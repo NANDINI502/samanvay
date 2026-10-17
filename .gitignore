@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets — never committed. .env.example (placeholders only) is kept.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Built locally / at container startup
+*/index/
+rag/index/

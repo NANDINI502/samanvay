@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedBot Orchestrator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%232457c5%22/%3E%3Cpath d=%22M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z%22 fill=%22white%22/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2430; --muted: #5d6878; --line: #dde2e8;
+    --accent: #2457c5; --accent-soft: #e8eefb;
+    --ok: #1d7a46; --ok-soft: #e4f4ea; --warn: #9a5b00; --warn-soft: #fdf1dc;
+    --bad: #b42318; --bad-soft: #fdeceb; --mock: #7a4dbf; --mock-soft: #f1eafb;
+    --nv: #4f7d00; --nv-soft: #eef6e0;
+    --radius: 10px; --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --panel: #1a2029; --text: #e6eaf0; --muted: #9aa5b4; --line: #2c3440;
+      --accent: #7aa2ff; --accent-soft: #1f2a44;
+      --ok: #5fd08f; --ok-soft: #173325; --warn: #f0b54d; --warn-soft: #3a2c12;
+      --bad: #ff8a80; --bad-soft: #3d1a18; --mock: #c3a2ff; --mock-soft: #2c2142;
+      --nv: #9bd341; --nv-soft: #22301a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden;
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  header { padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+  h1 { font-size: 19px; margin: 0; }
+  .tagline { color: var(--muted); font-size: 13px; flex-basis: 100%; }
+  .models { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; flex-basis: 100%; }
+  .models code { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+
+  .banner { max-width: 1200px; margin: 14px auto 0; padding: 0 16px; }
+  .banner > div { display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); color: var(--text);
+                  border: 1px solid var(--warn); border-radius: var(--radius); padding: 10px 14px; font-size: 13.5px; }
+  .banner strong { color: var(--warn); }
+  .banner .icon { font-size: 18px; line-height: 1.2; color: var(--warn); }
+
+  main.wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; padding: 16px; }
+  @media (max-width: 900px) { main.wrap { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  h3 { font-size: 14px; margin: 0; }
+  textarea, input, select, button { font: inherit; color: inherit; }
+  textarea { width: 100%; min-height: 84px; resize: vertical; padding: 10px; border: 1px solid var(--line);
+             border-radius: 8px; background: var(--bg); }
+
+  .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 10px 0 16px; }
+  .ex { display: flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid var(--line);
+        background: var(--bg); border-radius: 8px; padding: 8px 10px; cursor: pointer; min-width: 0; }
+  .ex:hover, .ex:focus-visible { border-color: var(--accent); outline: none; }
+  .ex .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .ex .q { font-size: 13px; overflow-wrap: anywhere; }
+  .ex .hint { font-size: 11.5px; color: var(--muted); }
+  .t-multi { color: var(--accent); } .t-red { color: var(--bad); } .t-ref { color: var(--warn); }
+  .t-tool { color: var(--ok); } .t-rag { color: var(--muted); }
+
+  button.primary { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 22px;
+                   font-weight: 600; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { button.primary { color: #0d1320; } }
+  button.primary:disabled { opacity: .6; cursor: progress; }
+  button.small { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px;
+                 font-size: 12.5px; cursor: pointer; }
+  .badge { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .b-ok { background: var(--ok-soft); color: var(--ok); }
+  .b-warn { background: var(--warn-soft); color: var(--warn); }
+  .b-bad { background: var(--bad-soft); color: var(--bad); }
+  .b-mock { background: var(--mock-soft); color: var(--mock); }
+  .b-live { background: var(--accent-soft); color: var(--accent); }
+  .b-nv { background: var(--nv-soft); color: var(--nv); }
+  .b-code { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+
+  details.model { border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
+  details.model > summary { padding: 9px 12px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  details.model > summary .kind { font-weight: 500; }
+  details.model .body { padding: 0 12px 12px; }
+  .note { color: var(--muted); font-size: 12.5px; margin: 4px 0 8px; overflow-wrap: anywhere; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .field { min-width: 0; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .field input, .field select { width: 100%; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px;
+                                background: var(--bg); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .empty { color: var(--muted); text-align: center; padding: 40px 10px; }
+  .final { border-left: 4px solid var(--accent); }
+  .final.deferred { border-left-color: var(--bad); }
+  .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; overflow-wrap: anywhere; }
+
+  .trace { list-style: none; margin: 0; padding: 0; }
+  .trace li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0;
+              border-bottom: 1px dashed var(--line); }
+  .trace li:last-child { border-bottom: 0; }
+  .trace .step { font-weight: 600; font-size: 13.5px; }
+  .trace .who { font-size: 12.5px; color: var(--muted); grid-column: 1; overflow-wrap: anywhere; }
+  .trace .who code { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .trace .stats { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-family: var(--mono); font-size: 12px;
+                  color: var(--muted); white-space: nowrap; align-self: center; }
+  @media (max-width: 480px) {
+    .trace li { grid-template-columns: minmax(0, 1fr); }
+    .trace .stats { grid-column: 1; grid-row: auto; text-align: left; }
+  }
+  .totals { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+  .agent { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 10px; min-width: 0; }
+  .agent .head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px; }
+  .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
+           margin: 10px 0 2px; }
+  ul.src { margin: 4px 0 0; padding-left: 18px; font-size: 13px; overflow-wrap: anywhere; }
+  a { color: var(--accent); }
+  .risk { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 10px; }
+  .bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 6px 0; }
+  .bar > span { display: block; height: 100%; background: var(--accent); }
+  .pct { font-size: 22px; font-weight: 700; }
+  .disclaimer { font-size: 12.5px; font-weight: 600; color: var(--warn); margin-top: 6px; }
+  table.factors { border-collapse: collapse; font-size: 13px; margin-top: 4px; width: 100%; }
+  table.factors td { padding: 2px 6px 2px 0; border-bottom: 1px dashed var(--line); overflow-wrap: anywhere; }
+  table.factors td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+  .err { color: var(--bad); }
+  footer { color: var(--muted); font-size: 12.5px; padding: 0 16px 24px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>MedBot Orchestrator</h1>
+    <span id="mode" class="badge b-warn">connecting…</span>
+    <span class="tagline">Multi-agent clinical decision support on Nebius Token Factory + NVIDIA Nemotron.</span>
+    <span class="models" id="models"></span>
+  </div>
+</header>
+
+<div class="banner" role="note" aria-label="Safety notice">
+  <div><span class="icon" aria-hidden="true">⚠</span>
+    <span><strong>Decision support, not diagnosis.</strong> Answers come only from cited WHO/NIH excerpts and
+      published equations, and the system defers to a clinician on red flags, referral criteria or weak evidence.
+      It does not replace clinical judgment. In an emergency, contact local emergency services.</span></div>
+</div>
+
+<main class="wrap">
+  <section class="panel">
+    <h2><label for="question">Question</label></h2>
+    <form id="ask">
+      <textarea id="question" required maxlength="2000"
+        placeholder="Ask a clinical question, or click an example below"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="submit" type="submit">Ask</button>
+        <span id="status" class="note" role="status" aria-live="polite"></span>
+      </div>
+
+      <h2 style="margin-top:18px">Examples <span class="note">(one click: fills in and asks)</span></h2>
+      <div class="examples" id="examples"></div>
+
+      <h2>Patient values <span class="note">(optional — for the risk tools)</span></h2>
+      <p class="note">A risk tool runs only when its agent is consulted and you fill in at least one of its own
+        fields. If any field is missing, the agent asks for it instead of guessing. One patient per question.</p>
+      <div id="riskforms"><p class="note">Loading fields…</p></div>
+    </form>
+  </section>
+
+  <section id="results">
+    <div class="panel empty">Ask a question to see which agents were consulted, which Nemotron model handled each
+      step, what each agent answered or why it deferred, any risk-tool result, and the final answer.</div>
+  </section>
+</main>
+
+<footer class="wrap">
+  Hackathon prototype — not a medical device. Guideline answers are grounded in cited WHO/NIH excerpts. eGFR
+  (CKD-EPI 2021) and FIB-4 are published equations; the cardiac model is trained on a small 1988 UCI research
+  dataset (see DATASETS.md).
+</footer>
+
+<script>
+// One-click examples. Calculator inputs are illustrative numbers (the same
+// arithmetic inputs as tests/test_calculators.py), not a patient; the cardiac
+// example loads a real row of the UCI dataset.
+const EXAMPLES = [
+  { tag: "Multi-agent", cls: "t-multi", q: "Diabetic patient with eGFR 50 — what blood pressure threshold applies?",
+    hint: "Cardiac + Renal + Endocrine agents, Ultra-tier synthesis" },
+  { tag: "Red flag → deferral", cls: "t-red", q: "My father has sudden facial droop and slurred speech",
+    hint: "Stopped in code before any agent or model call" },
+  { tag: "Referral → deferral", cls: "t-ref", q: "Patient with ascites and a history of hepatitis B — what next?",
+    hint: "Hepatic agent defers on a protocol referral term" },
+  { tag: "eGFR calculator", cls: "t-tool", q: "What does this patient's eGFR mean?",
+    values: { renal: { age: 60, sex: "male", serum_creatinine: 1.8 } }, hint: "Illustrative inputs, not a patient" },
+  { tag: "FIB-4 calculator", cls: "t-tool", q: "What does this patient's FIB-4 liver score suggest?",
+    values: { hepatic: { age: 50, ast: 40, alt: 25, platelets: 200 } }, hint: "Illustrative inputs, not a patient" },
+  { tag: "Cardiac model", cls: "t-tool", q: "What is this patient's cardiovascular risk?",
+    datasetRow: { organ: "cardiac", row: 0 }, hint: "Real row from the UCI Cleveland dataset" },
+  { tag: "Guideline lookup", cls: "t-rag", q: "What GFR value suggests kidney disease?",
+    hint: "Single agent, answer grounded in NIDDK excerpt" },
+];
+const DEFER_LABELS = { red_flag: "red flag", referral: "referral", low_confidence: "low confidence" };
+let schema = null, health = null;
+
+const $ = (sel, root = document) => root.querySelector(sel);
+function el(tag, attrs = {}, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const c of children) if (c != null) n.append(c);
+  return n;
+}
+
+async function init() {
+  for (const ex of EXAMPLES) {
+    const b = el("button", { type: "button", class: "ex" },
+      el("span", { class: "tag " + ex.cls, text: ex.tag }), el("span", { class: "q", text: ex.q }),
+      ex.hint ? el("span", { class: "hint", text: ex.hint }) : null);
+    b.onclick = () => runExample(ex);
+    $("#examples").append(b);
+  }
+  try {
+    health = await (await fetch("api/health")).json();
+    const mode = $("#mode");
+    if (health.mock) { mode.className = "badge b-mock"; mode.textContent = "MOCK MODE — model replies are labelled stubs"; }
+    else { mode.className = "badge b-live"; mode.textContent = "LIVE on Nebius Token Factory"; }
+    $("#models").append(
+      el("span", {}, "Orchestrator: ", el("code", { text: health.orchestrator_model })),
+      el("span", {}, "Agents: ", el("code", { text: health.agent_model })));
+    schema = await (await fetch("api/schema")).json();
+    renderForms();
+  } catch (e) {
+    $("#mode").className = "badge b-bad"; $("#mode").textContent = "backend unreachable";
+  }
+}
+
+function fieldInput(f, organ) {
+  const id = `f-${organ}-${f.key}`;
+  let input;
+  if (f.kind === "categorical") {
+    input = el("select", { id, "data-key": f.key, "data-organ": organ });
+    input.append(el("option", { value: "", text: "—" }));
+    for (const c of f.choices) input.append(el("option", { value: c, text: c.replaceAll("_", " ") }));
+  } else {
+    const hint = f.range ? `${f.range[0]}–${f.range[1]}` : `${f.min_exclusive ? ">" : "≥"} ${f.min}`;
+    input = el("input", { id, type: "number", step: "any", inputmode: "decimal", "data-key": f.key,
+                          "data-organ": organ, placeholder: hint });
+  }
+  const unit = f.unit && f.kind !== "categorical" ? ` (${f.unit})` : "";
+  return el("div", { class: "field" }, el("label", { for: id, text: f.label + unit }), input);
+}
+
+function clearForm(organ) {
+  document.querySelectorAll(`#riskforms [data-organ="${organ}"]`).forEach(i => i.value = "");
+  const src = $(`#src-${organ}`); if (src) src.textContent = "";
+}
+
+function fillForm(organ, values, source) {
+  for (const [k, v] of Object.entries(values)) {
+    const inp = $(`#riskforms [data-organ="${organ}"][data-key="${k}"]`);
+    if (inp) inp.value = v;
+  }
+  const src = $(`#src-${organ}`); if (src) src.textContent = source || "";
+  const box = $(`#model-${organ}`); if (box) box.open = true;
+}
+
+async function loadRow(organ, row) {
+  const ex = await (await fetch(`api/example/${organ}?row=${row}`)).json();
+  fillForm(organ, ex.values, ex.source);
+}
+
+function renderForms() {
+  const root = $("#riskforms");
+  root.textContent = "";
+  for (const [organ, m] of Object.entries(schema.risk_models)) {
+    const name = schema.agents[organ].display_name;
+    const fields = el("div", { class: "fields" }, ...m.fields.map(f => fieldInput(f, organ)));
+    const load = m.kind === "model" ? el("button", { type: "button", class: "small", text: "Load a real dataset row" }) : null;
+    const clear = el("button", { type: "button", class: "small", text: "Clear" });
+    const src = el("span", { class: "note", id: `src-${organ}` });
+    if (load) load.onclick = () => loadRow(organ, Math.floor(Math.random() * 50));
+    clear.onclick = () => clearForm(organ);
+    const about = m.kind === "model"
+      ? [el("p", { class: "note", text: `Trained model — ${m.dataset}: ${m.population}.` }),
+         el("p", { class: "note disclaimer", style: "margin-top:0", text: m.disclaimer })]
+      : [el("p", { class: "note", text: m.formula }),
+         el("p", { class: "note", text: `Source: ${m.citation}` }),
+         ...m.caveats.map(c => el("p", { class: "note", text: c }))];
+    root.append(el("details", { class: "model", id: `model-${organ}` },
+      el("summary", {}, `${name} — ${m.title} `,
+         el("span", { class: "kind badge " + (m.kind === "model" ? "b-warn" : "b-ok"),
+                      text: m.kind === "model" ? "trained model" : "published equation" })),
+      el("div", { class: "body" }, ...about, fields,
+        el("div", { class: "row", style: "margin-top:8px" }, load, clear, src))));
+  }
+}
+
+async function runExample(ex) {
+  $("#question").value = ex.q;
+  if (schema) for (const organ of Object.keys(schema.risk_models)) {
+    clearForm(organ);
+    const box = $(`#model-${organ}`); if (box) box.open = false;
+  }
+  try {
+    if (ex.values) for (const [organ, v] of Object.entries(ex.values)) fillForm(organ, v, "Illustrative inputs, not a patient.");
+    if (ex.datasetRow) await loadRow(ex.datasetRow.organ, ex.datasetRow.row);
+  } catch (e) { /* the question still runs; the agent will ask for any missing values */ }
+  $("#ask").requestSubmit();
+}
+
+function collectValues() {
+  // Each fieldset is one tool's input. Age/sex appear in several; send the
+  // values from whichever fieldset has tool-specific fields filled in.
+  // Shared fields must agree — one patient per question.
+  const values = {}, from = {};
+  for (const organ of Object.keys(schema?.risk_models || {})) {
+    const inputs = [...document.querySelectorAll(`#riskforms [data-organ="${organ}"]`)];
+    const used = inputs.some(i => i.value !== "" && !["age", "sex"].includes(i.dataset.key));
+    if (!used) continue;
+    for (const i of inputs) {
+      if (i.value === "") continue;
+      const v = i.type === "number" ? Number(i.value) : i.value, k = i.dataset.key;
+      if (k in values && values[k] !== v)
+        throw new Error(`"${k}" is ${values[k]} in the ${from[k]} form but ${v} in the ${organ} form — use one patient per question.`);
+      values[k] = v; from[k] = organ;
+    }
+  }
+  return Object.keys(values).length ? values : null;
+}
+
+$("#ask").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const question = $("#question").value.trim();
+  if (!question) return;
+  $("#submit").disabled = true; $("#status").textContent = "Consulting agents…";
+  try {
+    const res = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
+                                         body: JSON.stringify({ question, patient_values: collectValues() }) });
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    renderResult(await res.json());
+    $("#status").textContent = "";
+    if (window.matchMedia("(max-width: 900px)").matches) $("#results").scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    $("#status").innerHTML = ""; $("#status").append(el("span", { class: "err", text: "Request failed: " + e.message }));
+  } finally {
+    $("#submit").disabled = false;
+  }
+});
+
+function sourceList(urls) {
+  return el("ul", { class: "src" }, ...urls.map(u =>
+    el("li", {}, /^https?:\/\//.test(u) ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: u }) : u)));
+}
+
+function riskBox(r) {
+  const box = el("div", { class: "risk" }, el("div", { class: "label", style: "margin-top:0",
+                 text: r.kind === "calculator" ? "Calculator (published equation)" : "Risk model (trained)" }));
+  if (r.status === "needs_values") {
+    box.append(el("div", { text: "No result — the agent needs these values first:" }),
+               el("ul", { class: "src" }, ...r.missing.map(m => el("li", { text: m.label + (m.unit ? ` (${m.unit})` : "") }))));
+  } else if (r.status === "invalid") {
+    box.append(el("div", { text: "No result:" }), el("ul", { class: "src" }, ...r.problems.map(p => el("li", { text: p }))));
+  } else if (r.kind === "calculator") {
+    box.append(
+      el("div", {}, el("span", { class: "pct", text: r.value.toFixed(r.decimals) }), ` ${r.unit} — ${r.measure}`),
+      el("div", { text: r.interpretation }),
+      el("div", { class: "note", text: `Threshold source: ${r.interpretation_source}. Formula: ${r.formula}` }),
+      ...r.caveats.map(c => el("div", { class: "note", text: c })));
+  } else {
+    const pct = Math.round(r.probability * 100);
+    const bar = el("div", { class: "bar" }, el("span", { style: `width:${pct}%` }));
+    const rows = r.top_factors.map(f => el("tr", {},
+      el("td", { text: `${f.label} = ${String(f.value).replaceAll("_", " ")}` }),
+      el("td", { class: "num", text: `${f.effect >= 0 ? "+" : "−"}${Math.abs(f.effect * 100).toFixed(0)} pts` })));
+    const v = r.validation;
+    box.append(
+      el("div", {}, el("span", { class: "pct", text: `${pct}%` }), ` model estimate of ${r.target}`), bar,
+      el("div", { class: "note", text: "Largest contributions vs a typical patient in the dataset:" }),
+      el("table", { class: "factors" }, ...rows),
+      el("div", { class: "note", style: "margin-top:6px",
+                  text: `Validation (cross-validated, ${v.n_samples} patients): AUC ${v.cv_auc_mean.toFixed(2)}, ` +
+                        `sensitivity ${v.sensitivity.toFixed(2)}, specificity ${v.specificity.toFixed(2)} at 50%. ` +
+                        `Population: ${r.population}.` }));
+  }
+  box.append(el("div", { class: "disclaimer", text: r.disclaimer }), el("div", { class: "note", text: r.citation }));
+  return box;
+}
+
+function tokensText(c) {
+  if (c.usage && c.usage.total_tokens != null)
+    return `${c.usage.prompt_tokens ?? "?"} in · ${c.usage.completion_tokens ?? "?"} out`;
+  return c.mock ? "tokens n/a (mock)" : "tokens not reported";
+}
+
+function modelStep(step, c) {
+  const tier = c.role === "orchestrator" ? "Orchestrator tier" : "Agent tier";
+  return el("li", {},
+    el("span", { class: "step" }, step + " ", el("span", { class: "badge b-nv", text: "Nemotron" }),
+       c.mock ? el("span", { class: "badge b-mock", text: "mock" }) : null),
+    el("span", { class: "who" }, `${tier}: `, el("code", { text: c.model })),
+    el("span", { class: "stats" }, c.mock ? "no network call" : `${c.latency_ms ?? "?"} ms`, el("br"), tokensText(c)));
+}
+
+function codeStep(step, what) {
+  return el("li", {},
+    el("span", { class: "step" }, step + " ", el("span", { class: "badge b-code", text: "code" })),
+    el("span", { class: "who", text: what }),
+    el("span", { class: "stats", text: "deterministic" }));
+}
+
+function traceList(d) {
+  const ol = el("ol", { class: "trace" });
+  const calls = d.model_calls || [];
+  ol.append(codeStep("1. Red-flag check", d.routing_method === "red_flag"
+    ? "Emergency symptom found — answer stopped here, no agents, no model call." : "No global red flag."));
+  if (d.routing_method === "red_flag") return ol;
+  const routingCall = calls.find(c => c.step === "Routing");
+  if (routingCall) ol.append(modelStep("2. Routing", routingCall));
+  else ol.append(codeStep("2. Routing", d.routing_method === "keyword"
+    ? `Keyword match → ${d.agents_consulted.join(", ")}` : "No agent matched — asked the user to clarify."));
+  for (const a of d.agents) {
+    if (a.call) ol.append(modelStep(`3. ${a.display_name} agent`, a.call));
+    else ol.append(codeStep(`3. ${a.display_name} agent`,
+      `Guardrail deferred (${DEFER_LABELS[a.defer_kind] || a.defer_kind}) — no model call.`));
+    if (a.risk) ol.append(codeStep(`   ${a.display_name} risk tool`, `${a.risk.title}: ${a.risk.status}`));
+  }
+  const synth = calls.find(c => c.step === "Synthesis");
+  if (synth) ol.append(modelStep("4. Synthesis", synth));
+  else if (d.agents.length) ol.append(codeStep("4. Synthesis", "Skipped — the answer was deferred."));
+  return ol;
+}
+
+function totalsText(d) {
+  const calls = [...(d.model_calls || [])];
+  const tokens = calls.reduce((s, c) => s + (c.usage?.total_tokens || 0), 0);
+  const parts = [`Total ${d.total_ms} ms`, `${calls.length} Nemotron call${calls.length === 1 ? "" : "s"}`];
+  if (tokens) parts.push(`${tokens} tokens`);
+  if (d.agents.length > 1) parts.push("agents run in parallel");
+  return parts.join(" · ");
+}
+
+function renderResult(d) {
+  const root = $("#results");
+  root.textContent = "";
+
+  const finalCls = "panel final" + (d.deferred ? " deferred" : "");
+  const status = d.needs_clarification ? el("span", { class: "badge b-warn", text: "needs clarification" })
+               : d.deferred ? el("span", { class: "badge b-bad", text: "deferred" })
+               : el("span", { class: "badge b-ok", text: "answered" });
+  root.append(el("div", { class: finalCls },
+    el("div", { class: "row", style: "margin-bottom:6px" }, el("h2", { style: "margin:0", text: "Final answer" }), status,
+       d.mock ? el("span", { class: "badge b-mock", text: "MOCK" }) : null),
+    el("div", { class: "text", text: d.final_answer })));
+
+  root.append(el("div", { class: "panel", style: "margin-top:16px" },
+    el("h2", { text: "Pipeline trace" }), traceList(d), el("div", { class: "totals", text: totalsText(d) })));
+
+  if (!d.agents.length) return;
+  const agents = el("div", { class: "panel", style: "margin-top:16px" }, el("h2", { text: `Agents consulted (${d.agents.length})` }));
+  for (const a of d.agents) {
+    const badge = a.deferred
+      ? el("span", { class: "badge " + (a.defer_kind === "low_confidence" ? "b-warn" : "b-bad"),
+                     text: "deferred · " + (DEFER_LABELS[a.defer_kind] || a.defer_kind) })
+      : el("span", { class: "badge b-ok", text: "answered" });
+    const card = el("div", { class: "agent" },
+      el("div", { class: "head" }, el("h3", { text: a.display_name }), badge,
+         a.call?.mock ? el("span", { class: "badge b-mock", text: "MOCK reply" }) : null));
+    card.append(el("div", { class: "label", text: a.deferred ? "Deferral reason" : "Answer" }),
+                el("div", { class: "text", text: a.deferred ? a.reason : a.answer }));
+    if (a.risk) card.append(riskBox(a.risk));
+    if (a.retrieved_headings.length)
+      card.append(el("div", { class: "label", text: "Retrieved guideline sections" }),
+                  el("div", { class: "note", style: "margin:0", text: a.retrieved_headings.join(" · ") }));
+    if (a.citations.length) card.append(el("div", { class: "label", text: "Sources" }), sourceList(a.citations));
+    agents.append(card);
+  }
+  root.append(agents);
+}
+
+init();
+</script>
+</body>
+</html>

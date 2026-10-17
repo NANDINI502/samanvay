@@ -1,0 +1,26 @@
+# Secrets — never in the image. The API key is supplied at runtime as a platform secret.
+.env
+.env.*
+*.pem
+*.key
+
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.gitignore
+
+# Built at container startup to match the runtime EMBED_BACKEND
+rag/index/
+
+# Not needed to run the app
+tests/
+experiments/
+scripts/
+data/uci/chronic_kidney_disease/
+data/uci/ilpd/
+Dockerfile
+.dockerignore

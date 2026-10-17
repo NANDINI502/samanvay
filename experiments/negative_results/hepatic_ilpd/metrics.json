@@ -1,0 +1,115 @@
+{
+  "organ": "hepatic",
+  "dataset": "UCI ILPD (Indian Liver Patient Dataset)",
+  "n_samples": 583,
+  "n_positive": 416,
+  "prevalence": 0.7135506003430532,
+  "missing_values_per_feature": {
+    "ag_ratio": 4
+  },
+  "validation": "5x5 repeated stratified CV for AUC; one seeded 5-fold stratified split for out-of-fold sensitivity/specificity/calibration",
+  "seed": 0,
+  "chosen_model": "logistic_regression",
+  "selection_rule": "highest mean CV AUC; ties go to logistic regression",
+  "candidates": {
+    "logistic_regression": {
+      "cv_auc_mean": 0.7448804026904664,
+      "cv_auc_sd": 0.042511509939707766,
+      "oof_auc": 0.7522311146936895,
+      "threshold": 0.5,
+      "sensitivity": 0.9230769230769231,
+      "specificity": 0.2215568862275449,
+      "ppv": 0.7470817120622568,
+      "npv": 0.5362318840579711,
+      "confusion": {
+        "tp": 384,
+        "fn": 32,
+        "tn": 37,
+        "fp": 130
+      },
+      "calibration": {
+        "slope": 0.9044672207099806,
+        "intercept": 0.06216535956630662,
+        "mean_predicted_minus_observed": -0.000894565546511128,
+        "brier": 0.17107060328727952,
+        "bins": [
+          {
+            "mean_predicted": 0.4764849065674634,
+            "observed_rate": 0.4700854700854701,
+            "n": 117
+          },
+          {
+            "mean_predicted": 0.5894743136114704,
+            "observed_rate": 0.6120689655172413,
+            "n": 116
+          },
+          {
+            "mean_predicted": 0.6819535015061675,
+            "observed_rate": 0.6495726495726496,
+            "n": 117
+          },
+          {
+            "mean_predicted": 0.8349880268834773,
+            "observed_rate": 0.8620689655172413,
+            "n": 116
+          },
+          {
+            "mean_predicted": 0.9803721627722669,
+            "observed_rate": 0.9743589743589743,
+            "n": 117
+          }
+        ]
+      }
+    },
+    "gradient_boosting": {
+      "cv_auc_mean": 0.7261307209996082,
+      "cv_auc_sd": 0.03995080275210781,
+      "oof_auc": 0.7449116190695533,
+      "threshold": 0.5,
+      "sensitivity": 0.9014423076923077,
+      "specificity": 0.23952095808383234,
+      "ppv": 0.7470119521912351,
+      "npv": 0.49382716049382713,
+      "confusion": {
+        "tp": 375,
+        "fn": 41,
+        "tn": 40,
+        "fp": 127
+      },
+      "calibration": {
+        "slope": 0.8718651864952237,
+        "intercept": 0.07021810347363242,
+        "mean_predicted_minus_observed": 0.003540072182097509,
+        "brier": 0.17450599285575008,
+        "bins": [
+          {
+            "mean_predicted": 0.42903693877009347,
+            "observed_rate": 0.5128205128205128,
+            "n": 117
+          },
+          {
+            "mean_predicted": 0.5962202739405124,
+            "observed_rate": 0.5258620689655172,
+            "n": 116
+          },
+          {
+            "mean_predicted": 0.7345049103720134,
+            "observed_rate": 0.6923076923076923,
+            "n": 117
+          },
+          {
+            "mean_predicted": 0.8731956554545331,
+            "observed_rate": 0.8706896551724138,
+            "n": 116
+          },
+          {
+            "mean_predicted": 0.9527967343821457,
+            "observed_rate": 0.9658119658119658,
+            "n": 117
+          }
+        ]
+      }
+    }
+  },
+  "sklearn_version": "1.9.1"
+}

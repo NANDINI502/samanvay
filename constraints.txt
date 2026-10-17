@@ -1,0 +1,16 @@
+# Exact versions used to build and test this submission (Python 3.12).
+# The Docker image installs requirements.txt with these constraints, so the
+# cardiac model (models/cardiac/model.joblib, saved with scikit-learn 1.9.1)
+# loads in the same library versions it was trained and tested with.
+faiss-cpu==1.15.1
+fastapi==0.143.0
+httpx==0.28.1
+joblib==1.6.0
+numpy==2.5.4
+openai==3.29.0
+pandas==3.0.6
+pydantic==2.14.1
+python-dotenv==1.2.4
+scikit-learn==1.9.1
+scipy==1.18.1
+uvicorn==0.54.0

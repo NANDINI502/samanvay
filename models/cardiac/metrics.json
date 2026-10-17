@@ -1,0 +1,116 @@
+{
+  "organ": "cardiac",
+  "dataset": "UCI Heart Disease (Cleveland subset)",
+  "n_samples": 303,
+  "n_positive": 139,
+  "prevalence": 0.45874587458745875,
+  "missing_values_per_feature": {
+    "major_vessels": 4,
+    "thal": 2
+  },
+  "validation": "5x5 repeated stratified CV for AUC; one seeded 5-fold stratified split for out-of-fold sensitivity/specificity/calibration",
+  "seed": 0,
+  "chosen_model": "logistic_regression",
+  "selection_rule": "highest mean CV AUC; ties go to logistic regression",
+  "candidates": {
+    "logistic_regression": {
+      "cv_auc_mean": 0.9111169232002565,
+      "cv_auc_sd": 0.035851170425050566,
+      "oof_auc": 0.9091068608527813,
+      "threshold": 0.5,
+      "sensitivity": 0.8129496402877698,
+      "specificity": 0.8841463414634146,
+      "ppv": 0.8560606060606061,
+      "npv": 0.847953216374269,
+      "confusion": {
+        "tp": 113,
+        "fn": 26,
+        "tn": 145,
+        "fp": 19
+      },
+      "calibration": {
+        "slope": 0.8811483021311389,
+        "intercept": -0.05917216121568556,
+        "mean_predicted_minus_observed": 0.003360537269143149,
+        "brier": 0.11836305162898544,
+        "bins": [
+          {
+            "mean_predicted": 0.03192756934681673,
+            "observed_rate": 0.03278688524590164,
+            "n": 61
+          },
+          {
+            "mean_predicted": 0.12800845258632193,
+            "observed_rate": 0.18333333333333332,
+            "n": 60
+          },
+          {
+            "mean_predicted": 0.3833299010523699,
+            "observed_rate": 0.32786885245901637,
+            "n": 61
+          },
+          {
+            "mean_predicted": 0.7907508115999957,
+            "observed_rate": 0.8,
+            "n": 60
+          },
+          {
+            "mean_predicted": 0.97642592208231,
+            "observed_rate": 0.9508196721311475,
+            "n": 61
+          }
+        ]
+      }
+    },
+    "gradient_boosting": {
+      "cv_auc_mean": 0.8984436127144462,
+      "cv_auc_sd": 0.03863854934000287,
+      "oof_auc": 0.8952009124407792,
+      "threshold": 0.5,
+      "sensitivity": 0.7697841726618705,
+      "specificity": 0.8536585365853658,
+      "ppv": 0.816793893129771,
+      "npv": 0.813953488372093,
+      "confusion": {
+        "tp": 107,
+        "fn": 32,
+        "tn": 140,
+        "fp": 24
+      },
+      "calibration": {
+        "slope": 0.948753493759704,
+        "intercept": -0.014159360650616556,
+        "mean_predicted_minus_observed": 0.0004084517438934232,
+        "brier": 0.13096900862174327,
+        "bins": [
+          {
+            "mean_predicted": 0.04969566103472914,
+            "observed_rate": 0.01639344262295082,
+            "n": 61
+          },
+          {
+            "mean_predicted": 0.1459166842159344,
+            "observed_rate": 0.21666666666666667,
+            "n": 60
+          },
+          {
+            "mean_predicted": 0.3942469686304169,
+            "observed_rate": 0.39344262295081966,
+            "n": 61
+          },
+          {
+            "mean_predicted": 0.7526459506140964,
+            "observed_rate": 0.7166666666666667,
+            "n": 60
+          },
+          {
+            "mean_predicted": 0.9529426619512119,
+            "observed_rate": 0.9508196721311475,
+            "n": 61
+          }
+        ]
+      }
+    }
+  },
+  "sklearn_version": "1.9.1"
+}

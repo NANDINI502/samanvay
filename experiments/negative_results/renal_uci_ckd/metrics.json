@@ -1,0 +1,131 @@
+{
+  "organ": "renal",
+  "dataset": "UCI Chronic Kidney Disease",
+  "n_samples": 400,
+  "n_positive": 250,
+  "prevalence": 0.625,
+  "missing_values_per_feature": {
+    "age": 9,
+    "blood_pressure": 12,
+    "urine_specific_gravity": 47,
+    "urine_albumin": 46,
+    "urine_sugar": 49,
+    "pus_cell_clumps": 4,
+    "bacteria": 4,
+    "blood_glucose_random": 44,
+    "blood_urea": 19,
+    "serum_creatinine": 17,
+    "hemoglobin": 52,
+    "hypertension": 2,
+    "diabetes": 2,
+    "coronary_artery_disease": 2,
+    "appetite": 1,
+    "pedal_edema": 1,
+    "anemia": 1
+  },
+  "validation": "5x5 repeated stratified CV for AUC; one seeded 5-fold stratified split for out-of-fold sensitivity/specificity/calibration",
+  "seed": 0,
+  "chosen_model": "logistic_regression",
+  "selection_rule": "highest mean CV AUC; ties go to logistic regression",
+  "candidates": {
+    "logistic_regression": {
+      "cv_auc_mean": 1.0,
+      "cv_auc_sd": 0.0,
+      "oof_auc": 1.0,
+      "threshold": 0.5,
+      "sensitivity": 0.988,
+      "specificity": 1.0,
+      "ppv": 1.0,
+      "npv": 0.9803921568627451,
+      "confusion": {
+        "tp": 247,
+        "fn": 3,
+        "tn": 150,
+        "fp": 0
+      },
+      "calibration": {
+        "slope": 16.39208323289207,
+        "intercept": 7.378243319131834,
+        "mean_predicted_minus_observed": -0.0033321076265223626,
+        "brier": 0.008193891210448175,
+        "bins": [
+          {
+            "mean_predicted": 0.007267307342771018,
+            "observed_rate": 0.0,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.14542816296327427,
+            "observed_rate": 0.125,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.9562144637750624,
+            "observed_rate": 1.0,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.9994321211392208,
+            "observed_rate": 1.0,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.9999974066470599,
+            "observed_rate": 1.0,
+            "n": 80
+          }
+        ]
+      }
+    },
+    "gradient_boosting": {
+      "cv_auc_mean": 0.99976,
+      "cv_auc_sd": 0.0006499230723708666,
+      "oof_auc": 0.9998666666666667,
+      "threshold": 0.5,
+      "sensitivity": 0.992,
+      "specificity": 1.0,
+      "ppv": 1.0,
+      "npv": 0.9868421052631579,
+      "confusion": {
+        "tp": 248,
+        "fn": 2,
+        "tn": 150,
+        "fp": 0
+      },
+      "calibration": {
+        "slope": 2.5228127197828134,
+        "intercept": 2.4293355603227114,
+        "mean_predicted_minus_observed": -0.00517516166247034,
+        "brier": 0.00429784853937869,
+        "bins": [
+          {
+            "mean_predicted": 0.0031830179653518894,
+            "observed_rate": 0.0,
+            "n": 78
+          },
+          {
+            "mean_predicted": 0.10744407423745689,
+            "observed_rate": 0.12195121951219512,
+            "n": 82
+          },
+          {
+            "mean_predicted": 0.9872851484883028,
+            "observed_rate": 1.0,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.9990224778617451,
+            "observed_rate": 1.0,
+            "n": 80
+          },
+          {
+            "mean_predicted": 0.9995829467279889,
+            "observed_rate": 1.0,
+            "n": 80
+          }
+        ]
+      }
+    }
+  },
+  "sklearn_version": "1.9.1"
+}
