@@ -13,8 +13,8 @@ Work one step at a time and stop for the owner's OK after each.
 | C | Hindi/Hinglish red flags (`guardrails/README.md`; needs native-speaker clinical review) | Done (mock mode) |
 | D | One-way LLM safety check (`orchestrator/safety.py`): can only add a deferral, never remove one | Done (mock mode) |
 | E | Nemotron router with keyword fallback (`orchestrator/router.py`) | Done (mock mode) |
-| F | Health-worker mode in the UI (see below) | Not started (UI has D/E trace changes only) |
-| — | Guardrail fix: "dil ka daura" / "दिल का दौरा" labelled "seizure"; map to "chest pain" | Pending |
+| F | Health-worker mode in the UI (see below) | Done (mock mode); Hindi/Hinglish model answers untested until live |
+| — | Guardrail fix: "dil ka daura" / "दिल का दौरा" labelled "seizure"; map to "chest pain" | Done |
 | G | Live Nebius check | Blocked: needs a working Nebius key |
 | H | Native tool calling | Blocked: needs key |
 | I | Model-tier benchmark | Blocked: needs key |

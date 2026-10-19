@@ -90,3 +90,16 @@ def test_prefix_keyword():
     assert find_keyword("behoshi", ["behosh*"]) == "behosh*"
     assert find_keyword("behoshi", ["behosh"]) is None
     assert find_keyword("abehosh", ["behosh*"]) is None
+
+
+def test_heart_attack_phrase_named_chest_pain_not_seizure():
+    """"dil ka daura pada" also contains "daura pad-" (seizure); the message must name chest pain."""
+    for q in ["मेरे पिता को दिल का दौरा पड़ा है", "papa ko dil ka daura pada hai", "dil ka doura padha kya?"]:
+        g = check_red_flags(q)
+        assert not g.allowed and g.flag == "chest pain", (q, g)
+        assert "(chest pain)" in g.reason and "seizure" not in g.reason, q
+
+
+def test_seizure_phrases_still_name_seizure():
+    for q in ["bachche ko daura pada", "उसे मिर्गी का दौरा आया"]:
+        assert check_red_flags(q).flag == "seizure", q

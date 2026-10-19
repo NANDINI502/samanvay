@@ -46,6 +46,7 @@ class AgentResponse:
     answer: str
     reason: str | None = None
     defer_kind: str | None = None
+    trigger: str | None = None  # red flag / referral deferrals: the phrase found in the query
     citations: list[str] = field(default_factory=list)
     retrieved_headings: list[str] = field(default_factory=list)
     risk: dict | None = None  # models.tool.RiskResult.to_dict(), when the risk tool ran
@@ -74,6 +75,7 @@ class SpecialistAgent:
                 answer=f"Deferring to clinician review. Reason: {guard.reason}",
                 reason=guard.reason,
                 defer_kind=guard.kind,
+                trigger=guard.matched,
                 retrieved_headings=headings,
             )
 

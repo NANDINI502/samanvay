@@ -43,10 +43,13 @@ GLOBAL_RED_FLAGS = [
 
 # English red flag -> Hindi (Devanagari) and Romanised Hinglish translations.
 # Hinglish phrases use the canonical spellings of HINGLISH_SPELLINGS.
+# Checked in this order; the first flag that matches names the message.
 TRANSLATED_RED_FLAGS: dict[str, dict[str, list[str]]] = {
     "chest pain": {
-        "hi": ["सीने में दर्द", "छाती में दर्द"],
-        "hinglish": ["seene mein dard", "chhati mein dard"],
+        # "dil ka daura" means heart attack. It is mapped to chest pain, and
+        # comes before "seizure" so that "daura pad*" doesn't name it.
+        "hi": ["सीने में दर्द", "छाती में दर्द", "दिल का दौरा"],
+        "hinglish": ["seene mein dard", "chhati mein dard", "dil ka daura"],
     },
     "facial droop": {
         "hi": ["चेहरा टेढ़ा", "मुँह टेढ़ा"],
@@ -157,6 +160,7 @@ class GuardrailResult:
     reason: str | None = None
     kind: str | None = None  # "red_flag" | "referral" | "low_confidence"
     flag: str | None = None  # red flags: the English flag that matched (also for a translation)
+    matched: str | None = None  # red flags and referrals: the phrase as found in the query
 
 
 def _normalize(text: str) -> str:
@@ -202,6 +206,7 @@ def check_red_flags(query: str) -> GuardrailResult:
             allowed=False,
             kind="red_flag",
             flag=english,
+            matched=hit,
             reason=(
                 f"Query mentions {said}, an emergency warning sign — this needs "
                 "urgent in-person medical assessment, not an automated answer."
@@ -216,6 +221,7 @@ def check_referral_flags(query: str, referral_keywords: list[str]) -> GuardrailR
         return GuardrailResult(
             allowed=False,
             kind="referral",
+            matched=hit.rstrip("*"),
             reason=(
                 f"Query mentions '{hit}', which the source protocol lists as a "
                 "referral criterion — this needs specialist assessment."

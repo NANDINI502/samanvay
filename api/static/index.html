@@ -123,6 +123,18 @@
   table.factors td { padding: 2px 6px 2px 0; border-bottom: 1px dashed var(--line); overflow-wrap: anywhere; }
   table.factors td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
   .err { color: var(--bad); }
+  [hidden] { display: none !important; }
+  .modebar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 4px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg label { position: relative; padding: 6px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+               color: var(--muted); background: var(--bg); }
+  .seg label + label { border-left: 1px solid var(--line); }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg label:has(input:checked) { background: var(--accent-soft); color: var(--accent); }
+  .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .lang { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  .lang select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+  details.agents > summary { cursor: pointer; font-weight: 600; font-size: 15px; }
   footer { color: var(--muted); font-size: 12.5px; padding: 0 16px 24px; }
 </style>
 </head>
@@ -146,8 +158,22 @@
 
 <main class="wrap">
   <section class="panel">
-    <h2><label for="question">Question</label></h2>
     <form id="ask">
+      <h2>Answer for</h2>
+      <div class="modebar">
+        <div class="seg" role="radiogroup" aria-label="Answer for">
+          <label><input type="radio" name="audience" value="clinician" checked> Clinician</label>
+          <label><input type="radio" name="audience" value="health_worker"> Health worker</label>
+        </div>
+        <label class="lang" id="langwrap" hidden>Language
+          <select id="language">
+            <option value="en">English</option>
+            <option value="hi" lang="hi">हिन्दी (Hindi)</option>
+            <option value="hinglish">Hinglish</option>
+          </select></label>
+      </div>
+      <p class="note" id="modenote"></p>
+      <h2 style="margin-top:14px"><label for="question">Question</label></h2>
       <textarea id="question" required maxlength="2000"
         placeholder="Ask a clinical question, or click an example below"></textarea>
       <div class="row" style="margin-top:10px">
@@ -199,7 +225,18 @@ const EXAMPLES = [
     datasetRow: { organ: "cardiac", row: 0 }, hint: "Real row from the UCI Cleveland dataset" },
   { tag: "Guideline lookup", cls: "t-rag", q: "What GFR value suggests kidney disease?",
     hint: "Single agent, answer grounded in NIDDK excerpt" },
+  { tag: "Health worker · Hinglish", cls: "t-multi", q: "Diabetes wale mareez ka blood pressure kitna hona chahiye?",
+    mode: { audience: "health_worker", language: "hinglish" }, hint: "Simple answer, ends with the next step" },
+  { tag: "Health worker · Hindi red flag", cls: "t-red", q: "मरीज़ को सीने में दर्द हो रहा है",
+    mode: { audience: "health_worker", language: "hi" }, hint: "Emergency message in Hindi, no model call" },
 ];
+const MODE_NOTES = {
+  clinician: "Full detail: numbers, thresholds, risk-tool output and sources, in English.",
+  health_worker: "Simple words, in English, Hindi or Hinglish. Every answer ends with a clear next step and when " +
+                 "to refer. Same engine, guardrails and sources as clinician mode.",
+};
+const LANG_NAMES = { en: "English", hi: "Hindi", hinglish: "Hinglish" };
+const LANG_ATTR = { en: "en", hi: "hi", hinglish: "hi-Latn" };
 const DEFER_LABELS = { red_flag: "red flag", referral: "referral", low_confidence: "low confidence" };
 let schema = null, health = null;
 
@@ -213,7 +250,31 @@ function el(tag, attrs = {}, ...children) {
   return n;
 }
 
+function getMode() {
+  const audience = $('input[name="audience"]:checked').value;
+  return { audience, language: audience === "health_worker" ? $("#language").value : "en" };
+}
+
+function setMode(m, save = true) {
+  const radio = $(`input[name="audience"][value="${m.audience}"]`);
+  if (radio) radio.checked = true;
+  if (m.language && LANG_NAMES[m.language]) $("#language").value = m.language;
+  const hw = getMode().audience === "health_worker";
+  $("#langwrap").hidden = !hw;
+  $("#modenote").textContent = MODE_NOTES[getMode().audience];
+  if (save) try { localStorage.setItem("medbot-mode", JSON.stringify(getMode())); } catch (e) { /* optional */ }
+}
+
+function initMode() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("medbot-mode")); } catch (e) { /* optional */ }
+  setMode(saved || { audience: "clinician", language: "en" }, false);
+  document.querySelectorAll('input[name="audience"]').forEach(r => r.onchange = () => setMode({ audience: r.value }));
+  $("#language").onchange = () => setMode({ audience: "health_worker", language: $("#language").value });
+}
+
 async function init() {
+  initMode();
   for (const ex of EXAMPLES) {
     const b = el("button", { type: "button", class: "ex" },
       el("span", { class: "tag " + ex.cls, text: ex.tag }), el("span", { class: "q", text: ex.q }),
@@ -298,6 +359,7 @@ function renderForms() {
 }
 
 async function runExample(ex) {
+  if (ex.mode) setMode(ex.mode);
   $("#question").value = ex.q;
   if (schema) for (const organ of Object.keys(schema.risk_models)) {
     clearForm(organ);
@@ -337,7 +399,7 @@ $("#ask").addEventListener("submit", async (ev) => {
   $("#submit").disabled = true; $("#status").textContent = "Consulting agents…";
   try {
     const res = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-                                         body: JSON.stringify({ question, patient_values: collectValues() }) });
+                                         body: JSON.stringify({ question, patient_values: collectValues(), ...getMode() }) });
     if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
     renderResult(await res.json());
     $("#status").textContent = "";
@@ -470,16 +532,26 @@ function renderResult(d) {
   const status = d.needs_clarification ? el("span", { class: "badge b-warn", text: "needs clarification" })
                : d.deferred ? el("span", { class: "badge b-bad", text: "deferred" })
                : el("span", { class: "badge b-ok", text: "answered" });
-  root.append(el("div", { class: finalCls },
+  const hw = d.audience === "health_worker";
+  const modeBadge = el("span", { class: "badge b-code",
+                                 text: hw ? `Health worker · ${LANG_NAMES[d.language]}` : "Clinician" });
+  const final = el("div", { class: finalCls },
     el("div", { class: "row", style: "margin-bottom:6px" }, el("h2", { style: "margin:0", text: "Final answer" }), status,
-       d.mock ? el("span", { class: "badge b-mock", text: "MOCK" }) : null),
-    el("div", { class: "text", text: d.final_answer })));
+       modeBadge, d.mock ? el("span", { class: "badge b-mock", text: "MOCK" }) : null),
+    el("div", { class: "text", lang: LANG_ATTR[d.language] || "en", text: d.final_answer }));
+  const cited = [...new Set(d.agents.filter(a => !a.deferred).flatMap(a => a.citations))];
+  if (hw && cited.length) final.append(el("div", { class: "label", text: "Sources" }), sourceList(cited));
+  root.append(final);
 
   root.append(el("div", { class: "panel", style: "margin-top:16px" },
     el("h2", { text: "Pipeline trace" }), traceList(d), el("div", { class: "totals", text: totalsText(d) })));
 
   if (!d.agents.length) return;
-  const agents = el("div", { class: "panel", style: "margin-top:16px" }, el("h2", { text: `Agents consulted (${d.agents.length})` }));
+  // Health-worker mode keeps the full agent detail one click away, for the doctor.
+  const agents = hw
+    ? el("details", { class: "panel agents", style: "margin-top:16px" },
+         el("summary", { text: `Agent details for the doctor (${d.agents.length})` }))
+    : el("div", { class: "panel", style: "margin-top:16px" }, el("h2", { text: `Agents consulted (${d.agents.length})` }));
   for (const a of d.agents) {
     const badge = a.deferred
       ? el("span", { class: "badge " + (a.defer_kind === "low_confidence" ? "b-warn" : "b-bad"),

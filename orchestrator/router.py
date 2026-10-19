@@ -36,6 +36,7 @@ from agents.registry import AGENT_CONFIGS, ORGANS
 from agents.specialist import AgentResponse, SpecialistAgent
 from guardrails.checks import GLOBAL_RED_FLAGS, check_red_flags, find_keyword
 from models.tool import RiskResult, is_requested
+from orchestrator import audience as aud
 from orchestrator import safety
 from orchestrator.client import chat_as_orchestrator, chat_as_router, mock_enabled, redact
 
@@ -54,6 +55,8 @@ class OrchestratorResponse:
     agent_answers: dict[str, AgentResponse] = field(default_factory=dict)
     calls: list[dict] = field(default_factory=list)  # orchestrator-level model calls (safety, routing, synthesis)
     safety: dict | None = None  # orchestrator/safety.py result; None when a keyword red flag stopped the query
+    audience: str = "clinician"  # orchestrator/audience.py: wording only, never the decisions
+    language: str = "en"
 
 
 ROUTER_TIMEOUT_S = float(os.environ.get("MEDBOT_ROUTER_TIMEOUT_S", "10"))
@@ -148,15 +151,25 @@ def risk_notes(responses: dict[str, AgentResponse], patient_values: dict | None)
     return "\n\nRisk tool:\n" + "\n".join(lines) if lines else ""
 
 
-def handle_query(query: str, patient_values: dict | None = None) -> OrchestratorResponse:
+def handle_query(query: str, patient_values: dict | None = None,
+                 audience: str = "clinician", language: str = "en") -> OrchestratorResponse:
     """`patient_values`: optional risk-tool inputs, e.g. {"age": 63, "sex":
     "male", "serum_creatinine": 1.1}; keys per models/tool.required_inputs().
-    Only routed agents with a risk tool use them."""
+    Only routed agents with a risk tool use them.
+    `audience` / `language` (orchestrator/audience.py) change only the
+    wording of the final answer; every decision above is the same."""
+    audience, language = aud.normalize(audience, language)
+    r = _handle(query, patient_values, audience, language)
+    r.audience, r.language = audience, language
+    return r
+
+
+def _handle(query: str, patient_values: dict | None, audience: str, language: str) -> OrchestratorResponse:
     red = check_red_flags(query)
     if not red.allowed:
         return OrchestratorResponse(
             query=query, agents_consulted=[], routing_method="red_flag",
-            final_answer=f"Urgent: {red.reason} Contact emergency services or go to the nearest emergency department.",
+            final_answer=aud.red_flag_message(audience, language, red.matched, red.reason),
             deferred=True,
         )
 
@@ -180,12 +193,10 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
         # urgent one; their model calls stay in the trace for cost transparency.
         calls += [{**r.call, "step": r.call["step"] + " (discarded: safety deferral)"}
                   for r in responses.values() if r.call]
-        sign = f" ({check.sign})" if check.sign in GLOBAL_RED_FLAGS else ""
+        sign = check.sign if check.sign in GLOBAL_RED_FLAGS else None
         return OrchestratorResponse(
             query=query, agents_consulted=organs, routing_method="safety_model", routing_reason=reason,
-            final_answer=(f"Urgent: the safety check found a possible emergency warning sign{sign} that "
-                          "needs urgent in-person medical assessment, not an automated answer. Contact "
-                          "emergency services or go to the nearest emergency department."),
+            final_answer=aud.safety_message(audience, language, sign),
             deferred=True, calls=calls, safety=check.to_dict(),
         )
     if agent_error:
@@ -195,10 +206,7 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
         names = ", ".join(cfg["display_name"] for cfg in AGENT_CONFIGS.values())
         return OrchestratorResponse(
             query=query, agents_consulted=[], routing_method=method, routing_reason=reason,
-            final_answer=(
-                "I couldn't tell which body system this question is about. "
-                f"Could you rephrase it with the relevant area? Covered: {names}."
-            ),
+            final_answer=aud.clarify_message(audience, language, names),
             needs_clarification=True, calls=calls, safety=check.to_dict(),
         )
 
@@ -207,7 +215,7 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
         reasons = "; ".join(f"{AGENT_CONFIGS[r.organ]['display_name']}: {r.reason}" for r in hard_defers)
         return OrchestratorResponse(
             query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
-            final_answer=f"Deferring to clinician review. {reasons}",
+            final_answer=aud.referral_message(audience, language, [r.trigger for r in hard_defers], reasons),
             deferred=True, agent_answers=responses, calls=calls, safety=check.to_dict(),
         )
 
@@ -216,10 +224,7 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
     if not answered:
         return OrchestratorResponse(
             query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
-            final_answer=(
-                "None of the consulted agents' source material clearly covers this "
-                "question, so I won't guess. Please consult a clinician."
-            ) + risk_notes(responses, patient_values),
+            final_answer=aud.no_grounding_message(audience, language, risk_notes(responses, patient_values)),
             deferred=True, agent_answers=responses, calls=calls, safety=check.to_dict(),
         )
 
@@ -234,21 +239,12 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
                     + ", ".join(AGENT_CONFIGS[o]["display_name"] for o in gaps)
                     + ". Say so plainly in the final answer.")
     messages = [
-        {"role": "system", "content": (
-            "You are the Orchestrator in MedBot Orchestrator. Combine the specialist "
-            "answers below into one clear response for a clinician. Do not add any "
-            "medical claim the agents did not make. Where agents' answers interact "
-            "(e.g. diabetes changing a blood-pressure threshold), point that out only "
-            "if both answers support it. Keep the sources and end with a reminder "
-            "that this supports, and does not replace, clinical judgment. Report any "
-            "risk-tool result (calculator value or model estimate) separately from "
-            "guideline rules, with its disclaimer."
-        )},
+        {"role": "system", "content": aud.synthesis_prompt(audience, language)},
         {"role": "user", "content": f"Query: {query}\n\nSpecialist answers:\n{combined}{gap_note}"},
     ]
     synthesis = chat_as_orchestrator(messages)
     calls.append(synthesis.trace("Synthesis"))
-    final = synthesis.text + risk_notes(responses, patient_values)
+    final = synthesis.text + risk_notes(responses, patient_values) + aud.answered_suffix(audience, language)
     return OrchestratorResponse(
         query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
         final_answer=final, agent_answers=responses, calls=calls, safety=check.to_dict(),

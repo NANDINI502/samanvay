@@ -108,6 +108,14 @@ Ask a clinical question in plain language, optionally with patient values.
 - **Transparent trace.** The web UI shows which step ran in code and which
   Nemotron model handled each model step, with latency and token counts in
   live mode.
+- **Two modes, one engine.** *Clinician*: full detail, numbers, risk-tool
+  output and sources, in English. *Health worker*: simple language in
+  English, Hindi or Hinglish; red-flag, referral and other deferral
+  messages in the chosen language; every answer ends with a fixed
+  *Next step* line (what to do now, when to refer). Only the wording
+  changes (`orchestrator/audience.py`): routing, guardrails, agents, risk
+  tools and citations are identical, which `tests/test_audience.py` checks
+  on every eval case in every mode. The pipeline trace is shown in both.
 
 ## The AI can only make the system more cautious
 
@@ -414,7 +422,12 @@ reproduces these numbers exactly (tested).
   access works; its paraphrase recall and false-alarm rate are unmeasured.
   Its false alarms make answers defer more often (safe, but a cost).
 - Hindi/Hinglish red-flag phrases were translated for this project and
-  need native-speaker clinical review (see `guardrails/README.md`).
+  need native-speaker clinical review (see `guardrails/README.md`). The
+  same goes for the health-worker mode's fixed Hindi/Hinglish messages
+  (`orchestrator/audience.py`).
+- Health-worker mode: the risk-tool block and its disclaimer stay in
+  English; the model-written part of an answer in Hindi/Hinglish is
+  untested until live access works (mock replies are English stubs).
 - Not a medical device; no clinical validation of the system as a whole.
 
 ## Feedback on Nebius & NVIDIA tools

@@ -20,7 +20,7 @@ table.
 
 | English red flag | Hindi (Devanagari) | Hinglish (Romanised) |
 | --- | --- | --- |
-| chest pain | सीने में दर्द<br>छाती में दर्द | `seene mein dard`<br>`chhati mein dard` |
+| chest pain | सीने में दर्द<br>छाती में दर्द<br>दिल का दौरा¹ | `seene mein dard`<br>`chhati mein dard`<br>`dil ka daura`¹ |
 | facial droop | चेहरा टेढ़ा<br>मुँह टेढ़ा | `chehra tedha`<br>`munh tedha`<br>`chehra latak*` |
 | slurred speech | ज़बान लड़खड़ा<br>आवाज़ लड़खड़ा | `zaban ladkhad*`<br>`awaaz ladkhad*` |
 | arm weakness | बाँह में कमज़ोरी<br>हाथ में कमज़ोरी | `baanh mein kamzori`<br>`haath mein kamzori` |
@@ -38,6 +38,11 @@ table.
 | fainted | ग़श खा<br>चक्कर खाकर गिर<br>चक्कर खा कर गिर | `ghash kha*`<br>`chakkar khakar gir*`<br>`chakkar kha kar gir*` |
 | collapse | अचानक गिर | `achanak gir*` |
 | confusion | बहकी बहकी बात<br>होश में नहीं | `behki behki baat*`<br>`hosh mein nahi` |
+
+¹ *Dil ka daura* means "heart attack", not literally "chest pain". There is
+no "heart attack" flag in the English list, so it is mapped to the closest
+one, chest pain, and the message names chest pain. Translations are checked
+in table order, so chest pain is found before `daura pad*` (seizure).
 
 How matching works:
 
@@ -87,8 +92,10 @@ How matching works:
 Each of these makes the system defer when it might not need to; none can
 stop a deferral.
 
-- `daura pad*` (seizure) also matches *dil ka daura pada* (heart attack).
-  It still defers, but the message names "seizure".
+- `daura pad*` (seizure) would also match *dil ka daura pada* (heart
+  attack). Fixed: *dil ka daura* is matched first, as chest pain (note ¹).
+  Other phrasings, e.g. *heart ka daura pada*, still defer but are
+  labelled "seizure".
 - `achanak gir*` (collapse) also matches e.g. *sugar achanak gir gaya*
   (blood sugar suddenly dropped).
 - `saas` → `saans` (breath) also means *mother-in-law*: *saas nahi aa
@@ -103,3 +110,7 @@ checking are lay phrasings rather than literal translations:
 **facial droop** (*munh tedha*), **slurred speech** (*zaban ladkhad-*),
 **fainted** (*ghash kha-*, *chakkar khakar gir-*) and **confusion**
 (*behki behki baat-*, *hosh mein nahi*).
+
+The health-worker mode's fixed messages in Hindi and Hinglish (red flag,
+safety deferral, referral, no guidance, clarification, and the "Next step"
+lines) are in `orchestrator/audience.py` and need the same review.

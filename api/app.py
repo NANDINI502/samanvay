@@ -10,7 +10,9 @@ Endpoints:
   GET  /api/schema     agents + risk-tool input fields (for the form)
   GET  /api/example/{organ}   one real row from a trained model's UCI dataset (cardiac only;
                               calculators have no dataset)
-  POST /api/ask        {"question": "...", "patient_values": {...}} -> full trace
+  POST /api/ask        {"question": "...", "patient_values": {...},
+                        "audience": "clinician"|"health_worker", "language": "en"|"hi"|"hinglish"}
+                       -> full trace (audience/language change only the wording; see orchestrator/audience.py)
 
 All model calls still go through orchestrator/client.py via the router; this
 module only serialises what the router returns.
@@ -22,6 +24,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 from importlib import import_module
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -54,6 +57,8 @@ app = FastAPI(title="MedBot Orchestrator", docs_url="/api/docs", redoc_url=None,
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     patient_values: dict[str, str | float | int | None] | None = None
+    audience: Literal["clinician", "health_worker"] = "clinician"
+    language: Literal["en", "hi", "hinglish"] = "en"  # health_worker only; clinician answers are English
 
 
 @app.get("/")
@@ -116,7 +121,7 @@ def ask(req: AskRequest) -> dict:
     values = {k: v for k, v in (req.patient_values or {}).items() if v not in (None, "")} or None
     start = time.perf_counter()
     try:
-        r = handle_query(req.question.strip(), patient_values=values)
+        r = handle_query(req.question.strip(), patient_values=values, audience=req.audience, language=req.language)
     except Exception as e:  # model service down, key missing/rejected, network
         status = getattr(e, "status_code", None)
         raise HTTPException(503, llm.redact(
@@ -130,6 +135,8 @@ def ask(req: AskRequest) -> dict:
     return {
         "mock": mock_enabled(),
         "query": r.query,
+        "audience": r.audience,
+        "language": r.language,
         "routing_method": r.routing_method,
         "routing_reason": r.routing_reason,
         "agents_consulted": r.agents_consulted,

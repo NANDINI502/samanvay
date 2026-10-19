@@ -8,6 +8,9 @@ hepatic FIB-4 calculators):
     python -m orchestrator.cli "..." --values '{"age": 63, "sex": "male", ...}'
     python -m orchestrator.cli "..." --values-file patient.json
     python -m orchestrator.cli --inputs cardiac        # list the inputs a model needs
+
+Health-worker wording (simple language, Hindi/Hinglish, fixed "next step" line):
+    python -m orchestrator.cli "..." --audience health_worker --lang hi
 """
 from __future__ import annotations
 
@@ -17,6 +20,7 @@ import sys
 from pathlib import Path
 
 from models.tool import RISK_ORGANS, RiskResult, required_inputs
+from orchestrator.audience import AUDIENCES, LANGUAGES
 from orchestrator.router import handle_query
 
 
@@ -26,6 +30,8 @@ def main() -> None:
     parser.add_argument("--values", help="risk-tool inputs as a JSON object")
     parser.add_argument("--values-file", type=Path, help="JSON file with risk-tool inputs")
     parser.add_argument("--inputs", choices=RISK_ORGANS, help="print the inputs a risk tool needs, then exit")
+    parser.add_argument("--audience", choices=AUDIENCES, default="clinician")
+    parser.add_argument("--lang", choices=LANGUAGES, default="en", help="health_worker only")
     args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):  # Windows consoles (cp1252) can't print e.g. "√"
         sys.stdout.reconfigure(errors="replace")
@@ -50,7 +56,7 @@ def main() -> None:
     elif args.values:
         values = json.loads(args.values)
 
-    r = handle_query(" ".join(args.question), patient_values=values)
+    r = handle_query(" ".join(args.question), patient_values=values, audience=args.audience, language=args.lang)
     print(f"Routing: {r.routing_method} -> {r.agents_consulted or '-'}")
     for organ, a in r.agent_answers.items():
         status = f"DEFERRED ({a.defer_kind})" if a.deferred else "answered"
