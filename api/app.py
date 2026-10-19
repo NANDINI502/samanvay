@@ -123,18 +123,23 @@ def ask(req: AskRequest) -> dict:
             f"The model service is unavailable ({type(e).__name__}" + (f", HTTP {status}" if status else "") + f"): {e}"))
     total_ms = round((time.perf_counter() - start) * 1000)
     agent_calls = [a.call for a in r.agent_answers.values() if a.call]
+    safety = [c for c in r.calls if c["step"] == "Safety check"]
     routing = [c for c in r.calls if c["step"] == "Routing"]
+    discarded = [c for c in r.calls if c["step"].endswith("(discarded: safety deferral)")]
     synthesis = [c for c in r.calls if c["step"] == "Synthesis"]
     return {
         "mock": mock_enabled(),
         "query": r.query,
         "routing_method": r.routing_method,
+        "routing_reason": r.routing_reason,
         "agents_consulted": r.agents_consulted,
         "deferred": r.deferred,
         "needs_clarification": r.needs_clarification,
         "final_answer": r.final_answer,
         "total_ms": total_ms,
-        "model_calls": routing + agent_calls + synthesis,  # in pipeline order; agents run in parallel
+        "safety": r.safety,
+        # in pipeline order; the safety check runs in parallel with routing and the agents
+        "model_calls": safety + routing + agent_calls + discarded + synthesis,
         "agents": [
             {**asdict(a), "display_name": AGENT_CONFIGS[o]["display_name"]}
             for o, a in r.agent_answers.items()

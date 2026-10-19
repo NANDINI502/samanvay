@@ -4,9 +4,18 @@ parallel, and asks the Ultra-tier model to synthesize one answer.
 Routing, in order:
   1. Global red-flag check before anything else — an emergency symptom gets
      an immediate referral answer, no agents, no model call.
-  2. Keyword routing (word-boundary match on each organ's routing_keywords).
-  3. If no keyword matches: a Nemotron router call picks organs from the
-     registry (skipped in mock mode).
+  1b. One-way Nemotron safety check (orchestrator/safety.py), in parallel
+     with steps 2-4 and the agents: it can only add an emergency deferral
+     for warning signs the keywords missed. Its result is in before any
+     answer is returned or synthesized; on error the keyword result stands.
+  2. Nemotron router (router tier, MEDBOT_ROUTER=nemotron, the default):
+     strict JSON {"organs": [...], "reason": "..."} validated against the
+     registry. On error, timeout or an invalid reply -> keyword routing
+     (word-boundary match on each organ's routing_keywords). Mock mode and
+     MEDBOT_ROUTER=keyword use keyword routing directly.
+  3. Referral safety net, whichever router ran: every organ whose referral
+     term appears in the query is consulted too, so its referral rule
+     always runs. Routing can add agents here, never remove them.
   4. Still nothing: ask the user to clarify which body system the question
      is about, instead of guessing.
 
@@ -18,15 +27,17 @@ Aggregation rules (safety first):
 from __future__ import annotations
 
 import json
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from agents.registry import AGENT_CONFIGS, ORGANS
 from agents.specialist import AgentResponse, SpecialistAgent
-from guardrails.checks import check_red_flags, find_keyword
+from guardrails.checks import GLOBAL_RED_FLAGS, check_red_flags, find_keyword
 from models.tool import RiskResult, is_requested
-from orchestrator.client import chat_as_agent, chat_as_orchestrator, mock_enabled
+from orchestrator import safety
+from orchestrator.client import chat_as_orchestrator, chat_as_router, mock_enabled, redact
 
 AGENTS = {organ: SpecialistAgent(organ) for organ in ORGANS}
 
@@ -35,52 +46,93 @@ AGENTS = {organ: SpecialistAgent(organ) for organ in ORGANS}
 class OrchestratorResponse:
     query: str
     agents_consulted: list[str]
-    routing_method: str
+    routing_method: str  # "nemotron" | "keyword" | "keyword_fallback" | "red_flag" | "safety_model"
     final_answer: str
+    routing_reason: str = ""
     deferred: bool = False
     needs_clarification: bool = False
     agent_answers: dict[str, AgentResponse] = field(default_factory=dict)
-    calls: list[dict] = field(default_factory=list)  # orchestrator-level model calls (routing, synthesis)
+    calls: list[dict] = field(default_factory=list)  # orchestrator-level model calls (safety, routing, synthesis)
+    safety: dict | None = None  # orchestrator/safety.py result; None when a keyword red flag stopped the query
+
+
+ROUTER_TIMEOUT_S = float(os.environ.get("MEDBOT_ROUTER_TIMEOUT_S", "10"))
+
+ROUTER_PROMPT = (
+    "You route clinical questions to specialist agents. The question may be in English, "
+    "Hindi or Hinglish. Agents:\n"
+    + "\n".join(f"- {o}: {cfg['scope']}" for o, cfg in AGENT_CONFIGS.items())
+    + "\nPick every agent the question needs (several if it spans organs), or none if no "
+    "agent fits (for example, not a clinical question). Reply with ONLY this JSON, nothing "
+    'else: {"organs": ["<agent name>", ...], "reason": "<one short line>"}'
+)
+
+
+def router_mode() -> str:
+    return os.environ.get("MEDBOT_ROUTER", "nemotron").lower()
 
 
 def keyword_route(query: str) -> list[str]:
     return [o for o, cfg in AGENT_CONFIGS.items() if find_keyword(query, cfg["routing_keywords"])]
 
 
-def model_route(query: str, calls: list[dict] | None = None) -> list[str]:
-    """Ask Nemotron (agent tier) which organ agents fit. Returns [] on any
-    failure — the caller then asks the user to clarify. The call's trace is
-    appended to `calls`."""
-    if mock_enabled():
-        return []
-    options = ", ".join(f"{o} ({cfg['scope']})" for o, cfg in AGENT_CONFIGS.items())
-    messages = [
-        {"role": "system", "content": (
-            "You route clinical questions to specialist agents. Reply with ONLY a "
-            f"JSON list of agent names chosen from: {options}. Reply [] if none fit."
-        )},
-        {"role": "user", "content": query},
-    ]
-    try:
-        result = chat_as_agent(messages, max_tokens=50, temperature=0)
-        if calls is not None:
-            calls.append(result.trace("Routing"))
-        text = result.text
-        match = re.search(r"\[.*?\]", text, re.S)
-        picked = json.loads(match.group(0)) if match else []
-        return [o for o in picked if o in AGENT_CONFIGS]
-    except Exception:
-        return []
+def _keyword_reason(organs: list[str], query: str) -> str:
+    if not organs:
+        return "no routing keyword matched"
+    return "keyword match: " + ", ".join(
+        f"{o} ('{find_keyword(query, AGENT_CONFIGS[o]['routing_keywords'])}')" for o in organs)
 
 
-def route(query: str, calls: list[dict] | None = None) -> tuple[list[str], str]:
-    organs = keyword_route(query)
-    if organs:
-        return organs, "keyword"
-    organs = model_route(query, calls)
-    if organs:
-        return organs, "model"
-    return [], "none"
+def parse_route(text: str) -> tuple[list[str], str]:
+    """Strict: a JSON object whose "organs" is a list of registry names (no
+    unknown names). Raises ValueError otherwise."""
+    match = re.search(r"\{.*\}", text, re.S)
+    if not match:
+        raise ValueError("no JSON object in reply")
+    data = json.loads(match.group(0))
+    organs = data.get("organs") if isinstance(data, dict) else None
+    if not isinstance(organs, list) or not all(isinstance(o, str) for o in organs):
+        raise ValueError('"organs" is not a list of names')
+    unknown = [o for o in organs if o not in AGENT_CONFIGS]
+    if unknown:
+        raise ValueError(f"unknown agents {unknown}")
+    return list(dict.fromkeys(organs)), str(data.get("reason") or "").strip()
+
+
+def model_route(query: str, calls: list[dict] | None = None) -> tuple[list[str], str]:
+    """Nemotron router. Raises on any failure; the caller falls back."""
+    messages = [{"role": "system", "content": ROUTER_PROMPT}, {"role": "user", "content": query}]
+    result = chat_as_router(messages, max_tokens=120, temperature=0, timeout=ROUTER_TIMEOUT_S)
+    if calls is not None:
+        calls.append(result.trace("Routing"))
+    return parse_route(result.text)
+
+
+def referral_organs(query: str) -> list[str]:
+    return [o for o, cfg in AGENT_CONFIGS.items() if find_keyword(query, cfg["referral_keywords"])]
+
+
+def route(query: str, calls: list[dict] | None = None) -> tuple[list[str], str, str]:
+    """(organs, method, reason). See the module docstring for the order."""
+    if router_mode() == "nemotron" and not mock_enabled():
+        try:
+            organs, reason = model_route(query, calls)
+            method = "nemotron"
+        except Exception as e:
+            organs = keyword_route(query)
+            method = "keyword_fallback"
+            reason = (f"Nemotron router unavailable ({redact(f'{type(e).__name__}: {e}')[:120]}); "
+                      + _keyword_reason(organs, query))
+    else:
+        organs = keyword_route(query)
+        method = "keyword"
+        reason = _keyword_reason(organs, query) + (" (mock mode: Nemotron router not called)"
+                                                   if mock_enabled() and router_mode() == "nemotron" else "")
+    added = [o for o in referral_organs(query) if o not in organs]
+    if added:
+        organs = organs + added
+        reason += "; added so their referral rule runs: " + ", ".join(added)
+    return organs, method, reason
 
 
 def risk_notes(responses: dict[str, AgentResponse], patient_values: dict | None) -> str:
@@ -109,41 +161,66 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
         )
 
     calls: list[dict] = []
-    organs, method = route(query, calls)
+    with ThreadPoolExecutor(max_workers=1) as safety_pool:
+        safety_future = safety_pool.submit(safety.check, query)
+        organs, method, reason = route(query, calls)
+        responses, agent_error = {}, None
+        if organs:
+            try:
+                with ThreadPoolExecutor(max_workers=len(organs)) as pool:
+                    responses = dict(zip(organs, pool.map(
+                        lambda o: AGENTS[o].run(query, patient_values=patient_values), organs)))
+            except Exception as e:  # an emergency found by the safety check still wins
+                agent_error = e
+        check = safety_future.result()
+    if check.call:
+        calls.insert(0, check.call)
+    if check.emergency:
+        # The agents' answers are dropped so no ordinary answer sits beside the
+        # urgent one; their model calls stay in the trace for cost transparency.
+        calls += [{**r.call, "step": r.call["step"] + " (discarded: safety deferral)"}
+                  for r in responses.values() if r.call]
+        sign = f" ({check.sign})" if check.sign in GLOBAL_RED_FLAGS else ""
+        return OrchestratorResponse(
+            query=query, agents_consulted=organs, routing_method="safety_model", routing_reason=reason,
+            final_answer=(f"Urgent: the safety check found a possible emergency warning sign{sign} that "
+                          "needs urgent in-person medical assessment, not an automated answer. Contact "
+                          "emergency services or go to the nearest emergency department."),
+            deferred=True, calls=calls, safety=check.to_dict(),
+        )
+    if agent_error:
+        raise agent_error
+
     if not organs:
         names = ", ".join(cfg["display_name"] for cfg in AGENT_CONFIGS.values())
         return OrchestratorResponse(
-            query=query, agents_consulted=[], routing_method=method,
+            query=query, agents_consulted=[], routing_method=method, routing_reason=reason,
             final_answer=(
                 "I couldn't tell which body system this question is about. "
                 f"Could you rephrase it with the relevant area? Covered: {names}."
             ),
-            needs_clarification=True, calls=calls,
+            needs_clarification=True, calls=calls, safety=check.to_dict(),
         )
-
-    with ThreadPoolExecutor(max_workers=len(organs)) as pool:
-        responses = dict(zip(organs, pool.map(
-            lambda o: AGENTS[o].run(query, patient_values=patient_values), organs)))
 
     hard_defers = [r for r in responses.values() if r.deferred and r.defer_kind in {"red_flag", "referral"}]
     if hard_defers:
         reasons = "; ".join(f"{AGENT_CONFIGS[r.organ]['display_name']}: {r.reason}" for r in hard_defers)
         return OrchestratorResponse(
-            query=query, agents_consulted=organs, routing_method=method,
+            query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
             final_answer=f"Deferring to clinician review. {reasons}",
-            deferred=True, agent_answers=responses, calls=calls,
+            deferred=True, agent_answers=responses, calls=calls, safety=check.to_dict(),
         )
 
     answered = {o: r for o, r in responses.items() if not r.deferred}
     gaps = [o for o, r in responses.items() if r.deferred]
     if not answered:
         return OrchestratorResponse(
-            query=query, agents_consulted=organs, routing_method=method,
+            query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
             final_answer=(
                 "None of the consulted agents' source material clearly covers this "
                 "question, so I won't guess. Please consult a clinician."
             ) + risk_notes(responses, patient_values),
-            deferred=True, agent_answers=responses, calls=calls,
+            deferred=True, agent_answers=responses, calls=calls, safety=check.to_dict(),
         )
 
     combined = "\n\n".join(
@@ -173,6 +250,6 @@ def handle_query(query: str, patient_values: dict | None = None) -> Orchestrator
     calls.append(synthesis.trace("Synthesis"))
     final = synthesis.text + risk_notes(responses, patient_values)
     return OrchestratorResponse(
-        query=query, agents_consulted=organs, routing_method=method,
-        final_answer=final, agent_answers=responses, calls=calls,
+        query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
+        final_answer=final, agent_answers=responses, calls=calls, safety=check.to_dict(),
     )

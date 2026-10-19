@@ -7,11 +7,14 @@
 
 **Open source under the [MIT License](LICENSE).**
 
-Multi-agent clinical decision support built for the **Nebius x NVIDIA
-hackathon** (track: **Best Apps and Agents**). An orchestrator on NVIDIA
-Nemotron routes each clinical question to organ-specialist agents, each
-grounded in cited WHO/NIH excerpts, and combines their answers — with
-deterministic guardrails that defer to a clinician instead of guessing.
+Multi-agent clinical decision support **designed for health workers and
+doctors in Indian primary health centres**, built for the **Nebius x NVIDIA
+hackathon** (track: **Best Apps and Agents**). Its clinical core is the
+WHO PEN protocol, a package WHO designed specifically *for primary health
+care in low-resource settings*. An orchestrator on NVIDIA Nemotron routes
+each question to organ-specialist agents, each grounded in cited WHO/NIH
+excerpts, and combines their answers — with deterministic guardrails that
+tell the user to refer instead of guessing.
 
 > **Decision support, not diagnosis.** This is a hackathon prototype, not a
 > medical device. It does not replace clinical judgment.
@@ -21,7 +24,10 @@ deterministic guardrails that defer to a clinician instead of guessing.
 
 ## Contents
 
+- [Who it's for](#who-its-for)
 - [What it does](#what-it-does)
+- [The AI can only make the system more cautious](#the-ai-can-only-make-the-system-more-cautious)
+- [Routing](#routing-nemotron-first-keywords-as-fallback-referrals-always)
 - [Architecture](#architecture)
 - [Which Nemotron model does what, and why](#which-nemotron-model-does-what-and-why)
 - [How Nebius Token Factory is used](#how-nebius-token-factory-is-used)
@@ -33,12 +39,54 @@ deterministic guardrails that defer to a clinician instead of guessing.
 - [Feedback on Nebius & NVIDIA tools](#feedback-on-nebius--nvidia-tools)
 - [What changed during the submission period](#what-changed-during-the-submission-period)
 
+## Who it's for
+
+**Designed for** health workers and doctors in Indian primary health
+centres (PHCs). The design assumes a user who sees chronic conditions
+(blood pressure, diabetes, kidney, liver and lung problems) without a
+specialist on site, and whose key questions are *"what does this value
+mean?"* and *"does this patient need referral now?"*
+
+That is the setting the WHO PEN protocol was written for:
+
+> World Health Organization. *Package of Essential Noncommunicable (PEN)
+> Disease Interventions for Primary Health Care in Low-Resource Settings.*
+> Geneva: WHO. ISBN 978 92 4 150655 7.
+> [PDF (WHO AFRO)](https://www.afro.who.int/sites/default/files/2017-06/9789241506557_eng.pdf)
+
+How the corpus uses it:
+
+| Corpus | WHO PEN content | Other cited sources |
+| --- | --- | --- |
+| Cardiac | Total CVD risk factors, risk-chart actions, referral | WHO/ISH risk charts (PAHO/WHO) |
+| Renal | Kidney-related referral and blood-pressure rules | NIDDK (NIH) |
+| Neuro | Stroke/TIA referral rule | NINDS (NIH) |
+| Endocrine | Diagnostic thresholds, BP threshold in diabetes | WHO diabetes fact sheet |
+| Hepatic | — | WHO hepatitis B fact sheet, NIDDK (NIH) |
+| Respiratory | — | WHO COPD and asthma fact sheets |
+
+Design choices that follow from this setting:
+
+- **Referral first.** Red flags and PEN referral criteria are checked in
+  code before any model call and override everything else. The system
+  says *refer*; it doesn't try to manage an emergency.
+- **Calculators that need only routine values.** eGFR uses serum
+  creatinine, age and sex; FIB-4 uses age, AST, ALT and platelets. Missing
+  values make the tool ask for them; it never guesses.
+- **Cited, checkable answers.** Every answer links to the public WHO/NIH
+  source it came from, so a doctor can verify it.
+
+**Status:** this is a hackathon prototype. It has not been deployed in,
+piloted at or evaluated by any health centre, and it is not a medical
+device.
+
 ## What it does
 
 Ask a clinical question in plain language, optionally with patient values.
 
 - **Six specialist agents** — Cardiac, Renal, Neuro, Hepatic, Respiratory,
-  Endocrine. The orchestrator picks the relevant ones (often several, e.g.
+  Endocrine. A Nemotron router picks the relevant ones and says why in one
+  line (keyword routing is the fallback) (often several, e.g.
   *"Diabetic patient with eGFR 50 — what blood pressure threshold
   applies?"* consults Cardiac, Renal and Endocrine) and runs them in
   parallel.
@@ -46,7 +94,8 @@ Ask a clinical question in plain language, optionally with patient values.
   its own curated corpus and cites the source URLs. Each corpus lists what
   it does *not* cover, and the agent is told those limits.
 - **Safety in code, not in the prompt.** Emergency red flags (chest pain,
-  stroke signs, vomiting blood, …) stop the request before any model call.
+  stroke signs, vomiting blood, …), in English, Hindi and Hinglish, stop
+  the request before any model call.
   Organ-specific referral criteria and low retrieval confidence make an
   agent defer; a red flag or referral from any agent defers the whole
   answer.
@@ -60,16 +109,70 @@ Ask a clinical question in plain language, optionally with patient values.
   Nemotron model handled each model step, with latency and token counts in
   live mode.
 
+## The AI can only make the system more cautious
+
+Safety rules run in code, so no prompt can talk them out of a deferral.
+But keyword lists miss things people actually say: *"there is blood in her
+vomit"* contains no listed phrase. So one Nemotron call is added, with a
+strict one-way contract:
+
+| The safety model says… | What happens |
+| --- | --- |
+| *emergency* | The whole answer defers as urgent, exactly like a keyword red flag. Agents' answers are discarded and synthesis never runs. |
+| *not an emergency* | Nothing changes. Referral terms and retrieval confidence still run as before. |
+| error, timeout, or anything but the strict JSON reply | Nothing changes: the deterministic result stands, and the trace says the check was unavailable. |
+
+- It runs **after** the keyword check, which has already deferred any
+  listed red flag; a keyword red flag never reaches the model, so the model
+  has no opportunity to overrule it.
+- Its definition of an emergency is **our existing red-flag list**, passed
+  in the prompt. It recognises other wordings and languages for those signs
+  and adds no clinical criteria of its own.
+- It runs **in parallel** with routing and the specialist agents (agent
+  tier, `temperature=0`, timeout `MEDBOT_SAFETY_TIMEOUT_S`, default 10 s),
+  and its result is in before any answer is returned, so it adds little
+  latency.
+- Tested with faked model replies (`tests/test_safety.py`): emergency
+  defers; "clear" can't remove a referral; timeouts, errors, non-JSON and
+  non-boolean replies fall back; an emergency still wins if an agent's
+  model call fails.
+- The eval reports it separately: keyword **red-flag recall** must stay at
+  100% with or without the model, and **paraphrase recall** and **safety
+  false alarms** (live only) measure what the model adds and what it costs.
+
+## Routing: Nemotron first, keywords as fallback, referrals always
+
+1. **Nemotron router** (`NEMOTRON_ROUTER_MODEL`, `temperature=0`): returns
+   strict JSON `{"organs": [...], "reason": "..."}`. Any name not in
+   `agents/registry.py`, or any malformed reply, rejects the whole reply.
+   The reason is shown in the UI's pipeline trace.
+2. **Keyword fallback** on error, timeout (`MEDBOT_ROUTER_TIMEOUT_S`) or an
+   invalid reply; also in mock mode, or with `MEDBOT_ROUTER=keyword`.
+3. **Referral safety net**, whichever router ran: every organ whose
+   referral term appears in the question is consulted, so its referral rule
+   always runs. The router can add agents, never hide a referral. This
+   also closed a gap in the original keyword-only design, where 7 referral
+   terms (e.g. *DKA*, *varices*, *transient ischemic attack*) weren't
+   routing keywords, so their referral rule never ran; the question got
+   "please clarify" instead of a referral (eval cases `referral-07..09`).
+
+`python -m eval.run --compare-routers` runs the eval with both routers and
+lists every case where they disagree.
+
 ## Architecture
 
 ```mermaid
 flowchart TD
     Q[Question + optional patient values] --> RF{Global red-flag check<br/>code}
     RF -- red flag --> URG[Urgent referral answer<br/>no agents, no model call]
-    RF -- clear --> RT{Routing}
-    RT -- keyword match --> AG
-    RT -- no keyword --> MR[Nemotron router call<br/>agent tier] --> AG
-    RT -- nothing fits --> CL[Ask the user to clarify]
+    RF -- clear --> SC[One-way Nemotron safety check<br/>agent tier, in parallel<br/>can only add a deferral]
+    RF -- clear --> MR[Nemotron router<br/>strict JSON: organs + reason<br/>validated against registry]
+    SC -- emergency --> URG2[Urgent referral answer<br/>agents' answers discarded]
+    MR -- error / invalid --> KW[Keyword routing<br/>fallback, code]
+    MR --> NET[Referral safety net, code:<br/>add every organ whose<br/>referral term appears]
+    KW --> NET
+    NET --> AG
+    NET -- no organ --> CL[Ask the user to clarify]
 
     subgraph AG[Specialist agents, in parallel]
         direction TB
@@ -79,21 +182,24 @@ flowchart TD
         T1 --> N1[Nemotron agent-tier answer<br/>from excerpts + tool output only]
     end
 
-    AG --> AGG{Any red-flag or<br/>referral deferral?}
+    AG --> AGG{Safety check: emergency?<br/>Any red-flag or<br/>referral deferral?}
+    SC -. result joins here .-> AGG
     AGG -- yes --> DEF[Whole answer defers<br/>to clinician review]
     AGG -- no --> SYN[Nemotron orchestrator-tier synthesis<br/>keeps citations, adds no new claims]
     SYN --> OUT[Final answer + deterministic<br/>risk-tool block with disclaimer]
 
     classDef code fill:#eef,stroke:#557;
     classDef model fill:#efe,stroke:#4f7d00;
-    class RF,G1,T1,AGG code;
-    class MR,N1,SYN model;
+    class RF,G1,T1,AGG,KW,NET code;
+    class MR,N1,SYN,SC model;
 ```
 
 | Path | Role |
 | --- | --- |
 | `orchestrator/client.py` | The **only** module that calls a model: Nebius Token Factory via its OpenAI-compatible API. Records model, tier, latency and tokens per call. |
 | `orchestrator/router.py` | Red-flag check, routing, parallel agents, aggregation rules, synthesis |
+| `orchestrator/safety.py` | One-way Nemotron safety check: can add an emergency deferral, never remove one |
+| `eval/` | Behaviour eval: `cases.jsonl` (expected agents / deferral / tool, no expected answers) and `python -m eval.run` |
 | `agents/specialist.py`, `agents/registry.py` | One generic agent class, configured per organ (keywords, referral terms, scope) |
 | `rag/` | Curated corpora (`corpus/`), chunking + FAISS index (`ingest.py`), retrieval, threshold calibration |
 | `guardrails/checks.py` | Deterministic red flags, referral terms, retrieval confidence |
@@ -107,7 +213,8 @@ flowchart TD
 | Role | Configured by | Default model ID | Calls per question |
 | --- | --- | --- | --- |
 | **Orchestrator** — synthesizes the agents' answers into one response | `NEMOTRON_ORCHESTRATOR_MODEL` | `nvidia/nemotron-3-ultra-253b-a15b` (Ultra tier) | 1, only when at least one agent answered |
-| **Specialist agents** — answer from retrieved excerpts; also the fallback router | `NEMOTRON_AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` (Super tier) | 1 per consulted agent (run in parallel) + 1 if keyword routing fails |
+| **Router** — picks the specialist agents, returns strict JSON with a one-line reason | `NEMOTRON_ROUTER_MODEL` | same as the agent model until benchmarked | 1 |
+| **Specialist agents** — answer from retrieved excerpts; also the one-way safety check | `NEMOTRON_AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` (Super tier) | 1 per consulted agent (run in parallel) + 1 safety check |
 
 > **Model IDs to confirm.** The defaults above are what the code is
 > configured with today; the Ultra ID has not yet been confirmed against
@@ -209,7 +316,10 @@ All tests run offline (`tests/conftest.py` sets `MEDBOT_MOCK_LLM=1`).
 
 | File | Covers |
 | --- | --- |
-| `test_guardrails.py` | Red flags, word-boundary keyword matching, referral terms, retrieval confidence |
+| `test_guardrails.py` | Red flags (English, Hindi, Hinglish, spelling variants), word-boundary keyword matching, referral terms, retrieval confidence |
+| `test_router.py` | Nemotron router: strict JSON validated against the registry, keyword fallback on failure, referral safety net |
+| `test_safety.py` | One-way safety check: adds deferrals only, falls back on error/timeout/bad JSON |
+| `test_eval.py` | Eval case file is well-formed; harness scores a known case |
 | `test_retrieval.py` | Each corpus retrieves the right section for representative questions |
 | `test_orchestrator.py` | Routing, parallel agents, aggregation and deferral rules |
 | `test_calculators.py` | eGFR and FIB-4 against hand-computed values from the published formulas, band edges, invalid/missing inputs, guardrails blocking the tools |
@@ -287,8 +397,10 @@ reproduces these numbers exactly (tested).
   embedding backend is written but untested.
 - Questions with little word overlap (e.g. "when to start a statin") can
   fall under the confidence threshold and defer — safe, but a miss.
-- Keyword routing is simple; ambiguous words can pull in an extra agent
-  (which then defers quietly if it has no grounding).
+- The Nemotron router is tested with faked replies only until live access
+  works. Its fallback, keyword routing, is simple: ambiguous words can pull
+  in an extra agent, and plurals are missed ("kidneys" doesn't match
+  "kidney"; eval case `multi-03`).
 - Corpora are short curated excerpts, not full guidelines, and some sources
   are dated (NIDDK CKD page last reviewed 2016) — noted in each file.
 - The cardiac model comes from a small 1980s referral population and is
@@ -298,6 +410,11 @@ reproduces these numbers exactly (tested).
   separately say that a requested risk tool was skipped (the agent card does).
 - All agents share one model setting; per-agent model choice isn't
   configurable yet.
+- The one-way safety check is tested with faked replies only until live
+  access works; its paraphrase recall and false-alarm rate are unmeasured.
+  Its false alarms make answers defer more often (safe, but a cost).
+- Hindi/Hinglish red-flag phrases were translated for this project and
+  need native-speaker clinical review (see `guardrails/README.md`).
 - Not a medical device; no clinical validation of the system as a whole.
 
 ## Feedback on Nebius & NVIDIA tools

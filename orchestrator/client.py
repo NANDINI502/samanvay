@@ -21,6 +21,9 @@ NEBIUS_API_KEY = os.environ.get("NEBIUS_API_KEY")
 
 ORCHESTRATOR_MODEL = os.environ.get("NEMOTRON_ORCHESTRATOR_MODEL", "nvidia/nemotron-3-ultra-253b-a15b")
 AGENT_MODEL = os.environ.get("NEMOTRON_AGENT_MODEL", "nvidia/nemotron-3-super-120b-a12b")
+# Router: a short strict-JSON classification, so the cheapest tier that routes
+# correctly is the goal; defaults to the agent model until benchmarked.
+ROUTER_MODEL = os.environ.get("NEMOTRON_ROUTER_MODEL") or AGENT_MODEL
 
 
 @dataclass
@@ -62,7 +65,8 @@ def _mock_reply(messages: list[dict], model: str) -> ChatResult:
     return ChatResult(text=f"[MOCK {model}] Would answer from: {preview}...", model=model, mock=True)
 
 
-def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_tokens: int = 800) -> ChatResult:
+def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_tokens: int = 800,
+         timeout: float | None = None) -> ChatResult:
     """Single call against a Nebius Token Factory model.
 
     `messages` follows the standard OpenAI chat format:
@@ -80,6 +84,7 @@ def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_toke
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,
+        **({"timeout": timeout} if timeout is not None else {}),
     )
     latency = time.perf_counter() - start
     text = response.choices[0].message.content or ""
@@ -109,4 +114,10 @@ def chat_as_orchestrator(messages: list[dict], **kwargs) -> ChatResult:
 def chat_as_agent(messages: list[dict], **kwargs) -> ChatResult:
     result = chat(messages, model=AGENT_MODEL, **kwargs)
     result.role = "agent"
+    return result
+
+
+def chat_as_router(messages: list[dict], **kwargs) -> ChatResult:
+    result = chat(messages, model=ROUTER_MODEL, **kwargs)
+    result.role = "router"
     return result

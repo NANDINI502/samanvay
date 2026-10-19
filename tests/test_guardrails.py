@@ -1,4 +1,9 @@
-from guardrails.checks import check_red_flags, find_keyword, run_guardrails
+from pathlib import Path
+
+from guardrails.checks import (
+    GLOBAL_RED_FLAGS, TRANSLATED_RED_FLAGS, check_red_flags, find_keyword, run_guardrails,
+)
+from orchestrator.router import handle_query
 from rag.retrieve import retrieve
 
 
@@ -34,3 +39,54 @@ def test_well_covered_query_allowed():
 def test_red_flag_variants():
     for q in ["sudden facial droop and slurred speech", "she is vomiting blood", "he can't breathe"]:
         assert not check_red_flags(q).allowed, q
+
+
+def test_every_translation_maps_to_an_existing_english_red_flag():
+    assert set(TRANSLATED_RED_FLAGS) <= set(GLOBAL_RED_FLAGS)
+    for langs in TRANSLATED_RED_FLAGS.values():
+        assert set(langs) == {"hi", "hinglish"} and langs["hi"] and langs["hinglish"]
+
+
+def test_every_translated_phrase_fires_in_a_sentence():
+    for english, langs in TRANSLATED_RED_FLAGS.items():
+        for phrase in langs["hi"] + langs["hinglish"]:
+            q = f"मरीज़ को {phrase.rstrip('*')} है" if phrase in langs["hi"] else f"patient ko {phrase.rstrip('*')} hai"
+            g = check_red_flags(q)
+            assert not g.allowed and g.kind == "red_flag" and g.flag == english, (phrase, g)
+
+
+def test_translated_red_flags_are_reviewed_in_readme():
+    readme = (Path(__file__).resolve().parents[1] / "guardrails" / "README.md").read_text(encoding="utf-8")
+    for english, langs in TRANSLATED_RED_FLAGS.items():
+        for phrase in [english] + langs["hi"] + langs["hinglish"]:
+            assert phrase in readme, phrase
+
+
+def test_hindi_spelling_variants():
+    # chandrabindu vs anusvara, with and without nukta
+    for q in ["मरीज़ को साँस नहीं आ रही", "मरीज को सांस नहीं आ रही", "खून की उल्टी", "ख़ून की उल्टी"]:
+        assert not check_red_flags(q).allowed, q
+
+
+def test_hinglish_spelling_variants():
+    for q in ["Patient ko seene mein dard hai", "patient ko sine me dard", "chaati main dard ho raha",
+              "sans nahin aa rahi", "Dadi behoshi mein hai", "KHUN KI ULTI hui", "haath me kamjori"]:
+        assert not check_red_flags(q).allowed, q
+
+
+def test_hinglish_red_flag_beats_routing_keyword():
+    for q in ["Sugar patient behosh ho gaya", "BP ke patient ko seene mein dard hai"]:
+        r = handle_query(q)
+        assert r.deferred and r.routing_method == "red_flag" and r.agents_consulted == [], q
+
+
+def test_english_matching_unchanged_by_hinglish_spellings():
+    # "me" -> "mein" etc. applies only to Hinglish matching
+    assert check_red_flags("tell me about blood pressure").allowed
+    assert find_keyword("tell me", ["mein"]) is None
+
+
+def test_prefix_keyword():
+    assert find_keyword("behoshi", ["behosh*"]) == "behosh*"
+    assert find_keyword("behoshi", ["behosh"]) is None
+    assert find_keyword("abehosh", ["behosh*"]) is None

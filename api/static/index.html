@@ -99,6 +99,7 @@
   .trace .step { font-weight: 600; font-size: 13.5px; }
   .trace .who { font-size: 12.5px; color: var(--muted); grid-column: 1; overflow-wrap: anywhere; }
   .trace .who code { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .trace .who .detail { display: block; margin-top: 2px; color: var(--text); }
   .trace .stats { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-family: var(--mono); font-size: 12px;
                   color: var(--muted); white-space: nowrap; align-self: center; }
   @media (max-width: 480px) {
@@ -130,7 +131,8 @@
   <div class="wrap">
     <h1>MedBot Orchestrator</h1>
     <span id="mode" class="badge b-warn">connecting…</span>
-    <span class="tagline">Multi-agent clinical decision support on Nebius Token Factory + NVIDIA Nemotron.</span>
+    <span class="tagline">Clinical decision support designed for health workers and doctors in Indian primary health centres.
+      Grounded in the WHO PEN protocol for primary health care in low-resource settings. Runs on Nebius Token Factory + NVIDIA Nemotron.</span>
     <span class="models" id="models"></span>
   </div>
 </header>
@@ -170,7 +172,10 @@
 </main>
 
 <footer class="wrap">
-  Hackathon prototype — not a medical device. Guideline answers are grounded in cited WHO/NIH excerpts. eGFR
+  Hackathon prototype — not a medical device, and not deployed in any health centre. Core protocol:
+  <a href="https://www.afro.who.int/sites/default/files/2017-06/9789241506557_eng.pdf" target="_blank" rel="noopener">WHO
+  PEN — Package of Essential Noncommunicable Disease Interventions for Primary Health Care in Low-Resource Settings</a>.
+  Guideline answers are grounded in cited WHO/NIH excerpts. eGFR
   (CKD-EPI 2021) and FIB-4 are published equations; the cardiac model is trained on a small 1988 UCI research
   dataset (see DATASETS.md).
 </footer>
@@ -389,13 +394,31 @@ function tokensText(c) {
   return c.mock ? "tokens n/a (mock)" : "tokens not reported";
 }
 
-function modelStep(step, c) {
-  const tier = c.role === "orchestrator" ? "Orchestrator tier" : "Agent tier";
+const TIERS = { orchestrator: "Orchestrator tier", agent: "Agent tier", router: "Router tier" };
+
+function modelStep(step, c, detail) {
+  const tier = TIERS[c.role] || "Agent tier";
   return el("li", {},
     el("span", { class: "step" }, step + " ", el("span", { class: "badge b-nv", text: "Nemotron" }),
        c.mock ? el("span", { class: "badge b-mock", text: "mock" }) : null),
-    el("span", { class: "who" }, `${tier}: `, el("code", { text: c.model })),
+    el("span", { class: "who" }, `${tier}: `, el("code", { text: c.model }),
+       detail ? el("span", { class: "detail", text: detail }) : null),
     el("span", { class: "stats" }, c.mock ? "no network call" : `${c.latency_ms ?? "?"} ms`, el("br"), tokensText(c)));
+}
+
+const SAFETY_TEXT = {
+  emergency: s => `Possible emergency${s.sign ? ` (${s.sign})` : ""} — answer deferred as urgent.`,
+  clear: () => "No emergency sign found — nothing changed.",
+  unavailable: s => `Check unavailable (${s.reason}) — keyword result stands.`,
+  skipped: s => `Skipped (${s.reason}).`,
+};
+
+function safetyStep(d, calls) {
+  const s = d.safety;
+  if (!s) return null;
+  const text = (SAFETY_TEXT[s.status] || (() => s.status))(s) + " Can only add a deferral, never remove one.";
+  const call = calls.find(c => c.step === "Safety check");
+  return call ? modelStep("1b. Safety check", call, text) : codeStep("1b. Safety check", text);
 }
 
 function codeStep(step, what) {
@@ -411,10 +434,13 @@ function traceList(d) {
   ol.append(codeStep("1. Red-flag check", d.routing_method === "red_flag"
     ? "Emergency symptom found — answer stopped here, no agents, no model call." : "No global red flag."));
   if (d.routing_method === "red_flag") return ol;
+  const safety = safetyStep(d, calls);
+  if (safety) ol.append(safety);
   const routingCall = calls.find(c => c.step === "Routing");
-  if (routingCall) ol.append(modelStep("2. Routing", routingCall));
-  else ol.append(codeStep("2. Routing", d.routing_method === "keyword"
-    ? `Keyword match → ${d.agents_consulted.join(", ")}` : "No agent matched — asked the user to clarify."));
+  const routed = d.agents_consulted.length ? `→ ${d.agents_consulted.join(", ")}` : "→ no agent; asked the user to clarify";
+  const why = `${routed}. Reason: ${d.routing_reason || "n/a"}`;
+  if (routingCall) ol.append(modelStep(d.routing_method === "keyword_fallback" ? "2. Routing (fell back to keywords)" : "2. Routing", routingCall, why));
+  else ol.append(codeStep("2. Routing", `Keywords ${why}`));
   for (const a of d.agents) {
     if (a.call) ol.append(modelStep(`3. ${a.display_name} agent`, a.call));
     else ol.append(codeStep(`3. ${a.display_name} agent`,
