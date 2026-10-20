@@ -153,7 +153,11 @@ strict one-way contract:
 1. **Nemotron router** (`NEMOTRON_ROUTER_MODEL`, `temperature=0`): returns
    strict JSON `{"organs": [...], "reason": "..."}`. Any name not in
    `agents/registry.py`, or any malformed reply, rejects the whole reply.
-   The reason is shown in the UI's pipeline trace.
+   The reason is shown in the UI's pipeline trace. Keyword matches the
+   router left out are added to its pick: live, Nemotron consistently
+   dropped Cardiac from *"Diabetic patient with eGFR 50 — what blood
+   pressure threshold applies?"* (eval case `multi-01`), while keywords
+   miss what the router catches (plurals, paraphrases; `multi-03`).
 2. **Keyword fallback** on error, timeout (`MEDBOT_ROUTER_TIMEOUT_S`) or an
    invalid reply; also in mock mode, or with `MEDBOT_ROUTER=keyword`.
 3. **Referral safety net**, whichever router ran: every organ whose
@@ -220,7 +224,7 @@ flowchart TD
 
 | Role | Configured by | Default model ID | Calls per question |
 | --- | --- | --- | --- |
-| **Orchestrator** — synthesizes the agents' answers into one response | `NEMOTRON_ORCHESTRATOR_MODEL` | `nvidia/nemotron-3-ultra-253b-a15b` (Ultra tier) | 1, only when at least one agent answered |
+| **Orchestrator** — synthesizes the agents' answers into one response | `NEMOTRON_ORCHESTRATOR_MODEL` | `nvidia/Nemotron-3-Ultra-550b-a55b` (Ultra tier) | 1, only when at least one agent answered |
 | **Router** — picks the specialist agents, returns strict JSON with a one-line reason | `NEMOTRON_ROUTER_MODEL` | same as the agent model until benchmarked | 1 |
 | **Specialist agents** — answer from retrieved excerpts; also the one-way safety check | `NEMOTRON_AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` (Super tier) | 1 per consulted agent (run in parallel) + 1 safety check |
 

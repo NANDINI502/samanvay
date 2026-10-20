@@ -48,6 +48,7 @@ def test_nemotron_route_used_with_reason(monkeypatch):
     organs, method, reason = route("Does high blood pressure affect the kidneys?")
     assert (organs, method, reason) == (["cardiac", "renal"], "nemotron", "blood pressure and kidneys")
     assert seen[0]["temperature"] == 0 and seen[0]["timeout"] == router.ROUTER_TIMEOUT_S
+    assert seen[0]["thinking"] is False  # live: reasoning used up the 120-token budget, empty reply
 
 
 @pytest.mark.parametrize("reply,exc", [
@@ -92,11 +93,20 @@ def test_referral_net_catches_terms_keyword_routing_missed(query, organ):
 
 
 def test_router_cannot_drop_a_referral(monkeypatch):
-    # the model picks only cardiac; neuro's referral rule must still run
+    # the model picks only cardiac and no neuro routing keyword appears;
+    # neuro's referral rule must still run
     _fake_router(monkeypatch, '{"organs": ["cardiac"], "reason": "cholesterol follow-up"}')
-    r = handle_query("Patient with known stroke history and high cholesterol, what CVD follow-up?")
+    r = handle_query("Patient with a past transient ischemic attack and high cholesterol, what CVD follow-up?")
     assert "neuro" in r.agents_consulted and r.deferred
     assert "added so their referral rule runs: neuro" in r.routing_reason
+
+
+def test_keyword_matches_the_router_missed_are_added(monkeypatch):
+    # live, Nemotron dropped cardiac here (eval multi-01); the keyword match puts it back
+    _fake_router(monkeypatch, '{"organs": ["endocrine", "renal"], "reason": "diabetes and eGFR"}')
+    organs, method, reason = route("Diabetic patient with eGFR 50 — what blood pressure threshold applies?")
+    assert method == "nemotron" and organs[:2] == ["endocrine", "renal"] and "cardiac" in organs
+    assert "added by keyword match: cardiac" in reason
 
 
 def test_empty_route_asks_to_clarify(monkeypatch):

@@ -121,10 +121,11 @@ CLINICIAN_SYNTHESIS_PROMPT = (
     "answers below into one clear response for a clinician. Do not add any "
     "medical claim the agents did not make. Where agents' answers interact "
     "(e.g. diabetes changing a blood-pressure threshold), point that out only "
-    "if both answers support it. Keep the sources and end with a reminder "
-    "that this supports, and does not replace, clinical judgment. Report any "
-    "risk-tool result (calculator value or model estimate) separately from "
-    "guideline rules, with its disclaimer."
+    "if both answers support it. Report any risk-tool result (calculator "
+    "value or model estimate) separately from guideline rules, with its "
+    "disclaimer. Then write one line 'Sources:' listing the source URLs "
+    "exactly as given (not their titles), and end with a reminder that this "
+    "supports, and does not replace, clinical judgment."
 )
 
 

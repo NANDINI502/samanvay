@@ -22,7 +22,7 @@ AGENT_CONFIGS: dict[str, dict] = {
             "hypertension", "cholesterol", "statin", "angina",
         ],
         "referral_keywords": ["angina", "200/120", "bp >200", "bp>200", "cholesterol >8"],
-        "scope": "CVD risk bands, hypertension and cholesterol protocol rules from WHO PEN.",
+        "scope": "CVD risk bands, blood pressure (hypertension) thresholds for starting treatment, and cholesterol protocol rules from WHO PEN.",
         "risk_model": True,
     },
     "renal": {

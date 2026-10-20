@@ -71,7 +71,7 @@ def check(query: str) -> SafetyResult:
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": query}]
     call = None
     try:
-        result = chat_as_agent(messages, max_tokens=120, temperature=0, timeout=TIMEOUT_S)
+        result = chat_as_agent(messages, max_tokens=120, temperature=0, timeout=TIMEOUT_S, thinking=False)
         call = result.trace("Safety check")
         emergency, sign, reason = parse(result.text)
     except Exception as e:  # fail open to the deterministic result, which already ran

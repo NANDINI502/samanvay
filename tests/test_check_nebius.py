@@ -73,3 +73,25 @@ def check_is(model_id):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.is_nemotron(model_id)
+
+
+@pytest.mark.parametrize("thinking,expected", [
+    (True, {}),
+    (False, {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}),
+])
+def test_chat_thinking_switch(monkeypatch, thinking, expected):
+    sent = {}
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            sent.update(kwargs)
+            raise RuntimeError("stop after recording the request")
+
+    class FakeClient:
+        chat = type("Chat", (), {"completions": FakeCompletions()})()
+
+    monkeypatch.setattr(client, "mock_enabled", lambda: False)
+    monkeypatch.setattr(client, "_client", lambda: FakeClient())
+    with pytest.raises(RuntimeError):
+        client.chat([{"role": "user", "content": "hi"}], model="m", thinking=thinking)
+    assert {k: v for k, v in sent.items() if k == "extra_body"} == expected

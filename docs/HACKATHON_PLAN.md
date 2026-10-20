@@ -15,12 +15,12 @@ Work one step at a time and stop for the owner's OK after each.
 | E | Nemotron router with keyword fallback (`orchestrator/router.py`) | Done (mock mode) |
 | F | Health-worker mode in the UI (see below) | Done (mock mode); Hindi/Hinglish model answers untested until live |
 | — | Guardrail fix: "dil ka daura" / "दिल का दौरा" labelled "seizure"; map to "chest pain" | Done |
-| G | Live Nebius check | Blocked: needs a working Nebius key |
-| H | Native tool calling | Blocked: needs key |
-| I | Model-tier benchmark | Blocked: needs key |
-| J | Nebius embeddings | Blocked: needs key |
-| K | Tavily fallback | Blocked: needs key |
-| L | Final live run, README, DEPLOY.md, commit | Blocked: needs key |
+| G | Live Nebius check | Done 2026-10-20: new key works; Ultra ID fixed; reasoning off for router/safety; keyword matches added to Nemotron routing; live eval `eval/results/20261020T070006Z.json` (all metrics 100%) |
+| H | Native tool calling | Next (key works) |
+| I | Model-tier benchmark | Next (key works) |
+| J | Nebius embeddings | Next (key works) |
+| K | Tavily fallback | Next (key works) |
+| L | Final live run, README, DEPLOY.md, commit | Next (key works) |
 
 ## Current session order
 

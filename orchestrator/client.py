@@ -19,7 +19,7 @@ load_dotenv()
 NEBIUS_BASE_URL = os.environ.get("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
 NEBIUS_API_KEY = os.environ.get("NEBIUS_API_KEY")
 
-ORCHESTRATOR_MODEL = os.environ.get("NEMOTRON_ORCHESTRATOR_MODEL", "nvidia/nemotron-3-ultra-253b-a15b")
+ORCHESTRATOR_MODEL = os.environ.get("NEMOTRON_ORCHESTRATOR_MODEL", "nvidia/Nemotron-3-Ultra-550b-a55b")
 AGENT_MODEL = os.environ.get("NEMOTRON_AGENT_MODEL", "nvidia/nemotron-3-super-120b-a12b")
 # Router: a short strict-JSON classification, so the cheapest tier that routes
 # correctly is the goal; defaults to the agent model until benchmarked.
@@ -66,11 +66,15 @@ def _mock_reply(messages: list[dict], model: str) -> ChatResult:
 
 
 def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_tokens: int = 800,
-         timeout: float | None = None) -> ChatResult:
+         timeout: float | None = None, thinking: bool = True) -> ChatResult:
     """Single call against a Nebius Token Factory model.
 
     `messages` follows the standard OpenAI chat format:
     [{"role": "system"|"user"|"assistant", "content": "..."}]
+    Nemotron 3 reasons before answering, and the reasoning counts against
+    `max_tokens`. `thinking=False` turns it off (chat_template_kwargs,
+    honoured by Token Factory) for short strict-JSON calls, where a small
+    budget would otherwise end before any answer is written.
     Set MEDBOT_MOCK_LLM=1 to run the full pipeline offline with stub replies.
     """
     start = time.perf_counter()
@@ -85,6 +89,7 @@ def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_toke
         temperature=temperature,
         max_tokens=max_tokens,
         **({"timeout": timeout} if timeout is not None else {}),
+        **({} if thinking else {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}),
     )
     latency = time.perf_counter() - start
     text = response.choices[0].message.content or ""

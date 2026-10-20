@@ -39,6 +39,7 @@ def test_emergency_adds_deferral_and_skips_synthesis(monkeypatch):
     assert not any(c["step"] == "Synthesis" for c in r.calls)
     assert r.calls[0]["step"] == "Safety check"
     assert seen[0]["timeout"] == safety.TIMEOUT_S
+    assert seen[0]["thinking"] is False  # live: reasoning used up the 120-token budget, empty reply
 
 
 def test_emergency_on_an_unroutable_query_still_defers(monkeypatch):

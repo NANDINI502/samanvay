@@ -12,7 +12,11 @@ Routing, in order:
      strict JSON {"organs": [...], "reason": "..."} validated against the
      registry. On error, timeout or an invalid reply -> keyword routing
      (word-boundary match on each organ's routing_keywords). Mock mode and
-     MEDBOT_ROUTER=keyword use keyword routing directly.
+     MEDBOT_ROUTER=keyword use keyword routing directly. When the Nemotron
+     router succeeds, keyword matches it left out are added too: live, it
+     consistently dropped cardiac from "diabetic patient with eGFR 50, what
+     blood pressure threshold applies?" (eval multi-01), while keywords miss
+     what it catches (plurals, paraphrases; multi-03).
   3. Referral safety net, whichever router ran: every organ whose referral
      term appears in the query is consulted too, so its referral rule
      always runs. Routing can add agents here, never remove them.
@@ -65,8 +69,9 @@ ROUTER_PROMPT = (
     "You route clinical questions to specialist agents. The question may be in English, "
     "Hindi or Hinglish. Agents:\n"
     + "\n".join(f"- {o}: {cfg['scope']}" for o, cfg in AGENT_CONFIGS.items())
-    + "\nPick every agent the question needs (several if it spans organs), or none if no "
-    "agent fits (for example, not a clinical question). Reply with ONLY this JSON, nothing "
+    + "\nPick every agent whose scope covers any part of the question (several if it spans "
+    "organs or mentions several conditions), or none if no agent fits (for example, not a "
+    "clinical question). Reply with ONLY this JSON, nothing "
     'else: {"organs": ["<agent name>", ...], "reason": "<one short line>"}'
 )
 
@@ -105,7 +110,7 @@ def parse_route(text: str) -> tuple[list[str], str]:
 def model_route(query: str, calls: list[dict] | None = None) -> tuple[list[str], str]:
     """Nemotron router. Raises on any failure; the caller falls back."""
     messages = [{"role": "system", "content": ROUTER_PROMPT}, {"role": "user", "content": query}]
-    result = chat_as_router(messages, max_tokens=120, temperature=0, timeout=ROUTER_TIMEOUT_S)
+    result = chat_as_router(messages, max_tokens=120, temperature=0, timeout=ROUTER_TIMEOUT_S, thinking=False)
     if calls is not None:
         calls.append(result.trace("Routing"))
     return parse_route(result.text)
@@ -121,6 +126,11 @@ def route(query: str, calls: list[dict] | None = None) -> tuple[list[str], str, 
         try:
             organs, reason = model_route(query, calls)
             method = "nemotron"
+            missed = [o for o in keyword_route(query) if o not in organs]
+            if missed:
+                organs = organs + missed
+                reason += "; added by keyword match: " + ", ".join(
+                    f"{o} ('{find_keyword(query, AGENT_CONFIGS[o]['routing_keywords'])}')" for o in missed)
         except Exception as e:
             organs = keyword_route(query)
             method = "keyword_fallback"
