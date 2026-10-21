@@ -2,301 +2,935 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2E3A8C">
 <title>MedBot Orchestrator</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%232457c5%22/%3E%3Cpath d=%22M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z%22 fill=%22white%22/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%229%22 fill=%22%232E3A8C%22/%3E%3Cpath d=%22M13.5 7h5v6.5H25v5h-6.5V25h-5v-6.5H7v-5h6.5z%22 fill=%22%23F6F3EC%22/%3E%3C/svg%3E">
+<!-- Type: Anek (headings) and Mukta (text) both come from Ek Type, Mumbai, and ship matched Latin + Devanagari,
+     so English, हिन्दी and Hinglish read as one voice. System fonts take over if Google Fonts can't load. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@600;700&family=Anek+Latin:wght@600;700&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ============ Design tokens ============
+     Brand = indigo: calm and trustworthy, and distinct from every status colour.
+     Status = clinical triage colours only: red = emergency, amber = refer, green = guidance.
+     Organ pastels are identity colours only; an organ's answer status is always a badge with an icon and a label.
+     Colour is never the only signal. Dark tokens apply for the system setting unless the user picked light,
+     and always when the user picked dark (Settings). */
   :root {
-    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2430; --muted: #5d6878; --line: #dde2e8;
-    --accent: #2457c5; --accent-soft: #e8eefb;
-    --ok: #1d7a46; --ok-soft: #e4f4ea; --warn: #9a5b00; --warn-soft: #fdf1dc;
-    --bad: #b42318; --bad-soft: #fdeceb; --mock: #7a4dbf; --mock-soft: #f1eafb;
-    --nv: #4f7d00; --nv-soft: #eef6e0;
-    --radius: 10px; --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+    color-scheme: light;
+    --paper: #F6F3EC;  --surface: #FFFFFF; --sunk: #F1EDE4; --line: #E6E0D4; --line-2: #D6CFC0;
+    --ink: #1B1F3B;    --ink-2: #474C68;   --muted: #646981;
+    --brand: #2E3A8C;  --brand-hover: #24306F; --brand-soft: #E8EAF7; --on-brand: #FFFFFF; --bar: #26306F;
+    --red: #B42318;    --red-soft: #FDECEA;
+    --amber: #92400E;  --amber-soft: #FEF3C7; --amber-zone: #D99A2B;
+    --green: #166534;  --green-soft: #E3F4E8;
+    --nv: #4A7A00;     --nv-soft: #EDF5DC;
+    --mock: #6B4FBF;   --mock-soft: #EEE9FA;
+    --heart-bg: #FCE7EC; --heart-fg: #9F1239;  --kidney-bg: #E2EDFB; --kidney-fg: #1E4F8A;
+    --liver-bg: #FDEBDA; --liver-fg: #9A3D0B;  --endo-bg: #EFE7FA;   --endo-fg: #5B2B95;
+    --lungs-bg: #DCF2EF; --lungs-fg: #0F5F58;  --brain-bg: #EAE5FB;  --brain-fg: #4C2A9E;
+    --ill-sky: #EAF0F7; --ill-sun: #F5C66B; --ill-hill: #DCE8CF; --ill-hill-2: #CBDDB8; --ill-wall: #FFFDF8;
+    --ill-roof: #C9694B; --ill-tree: #7FAE6A; --ill-tree-2: #5E9152; --ill-trunk: #8A6A4B; --ill-line: #3B3F5C; --ill-sign: #2E3A8C;
+    --head: "Anek Latin", "Anek Devanagari", "Mukta", system-ui, sans-serif;
+    --text: "Mukta", "Noto Sans Devanagari", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --r-lg: 18px; --r-md: 14px; --r-sm: 10px;
+    --shadow: 0 1px 2px rgba(27,31,59,.04), 0 6px 20px -12px rgba(27,31,59,.16);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #12161c; --panel: #1a2029; --text: #e6eaf0; --muted: #9aa5b4; --line: #2c3440;
-      --accent: #7aa2ff; --accent-soft: #1f2a44;
-      --ok: #5fd08f; --ok-soft: #173325; --warn: #f0b54d; --warn-soft: #3a2c12;
-      --bad: #ff8a80; --bad-soft: #3d1a18; --mock: #c3a2ff; --mock-soft: #2c2142;
-      --nv: #9bd341; --nv-soft: #22301a;
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #12142A; --surface: #1A1D38; --sunk: #222645; --line: #2E3358; --line-2: #3B416C;
+      --ink: #ECEDF7; --ink-2: #C3C6DD; --muted: #A2A6C2;
+      --brand: #9AA6FF; --brand-hover: #B4BDFF; --brand-soft: #262C55; --on-brand: #12142A; --bar: #1C2150;
+      --red: #FF8A7E; --red-soft: #3A1A1F; --amber: #F6C25A; --amber-soft: #36290E; --amber-zone: #F6C25A;
+      --green: #6FD69A; --green-soft: #15301F; --nv: #A6D84B; --nv-soft: #22301A; --mock: #C7AEFF; --mock-soft: #2A2448;
+      --heart-bg: #3A1D29; --heart-fg: #FFA3B8; --kidney-bg: #182B48; --kidney-fg: #9CC4F5;
+      --liver-bg: #3A2614; --liver-fg: #FDB27A; --endo-bg: #2C1F45; --endo-fg: #CDB0F5;
+      --lungs-bg: #12302D; --lungs-fg: #7FDCCF; --brain-bg: #261F4A; --brain-fg: #BBA8FA;
+      --ill-sky: #1F2347; --ill-sun: #C9A24E; --ill-hill: #23382A; --ill-hill-2: #1C2E22; --ill-wall: #2C3058;
+      --ill-roof: #8E4C39; --ill-tree: #4D7A43; --ill-tree-2: #3B6334; --ill-trunk: #6B5139; --ill-line: #B8BCDB; --ill-sign: #9AA6FF;
+      --shadow: none;
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #12142A; --surface: #1A1D38; --sunk: #222645; --line: #2E3358; --line-2: #3B416C;
+    --ink: #ECEDF7; --ink-2: #C3C6DD; --muted: #A2A6C2;
+    --brand: #9AA6FF; --brand-hover: #B4BDFF; --brand-soft: #262C55; --on-brand: #12142A; --bar: #1C2150;
+    --red: #FF8A7E; --red-soft: #3A1A1F; --amber: #F6C25A; --amber-soft: #36290E; --amber-zone: #F6C25A;
+    --green: #6FD69A; --green-soft: #15301F; --nv: #A6D84B; --nv-soft: #22301A; --mock: #C7AEFF; --mock-soft: #2A2448;
+    --heart-bg: #3A1D29; --heart-fg: #FFA3B8; --kidney-bg: #182B48; --kidney-fg: #9CC4F5;
+    --liver-bg: #3A2614; --liver-fg: #FDB27A; --endo-bg: #2C1F45; --endo-fg: #CDB0F5;
+    --lungs-bg: #12302D; --lungs-fg: #7FDCCF; --brain-bg: #261F4A; --brain-fg: #BBA8FA;
+    --ill-sky: #1F2347; --ill-sun: #C9A24E; --ill-hill: #23382A; --ill-hill-2: #1C2E22; --ill-wall: #2C3058;
+    --ill-roof: #8E4C39; --ill-tree: #4D7A43; --ill-tree-2: #3B6334; --ill-trunk: #6B5139; --ill-line: #B8BCDB; --ill-sign: #9AA6FF;
+    --shadow: none;
+  }
+
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden;
-         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 1200px; margin: 0 auto; }
-  header { padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
-  header .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
-  h1 { font-size: 19px; margin: 0; }
-  .tagline { color: var(--muted); font-size: 13px; flex-basis: 100%; }
-  .models { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; flex-basis: 100%; }
-  .models code { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
-
-  .banner { max-width: 1200px; margin: 14px auto 0; padding: 0 16px; }
-  .banner > div { display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); color: var(--text);
-                  border: 1px solid var(--warn); border-radius: var(--radius); padding: 10px 14px; font-size: 13.5px; }
-  .banner strong { color: var(--warn); }
-  .banner .icon { font-size: 18px; line-height: 1.2; color: var(--warn); }
-
-  main.wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; padding: 16px; }
-  @media (max-width: 900px) { main.wrap { grid-template-columns: minmax(0, 1fr); } }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; }
-  h2 { font-size: 15px; margin: 0 0 10px; }
-  h3 { font-size: 14px; margin: 0; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16.5px/1.6 var(--text); overflow-x: hidden; }
+  h1, h2, h3, h4 { font-family: var(--head); font-weight: 650; letter-spacing: -.005em; line-height: 1.2; margin: 0; }
   textarea, input, select, button { font: inherit; color: inherit; }
-  textarea { width: 100%; min-height: 84px; resize: vertical; padding: 10px; border: 1px solid var(--line);
-             border-radius: 8px; background: var(--bg); }
-
-  .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 10px 0 16px; }
-  .ex { display: flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid var(--line);
-        background: var(--bg); border-radius: 8px; padding: 8px 10px; cursor: pointer; min-width: 0; }
-  .ex:hover, .ex:focus-visible { border-color: var(--accent); outline: none; }
-  .ex .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-  .ex .q { font-size: 13px; overflow-wrap: anywhere; }
-  .ex .hint { font-size: 11.5px; color: var(--muted); }
-  .t-multi { color: var(--accent); } .t-red { color: var(--bad); } .t-ref { color: var(--warn); }
-  .t-tool { color: var(--ok); } .t-rag { color: var(--muted); }
-
-  button.primary { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 22px;
-                   font-weight: 600; cursor: pointer; }
-  @media (prefers-color-scheme: dark) { button.primary { color: #0d1320; } }
-  button.primary:disabled { opacity: .6; cursor: progress; }
-  button.small { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px;
-                 font-size: 12.5px; cursor: pointer; }
-  .badge { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-  .b-ok { background: var(--ok-soft); color: var(--ok); }
-  .b-warn { background: var(--warn-soft); color: var(--warn); }
-  .b-bad { background: var(--bad-soft); color: var(--bad); }
-  .b-mock { background: var(--mock-soft); color: var(--mock); }
-  .b-live { background: var(--accent-soft); color: var(--accent); }
-  .b-nv { background: var(--nv-soft); color: var(--nv); }
-  .b-code { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
-
-  details.model { border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
-  details.model > summary { padding: 9px 12px; cursor: pointer; font-weight: 600; font-size: 14px; }
-  details.model > summary .kind { font-weight: 500; }
-  details.model .body { padding: 0 12px 12px; }
-  .note { color: var(--muted); font-size: 12.5px; margin: 4px 0 8px; overflow-wrap: anywhere; }
-  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-  .field { min-width: 0; }
-  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
-  .field input, .field select { width: 100%; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px;
-                                background: var(--bg); }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .empty { color: var(--muted); text-align: center; padding: 40px 10px; }
-  .final { border-left: 4px solid var(--accent); }
-  .final.deferred { border-left-color: var(--bad); }
-  .text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; overflow-wrap: anywhere; }
-
-  .trace { list-style: none; margin: 0; padding: 0; }
-  .trace li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0;
-              border-bottom: 1px dashed var(--line); }
-  .trace li:last-child { border-bottom: 0; }
-  .trace .step { font-weight: 600; font-size: 13.5px; }
-  .trace .who { font-size: 12.5px; color: var(--muted); grid-column: 1; overflow-wrap: anywhere; }
-  .trace .who code { font-family: var(--mono); font-size: 12px; color: var(--text); }
-  .trace .who .detail { display: block; margin-top: 2px; color: var(--text); }
-  .trace .stats { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-family: var(--mono); font-size: 12px;
-                  color: var(--muted); white-space: nowrap; align-self: center; }
-  @media (max-width: 480px) {
-    .trace li { grid-template-columns: minmax(0, 1fr); }
-    .trace .stats { grid-column: 1; grid-row: auto; text-align: left; }
-  }
-  .totals { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
-
-  .agent { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 10px; min-width: 0; }
-  .agent .head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px; }
-  .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
-           margin: 10px 0 2px; }
-  ul.src { margin: 4px 0 0; padding-left: 18px; font-size: 13px; overflow-wrap: anywhere; }
-  a { color: var(--accent); }
-  .risk { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 10px; }
-  .bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 6px 0; }
-  .bar > span { display: block; height: 100%; background: var(--accent); }
-  .pct { font-size: 22px; font-weight: 700; }
-  .disclaimer { font-size: 12.5px; font-weight: 600; color: var(--warn); margin-top: 6px; }
-  table.factors { border-collapse: collapse; font-size: 13px; margin-top: 4px; width: 100%; }
-  table.factors td { padding: 2px 6px 2px 0; border-bottom: 1px dashed var(--line); overflow-wrap: anywhere; }
-  table.factors td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
-  .err { color: var(--bad); }
+  a { color: var(--brand); text-underline-offset: 2px; }
   [hidden] { display: none !important; }
-  .modebar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 4px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .seg label { position: relative; padding: 6px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
-               color: var(--muted); background: var(--bg); }
-  .seg label + label { border-left: 1px solid var(--line); }
-  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .seg label:has(input:checked) { background: var(--accent-soft); color: var(--accent); }
-  .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .lang { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
-  .lang select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
-  details.agents > summary { cursor: pointer; font-weight: 600; font-size: 15px; }
-  footer { color: var(--muted); font-size: 12.5px; padding: 0 16px 24px; }
+  :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); }
+  .card-h { display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+  .card-h h2 { font-size: 17px; }
+  .fineprint { font-size: 14px; color: var(--muted); line-height: 1.45; }
+  .textbtn { background: none; border: 0; padding: 0 4px; min-height: 44px; min-width: 44px; color: var(--brand); font-weight: 600; font-size: 15px; cursor: pointer; }
+  .iconbtn { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; color: inherit; }
+
+  /* ============ Top bar ============ */
+  .bar { position: sticky; top: 0; z-index: 20; background: var(--bar); color: #fff; }
+  .bar .in { padding: 0 16px 0 14px; height: 64px; display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; border-radius: 11px; background: #F6F3EC; display: grid; place-items: center; flex: none; }
+  .logo svg { width: 18px; height: 18px; fill: #2E3A8C; }
+  .brandname { display: grid; line-height: 1.15; min-width: 0; }
+  .brandname b { font-family: var(--head); font-weight: 700; font-size: 19px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brandname small { font-size: 12.5px; font-weight: 500; opacity: .82; white-space: nowrap; }
+  .grow { flex: 1; }
+  .status { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: 999px; flex: none;
+            background: rgba(255,255,255,.14); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .s-live { color: #B7F0C8; } .s-mock { color: #DCCFFF; } .s-off { color: #FFB4AB; } .s-wait { color: rgba(255,255,255,.85); }
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); flex: none; }
+  .seg label { position: relative; }
+  .seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .seg label > span { display: inline-grid; place-items: center; min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,.88); }
+  .seg label:has(input:checked) > span { background: #fff; color: #26306F; }
+  .seg label:has(input:focus-visible) > span { outline: 3px solid #fff; outline-offset: 1px; }
+  .seg .short { display: none; }
+  .bar .iconbtn { color: #fff; } .bar .iconbtn:hover { background: rgba(255,255,255,.12); }
+  .bar .iconbtn:focus-visible { outline-color: #fff; }
+
+  /* ============ Shell: rail + columns ============ */
+  .shell { display: grid; grid-template-columns: 76px minmax(0, 1fr); }
+  .rail { position: sticky; top: 64px; height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; gap: 6px;
+          padding: 16px 0; border-right: 1px solid var(--line); background: var(--surface); }
+  .rail button { display: grid; justify-items: center; gap: 2px; width: 64px; min-height: 58px; padding: 6px 0; border: 0; border-radius: 14px;
+                 background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .rail button svg { width: 22px; height: 22px; }
+  .rail button:hover { color: var(--ink); background: var(--sunk); }
+  .rail button[aria-current="page"] { color: var(--brand); background: var(--brand-soft); }
+  .page { padding: 22px 22px 28px; display: grid; gap: 20px; min-width: 0; max-width: 1560px; }
+  .cols { display: grid; grid-template-columns: 320px minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .col { display: grid; gap: 16px; min-width: 0; align-content: start; }
+
+  /* ============ Column 1: who / question / team ============ */
+  .who-card { padding: 16px; display: grid; gap: 10px; }
+  .who-card h2 { font-size: 16px; }
+  .opt { border: 1.5px solid var(--line); border-radius: var(--r-md); }
+  .optl { position: relative; display: block; padding: 12px 12px 12px 44px; min-height: 56px; cursor: pointer; }
+  .optl input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; width: 100%; height: 100%; }
+  .optl::before { content: ""; position: absolute; left: 14px; top: 15px; width: 18px; height: 18px; border-radius: 50%;
+                  border: 2px solid var(--muted); background: var(--surface); box-sizing: border-box; }
+  .opt:has(.optl input:checked) { border-color: var(--brand); background: var(--brand-soft); }
+  .optl:has(input:checked)::before { border: 6px solid var(--brand); }
+  .optl:has(input:focus-visible) { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: var(--r-md); }
+  .opt b { font-weight: 650; font-size: 15.5px; line-height: 1.3; display: block; }
+  .opt .sub { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+  .opt > .chips { padding: 0 12px 12px 44px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .chip span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 13px; border-radius: 999px; border: 1.5px solid var(--line-2);
+               background: var(--surface); font-size: 14.5px; font-weight: 600; }
+  .chip:has(input:checked) span { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+  .chip:has(input:focus-visible) span { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+  .q-card { padding: 16px; display: grid; gap: 10px; }
+  .q-card label.ql { font-family: var(--head); font-weight: 650; font-size: 16px; }
+  .qbox { position: relative; }
+  textarea { width: 100%; min-height: 128px; resize: vertical; border: 1.5px solid var(--line-2); border-radius: var(--r-md);
+             background: var(--paper); padding: 12px 14px 34px; outline: none; font-size: 16.5px; line-height: 1.5; display: block; }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+  .qfoot { position: absolute; left: 8px; right: 10px; bottom: 4px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+  .qfoot > * { pointer-events: auto; }
+  .mic { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: var(--brand); cursor: pointer; display: grid; place-items: center; }
+  .mic:hover { background: var(--brand-soft); }
+  .mic[aria-pressed="true"] { background: var(--red); color: #fff; animation: rec 1.2s ease-in-out infinite; }
+  @keyframes rec { 50% { box-shadow: 0 0 0 6px var(--red-soft); } }
+  .count { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+  .primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; white-space: nowrap;
+             border: 0; border-radius: var(--r-md); background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 16.5px; cursor: pointer; }
+  .primary:hover { background: var(--brand-hover); }
+  .primary:disabled { opacity: .6; cursor: progress; }
+  .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 0 10px; border-radius: var(--r-md);
+               border: 1.5px solid var(--line-2); background: var(--surface); font-weight: 600; font-size: 14.5px; cursor: pointer; white-space: nowrap; }
+  .secondary:hover { border-color: var(--brand); color: var(--brand); }
+  .badge-n { min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 12.5px; text-align: center; line-height: 20px; }
+  .hint { font-size: 12.5px; color: var(--muted); text-align: right; }
+  .formerr { color: var(--red); font-size: 14.5px; }
+  .formerr:empty { display: none; }
+  .strip { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-md); background: var(--green-soft); color: var(--green);
+           font-size: 14px; line-height: 1.45; }
+  .strip b { color: var(--green); }
+  .strip span span { color: var(--ink-2); }
+
+  .team { padding: 16px; }
+  .team .card-h { margin-bottom: 12px; }
+  .orch { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .orch i { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .orch.busy i { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
+  .tile { position: relative; display: grid; justify-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 16px; text-align: center;
+          background: var(--o-bg); color: var(--o-fg); border: 2px solid transparent; transition: opacity .3s, filter .3s, transform .3s, border-color .3s; }
+  .tile .ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); }
+  .tile .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .tile .nm { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.15; }
+  .tile .ag { font-size: 11.5px; color: var(--ink-2); line-height: 1.1; }
+  .tile .st { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; display: none; place-items: center; color: #fff; }
+  .tile .st svg { width: 12px; height: 12px; stroke-width: 3.2; }
+  .tile.ok .st { display: grid; background: var(--green); } .tile.warn .st { display: grid; background: var(--amber); } .tile.bad .st { display: grid; background: var(--red); }
+  :root[data-theme="dark"] .tile .st { color: #12142A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tile .st { color: #12142A; } }
+  .tile.scan { border-color: var(--brand); transform: translateY(-2px); }
+  .tile.off { opacity: .4; }
+  .team.stopped .tile { filter: grayscale(1); opacity: .45; }
+  .team.stopped { border-color: var(--red); }
+  .t-cardiac { --o-bg: var(--heart-bg); --o-fg: var(--heart-fg); } .t-renal { --o-bg: var(--kidney-bg); --o-fg: var(--kidney-fg); }
+  .t-hepatic { --o-bg: var(--liver-bg); --o-fg: var(--liver-fg); } .t-endocrine { --o-bg: var(--endo-bg); --o-fg: var(--endo-fg); }
+  .t-respiratory { --o-bg: var(--lungs-bg); --o-fg: var(--lungs-fg); } .t-neuro { --o-bg: var(--brain-bg); --o-fg: var(--brain-fg); }
+  .stepper { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; position: relative; }
+  .stepper li { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); line-height: 1.25; position: relative; }
+  .stepper li::before { content: ""; position: absolute; top: 14px; left: -50%; width: 100%; height: 2px; background: var(--line-2); z-index: 0; }
+  .stepper li:first-child::before { display: none; }
+  .stepper .dot { position: relative; z-index: 1; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+                  background: var(--surface); border: 2px solid var(--line-2); color: var(--muted); font-size: 13px; }
+  .stepper .dot svg { width: 15px; height: 15px; stroke-width: 3; }
+  .stepper li.active { color: var(--brand); } .stepper li.active .dot { border-color: var(--brand); color: var(--brand); animation: pulse 1s ease-in-out infinite; }
+  .stepper li.done { color: var(--green); } .stepper li.done .dot { background: var(--green); border-color: var(--green); color: var(--surface); }
+  .stepper li.done::before, .stepper li.active::before { background: var(--green); }
+  .stepper li.halt { color: var(--red); } .stepper li.halt .dot { background: var(--red); border-color: var(--red); color: var(--surface); }
+  .stepper li.skip .dot { border-style: dashed; }
+  .cap { margin-top: 12px; font-size: 14px; color: var(--ink-2); min-height: 22px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+  .team.stopped .cap { color: var(--red); font-weight: 600; }
+
+  /* ============ Column 2: hero / legend / answer ============ */
+  .hero { padding: 26px 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, 250px); gap: 18px; align-items: center; overflow: hidden; }
+  .eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+  .hero h1 { font-size: clamp(28px, 2.8vw, 38px); margin: 8px 0 10px; letter-spacing: -.015em; }
+  .hero p { margin: 0; color: var(--ink-2); max-width: 560px; }
+  .hero svg.art { width: 100%; height: auto; display: block; }
+  .art .sky { fill: var(--ill-sky); } .art .sun { fill: var(--ill-sun); } .art .hill { fill: var(--ill-hill); } .art .hill2 { fill: var(--ill-hill-2); }
+  .art .wall { fill: var(--ill-wall); } .art .roof { fill: var(--ill-roof); } .art .tree { fill: var(--ill-tree); } .art .tree2 { fill: var(--ill-tree-2); }
+  .art .trunk { fill: var(--ill-trunk); } .art .sign { fill: var(--ill-sign); } .art .signtx { fill: #fff; }
+  .art .ln { fill: none; stroke: var(--ill-line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .art .win { fill: var(--brand-soft); }
+  .legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
+  .legend li { padding: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+  .legend .ic { grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; }
+  .legend b { font-family: var(--head); font-weight: 650; font-size: 15px; line-height: 1.25; }
+  .legend span { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+  .lv-r .ic { background: var(--red-soft); color: var(--red); } .lv-r b { color: var(--red); }
+  .lv-a .ic { background: var(--amber-soft); color: var(--amber); } .lv-a b { color: var(--amber); }
+  .lv-g .ic { background: var(--green-soft); color: var(--green); } .lv-g b { color: var(--green); }
+  .lv-n .ic { background: var(--sunk); color: var(--ink-2); } .lv-n b { color: var(--ink-2); }
+
+  .working { padding: 22px; display: flex; gap: 14px; align-items: center; color: var(--ink-2); }
+  .bars { display: flex; gap: 4px; align-items: flex-end; height: 22px; }
+  .bars i { width: 5px; border-radius: 3px; background: var(--brand); animation: eq 1s ease-in-out infinite; transform-origin: bottom; }
+  .bars i:nth-child(1) { height: 40%; } .bars i:nth-child(2) { height: 90%; animation-delay: .15s; } .bars i:nth-child(3) { height: 60%; animation-delay: .3s; }
+  @keyframes eq { 50% { transform: scaleY(.4); } }
+  .results { display: grid; gap: 16px; min-width: 0; }
+  .results > *, .col > * { min-width: 0; }
+  .triage { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: var(--r-lg) var(--r-lg) 0 0; flex-wrap: wrap; }
+  .triage .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; color: #fff; }
+  .triage .ic svg { width: 26px; height: 26px; }
+  .triage .tx { flex: 1 1 220px; min-width: 0; }
+  .triage h2 { font-size: 21px; }
+  .triage p { margin: 2px 0 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.45; }
+  .triage .tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-self: center; }
+  .tr-g { background: var(--green-soft); } .tr-g .ic { background: var(--green); } .tr-g h2 { color: var(--green); }
+  .tr-a { background: var(--amber-soft); } .tr-a .ic { background: var(--amber); } .tr-a h2 { color: var(--amber); }
+  .tr-r { background: var(--red-soft); } .tr-r .ic { background: var(--red); } .tr-r h2 { color: var(--red); }
+  .tr-n { background: var(--sunk); } .tr-n .ic { background: var(--ink-2); }
+  :root[data-theme="dark"] .triage .ic { color: #12142A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .triage .ic { color: #12142A; } }
+  .card.urgent { border: 2px solid var(--red); }
+  .answer-body { padding: 18px 22px 22px; }
+  .answer-text { overflow-wrap: anywhere; font-size: 17.5px; line-height: 1.65; }
+  .answer-text p { margin: 0 0 10px; } .answer-text p:last-child { margin-bottom: 0; }
+  .answer-text ol, .answer-text ul { margin: 0 0 10px; padding-left: 24px; } .answer-text li { margin: 3px 0; }
+  .answer-text .hd { font-weight: 700; }
+  .urgent .answer-text { font-size: 19.5px; font-weight: 600; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+         background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); white-space: nowrap; }
+  .tag svg { width: 14px; height: 14px; stroke-width: 2.6; }
+  .tag.g { background: var(--green-soft); color: var(--green); border-color: transparent; } .tag.a { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+  .tag.r { background: var(--red-soft); color: var(--red); border-color: transparent; } .tag.nv { background: var(--nv-soft); color: var(--nv); border-color: transparent; }
+  .tag.mock { background: var(--mock-soft); color: var(--mock); border-color: transparent; }
+  .sources { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sources h3 { font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-family: var(--text); font-weight: 700; }
+  .sources ol { margin: 6px 0 0; padding-left: 22px; font-size: 14.5px; overflow-wrap: anywhere; }
+  .sources li { margin: 3px 0; }
+
+  details.ex > summary { list-style: none; cursor: pointer; padding: 14px 20px; display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; min-height: 56px; }
+  details.ex > summary::-webkit-details-marker { display: none; }
+  details.ex > summary h2 { font-size: 17px; }
+  details.ex > summary .chev { margin-left: auto; transition: transform .2s; color: var(--muted); }
+  details.ex[open] > summary .chev { transform: rotate(180deg); }
+  .hstats { display: flex; gap: 6px; flex-wrap: wrap; }
+  .hstats span { padding: 2px 10px; border-radius: 999px; background: var(--sunk); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .hstats b { color: var(--ink); }
+  .exb { padding: 0 20px 18px; min-width: 0; overflow-x: auto; }
+  table.trace { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.trace th { text-align: left; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  table.trace td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.trace tr:last-child td { border-bottom: 0; }
+  table.trace td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  table.trace .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; background: var(--sunk); color: var(--ink-2); }
+  table.trace tr.m .n { background: var(--nv-soft); color: var(--nv); } table.trace tr.x .n { background: var(--red-soft); color: var(--red); }
+  table.trace .nm { font-weight: 650; }
+  table.trace .d { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; line-height: 1.4; margin-top: 2px; }
+  table.trace code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--sunk); color: var(--ink); padding: 1px 6px; border-radius: 6px; }
+  table.trace code.mid { overflow-wrap: normal; word-break: normal; }
+  @media (max-width: 560px) { table.trace code.mid { overflow-wrap: anywhere; } }
+  .lbar { width: 90px; height: 8px; border-radius: 5px; background: var(--sunk); overflow: hidden; margin-top: 7px; }
+  .lbar span { display: block; height: 100%; border-radius: 5px; background: var(--nv); }
+  .agent { border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; margin-top: 10px; }
+  .agent .h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .agent h3 { font-size: 16px; }
+  .agent .body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+  .small { font-size: 13.5px; color: var(--muted); margin-top: 6px; overflow-wrap: anywhere; }
+
+  /* ============ Column 3: measurements / risk / sources ============ */
+  .mcard { padding: 16px; display: grid; gap: 12px; }
+  .filled { font-size: 12.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--sunk); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .tabs { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--sunk); }
+  .tabs button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 6px; border-radius: 10px; border: 0; background: transparent;
+                 font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.2; color: var(--ink-2); position: relative; }
+  .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(27,31,59,.12); }
+  .tabs .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .field label { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; font-weight: 500; line-height: 1.3; }
+  .field input, .field select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1.5px solid var(--line-2); border-radius: var(--r-sm); background: var(--paper); font-size: 16px; }
+  .field input:focus, .field select:focus { border-color: var(--brand); outline: none; box-shadow: 0 0 0 4px var(--brand-soft); }
+  .tool-actions { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; }
+  .notice { padding: 10px 12px; border-radius: var(--r-sm); background: var(--amber-soft); color: var(--ink); font-size: 14px; }
+  .notice b { color: var(--amber); }
+  .notice ul { margin: 4px 0 0; padding-left: 20px; }
+  .reading { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .reading .v { font-family: var(--head); font-weight: 700; font-size: 50px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .reading .u { font-size: 14.5px; color: var(--muted); }
+  .scale { margin: 14px 0 0; }
+  .track { display: flex; height: 12px; border-radius: 8px; overflow: hidden; }
+  .z-g { background: var(--green); } .z-a { background: var(--amber-zone); } .z-r { background: var(--red); } .z-b { background: var(--brand); }
+  .pin { position: relative; height: 0; z-index: 2; }
+  .pin span { position: absolute; top: -10px; transform: translateX(-50%); width: 6px; height: 32px; border-radius: 3px; background: var(--ink); box-shadow: 0 0 0 3px var(--surface); }
+  .ticks { position: relative; height: 24px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ticks span { position: absolute; top: 4px; transform: translateX(-50%); }
+  .ticks span:first-child { transform: none; } .ticks span:last-child { transform: translateX(-100%); }
+  .zlegend { display: grid; gap: 2px; font-size: 13px; color: var(--ink-2); }
+  .zlegend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .interp { padding: 10px 12px; border-radius: var(--r-sm); background: var(--sunk); font-size: 15px; font-weight: 600; }
+  .disclaim { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; font-weight: 600; color: var(--amber); }
+  .disclaim svg { width: 18px; height: 18px; margin-top: 1px; }
+  table.factors { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.factors td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  table.factors td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; padding-left: 8px; }
+  .srccard { padding: 16px; }
+  .srccard ol { margin: 8px 0 0; padding-left: 22px; font-size: 14px; overflow-wrap: anywhere; }
+  .srccard li { margin: 6px 0; } .srccard li span { display: block; font-size: 12.5px; color: var(--muted); }
+
+  /* ============ Cases ============ */
+  .cases { padding: 16px 18px 18px; min-width: 0; }
+  .case-row { display: flex; gap: 10px; overflow-x: auto; padding: 12px 2px 6px; scroll-snap-type: x proximity; }
+  .case-row.all { flex-wrap: wrap; overflow: visible; }
+  .case { flex: 0 0 230px; scroll-snap-align: start; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r-md);
+          padding: 12px; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-content: start; min-height: 44px; }
+  .case-row.all .case { flex: 1 1 230px; }
+  .case:hover { border-color: var(--brand); }
+  .case .ic { grid-row: span 3; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+  .case .ic svg { width: 18px; height: 18px; }
+  .case b { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .case .q { font-size: 13.5px; color: var(--ink-2); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .case .lg { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .c-r .ic { background: var(--red-soft); color: var(--red); } .c-a .ic { background: var(--amber-soft); color: var(--amber); }
+  .c-g .ic { background: var(--green-soft); color: var(--green); } .c-b .ic { background: var(--brand-soft); color: var(--brand); }
+  footer { padding: 0 22px 28px; font-size: 13px; color: var(--muted); max-width: 1100px; }
+
+  /* ============ Dialogs ============ */
+  dialog { border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px -20px rgba(0,0,0,.4); }
+  dialog::backdrop { background: rgba(18,20,42,.45); }
+  .dlg-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 4px 20px; }
+  .dlg-h h2 { font-size: 19px; }
+  .dlg-b { padding: 8px 20px 20px; display: grid; gap: 16px; }
+  .dlg-b fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+  .dlg-b legend { font-weight: 650; font-size: 15px; padding: 0; margin-bottom: 8px; }
+  .hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 50vh; overflow-y: auto; }
+  .hist button { width: 100%; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r-md); padding: 10px 12px;
+                 cursor: pointer; display: grid; gap: 4px; min-height: 44px; }
+  .hist button:hover { border-color: var(--brand); }
+  .hist .q { font-size: 15px; overflow-wrap: anywhere; }
+  .hist .m { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 1199px) {
+    .cols { grid-template-columns: 320px minmax(0, 1fr); grid-template-rows: auto 1fr; }
+    .col1 { grid-row: span 2; }
+    .col3 { grid-column: 2; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 899px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 20; flex-direction: row; justify-content: space-around;
+            padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); border-right: 0; border-top: 1px solid var(--line); }
+    .rail button { width: auto; flex: 1; max-width: 110px; }
+    body { padding-bottom: 72px; }
+    .page { padding: 14px 12px 24px; gap: 14px; }
+    .cols { display: flex; flex-direction: column; gap: 14px; }
+    .col { display: contents; }
+    .hero { order: 1; } .who-card { order: 2; } .q-card { order: 3; } .results { order: 4; } .team { order: 5; }
+    .mcard { order: 6; } .riskcard { order: 7; } .srccard { order: 8; } .legend { order: 9; }
+    .hero { grid-template-columns: minmax(0, 1fr) 130px; padding: 18px; }
+    .hero h1 { font-size: 26px; }
+    footer { padding: 0 12px 24px; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .bar .in { padding: 0 8px 0 10px; gap: 8px; height: 60px; }
+    .rail { top: auto; }
+    .brandname small { display: none; } .brandname b { font-size: 17px; }
+    .status { padding: 4px 8px; font-size: 12.5px; }
+    .seg label > span { padding: 0 6px; min-width: 44px; min-height: 44px; font-size: 13px; }
+    .logo { display: none; }
+    .seg .long { display: none; } .seg .short { display: inline; }
+    .hero { grid-template-columns: minmax(0, 1fr); padding: 18px 16px; }
+    .hero svg.art { max-width: 260px; margin: 0 auto; }
+    .legend { grid-template-columns: minmax(0, 1fr); }
+    .triage { padding: 16px; } .answer-body { padding: 16px; }
+    details.ex > summary { padding: 12px 16px; } .exb { padding: 0 14px 14px; }
+    table.trace thead { display: none; }
+    table.trace, table.trace tbody, table.trace tr, table.trace td { display: block; width: 100%; }
+    table.trace tr { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 2px 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    table.trace td { padding: 0; border: 0; }
+    table.trace td:nth-child(1) { grid-row: span 4; }
+    table.trace td.num { text-align: left; }
+    table.trace td:empty { display: none; }
+    .reading .v { font-size: 44px; }
+  }
+  @media (max-width: 420px) {
+    .status { padding: 0; width: 28px; height: 28px; justify-content: center; }
+    .status .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .brandname b { white-space: normal; font-size: 14px; line-height: 1.05; overflow: visible; }
+    .bar .in { gap: 6px; padding: 0 4px 0 10px; }
+    .seg { padding: 2px; } .seg label > span { padding: 0; min-width: 44px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <h1>MedBot Orchestrator</h1>
-    <span id="mode" class="badge b-warn">connecting…</span>
-    <span class="tagline">Clinical decision support designed for health workers and doctors in Indian primary health centres.
-      Grounded in the WHO PEN protocol for primary health care in low-resource settings. Runs on Nebius Token Factory + NVIDIA Nemotron.</span>
-    <span class="models" id="models"></span>
+<header class="bar">
+  <div class="in">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z"/></svg></div>
+    <div class="brandname"><b>MedBot Orchestrator</b><small>NVIDIA Nemotron · Nebius</small></div>
+    <div class="grow"></div>
+    <span id="status" class="status s-wait" role="status">…</span>
+    <div class="seg" role="radiogroup" aria-label="Interface language" id="uilang">
+      <label><input type="radio" name="uilang" value="hi" aria-label="हिन्दी"><span lang="hi"><span class="long">हिन्दी</span><span class="short">हि</span></span></label>
+      <label><input type="radio" name="uilang" value="en" checked aria-label="English"><span lang="en"><span class="long">English</span><span class="short">EN</span></span></label>
+      <label><input type="radio" name="uilang" value="hinglish" aria-label="Hinglish"><span lang="hi-Latn"><span class="long">Hinglish</span><span class="short">HL</span></span></label>
+    </div>
+    <button class="iconbtn" type="button" id="gear" data-i18n-label="settings" aria-label="Settings"></button>
   </div>
 </header>
 
-<div class="banner" role="note" aria-label="Safety notice">
-  <div><span class="icon" aria-hidden="true">⚠</span>
-    <span><strong>Decision support, not diagnosis.</strong> Answers come only from cited WHO/NIH excerpts and
-      published equations, and the system defers to a clinician on red flags, referral criteria or weak evidence.
-      It does not replace clinical judgment. In an emergency, contact local emergency services.</span></div>
+<div class="shell">
+  <nav class="rail" aria-label="Main">
+    <button type="button" data-nav="home" aria-current="page"><span data-ico="home"></span><span data-i18n="nav_home">Home</span></button>
+    <button type="button" data-nav="ask"><span data-ico="ask"></span><span data-i18n="nav_ask">Ask</span></button>
+    <button type="button" data-nav="history"><span data-ico="history"></span><span data-i18n="nav_history">History</span></button>
+    <button type="button" data-nav="settings"><span data-ico="gear"></span><span data-i18n="nav_settings">Settings</span></button>
+  </nav>
+
+  <div class="page" id="top">
+    <div class="cols">
+      <!-- ===== Column 1 ===== -->
+      <div class="col col1">
+        <form id="ask" class="col" novalidate>
+          <section class="card who-card" aria-labelledby="who-h">
+            <h2 id="who-h" data-i18n="who">Who is asking?</h2>
+            <div role="radiogroup" aria-labelledby="who-h" style="display:grid;gap:8px">
+              <div class="opt">
+                <label class="optl"><input type="radio" name="audience" value="health_worker">
+                  <b data-i18n="hw">Health worker</b><span class="sub" data-i18n="hwSub">Simple words · Hindi</span></label>
+                <div class="chips" id="langs" role="radiogroup" data-i18n-label="ansLang" aria-label="Answer language">
+                  <label class="chip"><input type="radio" name="language" value="hi"><span lang="hi">हिन्दी</span></label>
+                  <label class="chip"><input type="radio" name="language" value="hinglish"><span lang="hi-Latn">Hinglish</span></label>
+                  <label class="chip"><input type="radio" name="language" value="en" checked><span lang="en">English</span></label>
+                </div>
+              </div>
+              <div class="opt">
+                <label class="optl"><input type="radio" name="audience" value="clinician" checked>
+                  <b data-i18n="cl">Clinician</b><span class="sub" data-i18n="clSub">Full detail · numbers</span></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="card q-card">
+            <label for="question" class="ql" data-i18n="ask">What do you want to ask?</label>
+            <div class="qbox">
+              <textarea id="question" maxlength="1000" required data-i18n-ph="ph" aria-describedby="count"
+                placeholder="Type a question about a patient — e.g. Diabetic patient with eGFR 50, which BP target applies?"></textarea>
+              <div class="qfoot">
+                <button type="button" class="mic" id="mic" aria-pressed="false" data-i18n-label="mic" aria-label="Speak your question" hidden></button>
+                <span class="count" id="count" aria-live="off">0/1000</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="secondary" id="mtoggle" type="button" aria-controls="mcard">
+                <span data-i18n="measure">Measurements</span><span class="badge-n" id="mcount">0</span></button>
+              <button class="primary" id="submit" type="submit"><span data-i18n="go">Ask MedBot</span><span aria-hidden="true">→</span></button>
+            </div>
+            <div class="hint" data-i18n="hint">Ctrl/⌘+Enter</div>
+            <div id="formerr" class="formerr" role="alert"></div>
+            <div class="strip"><span data-ico="shield"></span>
+              <span><b>Decision support, not diagnosis.</b> <span data-i18n="safety">For emergencies, call local emergency services.</span></span></div>
+          </section>
+        </form>
+
+        <section class="card team" id="team" aria-labelledby="team-h">
+          <div class="card-h"><h2 id="team-h" data-i18n="team">Specialist Team</h2>
+            <span class="orch" id="orch"><i></i>Nemotron</span></div>
+          <ul class="tiles" id="tiles"></ul>
+          <ol class="stepper" id="stepper" aria-label="Progress">
+            <li data-step="1"><span class="dot">1</span><span data-i18n="st1">Assessing symptoms</span></li>
+            <li data-step="2"><span class="dot">2</span><span data-i18n="st2">Running agents</span></li>
+            <li data-step="3"><span class="dot">3</span><span data-i18n="st3">Synthesizing answer</span></li>
+          </ol>
+          <div class="cap" id="cap" aria-live="polite" data-i18n="teamSub">Each question goes only to the specialists it needs.</div>
+        </section>
+      </div>
+
+      <!-- ===== Column 2 ===== -->
+      <main class="col col2" id="main">
+        <section class="card hero">
+          <div>
+            <div class="eyebrow" data-i18n="eyebrow">For primary health centres · WHO PEN</div>
+            <h1 data-i18n="h1">Six specialists. One careful answer.</h1>
+            <p data-i18n="heroP">Each question goes to the organ specialists it needs, is answered only from cited WHO and NIH guidance, and says plainly when a patient needs a doctor.</p>
+          </div>
+          <svg class="art" viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+            <rect class="sky" x="0" y="0" width="320" height="200" rx="18"/>
+            <circle class="sun" cx="262" cy="42" r="17"/>
+            <path class="ln" d="M44 34c6-5 14-5 19 0 4-3 11-2 13 3" opacity=".5"/>
+            <path class="ln" d="M118 22c5-4 12-4 16 0 3-2 9-1 11 2" opacity=".5"/>
+            <path class="hill2" d="M0 150c40-22 90-30 140-20s100 2 180-18v88H0z"/>
+            <path class="hill" d="M0 166c60-14 120-16 180-8s100 0 140-10v52H0z"/>
+            <!-- health centre -->
+            <path class="wall" d="M92 104l2 58h112l1-58z"/>
+            <path class="ln" d="M92 104l2 58h112l1-58"/>
+            <path class="roof" d="M82 106l67-36 69 36z"/>
+            <path class="ln" d="M82 106l67-36 69 36"/>
+            <rect class="sign" x="132" y="84" width="34" height="16" rx="4"/>
+            <path class="signtx" d="M146.5 86.5h5v4.5h4.5v3.5h-4.5v4h-5v-4H142v-3.5h4.5z"/>
+            <path class="win" d="M106 118h20v16h-20z"/><path class="ln" d="M106 118h20v16h-20zM116 118v16"/>
+            <path class="win" d="M174 118h20v16h-20z"/><path class="ln" d="M174 118h20v16h-20zM184 118v16"/>
+            <path class="win" d="M139 126h22v36h-22z"/><path class="ln" d="M139 162v-36h22v36M150 126v36"/>
+            <path class="ln" d="M80 162h142"/>
+            <!-- path -->
+            <path class="ln" d="M144 162c-4 12-12 22-22 34M156 162c4 12 10 22 18 34" opacity=".6"/>
+            <!-- trees -->
+            <rect class="trunk" x="238" y="132" width="7" height="32" rx="2"/>
+            <path class="tree" d="M241 74c16 0 26 14 24 30 10 6 8 24-6 28-10 4-26 4-36-2-12-6-10-22 0-28-2-16 6-28 18-28z"/>
+            <path class="ln" d="M241 74c16 0 26 14 24 30 10 6 8 24-6 28-10 4-26 4-36-2-12-6-10-22 0-28-2-16 6-28 18-28z"/>
+            <rect class="trunk" x="277" y="140" width="6" height="26" rx="2"/>
+            <path class="tree2" d="M280 98c11 0 18 11 16 22 7 5 5 18-5 20-7 2-17 2-23-2-8-4-7-16 0-20-1-11 4-20 12-20z"/>
+            <path class="ln" d="M280 98c11 0 18 11 16 22 7 5 5 18-5 20-7 2-17 2-23-2-8-4-7-16 0-20-1-11 4-20 12-20z"/>
+            <rect class="trunk" x="40" y="138" width="6" height="26" rx="2"/>
+            <path class="tree2" d="M43 96c10 0 17 10 15 21 7 4 5 17-4 19-7 2-16 2-22-2-8-4-6-15 0-19-1-11 4-19 11-19z"/>
+            <path class="ln" d="M43 96c10 0 17 10 15 21 7 4 5 17-4 19-7 2-16 2-22-2-8-4-6-15 0-19-1-11 4-19 11-19z"/>
+          </svg>
+        </section>
+
+        <ul class="legend" aria-label="What the colours mean">
+          <li class="card lv-r"><span class="ic" data-ico="warn"></span><b data-i18n="T_r">Emergency</b><span data-i18n="M_r">Stopped at once: send for emergency care.</span></li>
+          <li class="card lv-a"><span class="ic" data-ico="bang"></span><b data-i18n="T_a">Refer to a doctor</b><span data-i18n="M_a">A referral sign, or not sure enough: a doctor decides.</span></li>
+          <li class="card lv-g"><span class="ic" data-ico="check"></span><b data-i18n="T_g">Guidance</b><span data-i18n="M_g">Answer from the cited guidelines.</span></li>
+          <li class="card lv-n"><span class="ic" data-ico="q"></span><b data-i18n="T_n">Please clarify</b><span data-i18n="M_n">No specialist matched the question.</span></li>
+        </ul>
+
+        <div id="results" class="results" aria-live="polite"></div>
+      </main>
+
+      <!-- ===== Column 3 ===== -->
+      <aside class="col col3" aria-label="Measurements and sources">
+        <section class="card mcard" id="mcard" aria-labelledby="m-h" tabindex="-1">
+          <div class="card-h"><h2 id="m-h" data-i18n="measure">Measurements</h2><span class="filled" id="filled" hidden></span></div>
+          <div class="tabs" id="tabs" role="tablist" aria-labelledby="m-h"></div>
+          <div id="toolpanel"><p class="fineprint" data-i18n="loading">Loading…</p></div>
+        </section>
+        <section class="card mcard riskcard" id="riskcard" hidden></section>
+        <section class="card srccard" id="srccard" hidden></section>
+      </aside>
+    </div>
+
+    <section class="card cases" aria-labelledby="cases-h">
+      <div class="card-h"><h2 id="cases-h" data-i18n="cases">Try a case</h2>
+        <button type="button" class="textbtn" id="seeall" aria-controls="caserow" aria-expanded="false" data-i18n="seeAll">See all</button></div>
+      <div class="case-row" id="caserow"></div>
+      <p class="fineprint" style="margin:4px 0 0" data-i18n="casesNote">Calculator inputs are illustrative numbers, not real patients.</p>
+    </section>
+  </div>
 </div>
 
-<main class="wrap">
-  <section class="panel">
-    <form id="ask">
-      <h2>Answer for</h2>
-      <div class="modebar">
-        <div class="seg" role="radiogroup" aria-label="Answer for">
-          <label><input type="radio" name="audience" value="clinician" checked> Clinician</label>
-          <label><input type="radio" name="audience" value="health_worker"> Health worker</label>
-        </div>
-        <label class="lang" id="langwrap" hidden>Language
-          <select id="language">
-            <option value="en">English</option>
-            <option value="hi" lang="hi">हिन्दी (Hindi)</option>
-            <option value="hinglish">Hinglish</option>
-          </select></label>
-      </div>
-      <p class="note" id="modenote"></p>
-      <h2 style="margin-top:14px"><label for="question">Question</label></h2>
-      <textarea id="question" required maxlength="2000"
-        placeholder="Ask a clinical question, or click an example below"></textarea>
-      <div class="row" style="margin-top:10px">
-        <button class="primary" id="submit" type="submit">Ask</button>
-        <span id="status" class="note" role="status" aria-live="polite"></span>
-      </div>
-
-      <h2 style="margin-top:18px">Examples <span class="note">(one click: fills in and asks)</span></h2>
-      <div class="examples" id="examples"></div>
-
-      <h2>Patient values <span class="note">(optional — for the risk tools)</span></h2>
-      <p class="note">A risk tool runs only when its agent is consulted and you fill in at least one of its own
-        fields. If any field is missing, the agent asks for it instead of guessing. One patient per question.</p>
-      <div id="riskforms"><p class="note">Loading fields…</p></div>
-    </form>
-  </section>
-
-  <section id="results">
-    <div class="panel empty">Ask a question to see which agents were consulted, which Nemotron model handled each
-      step, what each agent answered or why it deferred, any risk-tool result, and the final answer.</div>
-  </section>
-</main>
-
-<footer class="wrap">
+<footer>
   Hackathon prototype — not a medical device, and not deployed in any health centre. Core protocol:
   <a href="https://www.afro.who.int/sites/default/files/2017-06/9789241506557_eng.pdf" target="_blank" rel="noopener">WHO
   PEN — Package of Essential Noncommunicable Disease Interventions for Primary Health Care in Low-Resource Settings</a>.
-  Guideline answers are grounded in cited WHO/NIH excerpts. eGFR
-  (CKD-EPI 2021) and FIB-4 are published equations; the cardiac model is trained on a small 1988 UCI research
+  eGFR (CKD-EPI 2021) and FIB-4 are published equations; the cardiac model is trained on a small 1988 UCI research
   dataset (see DATASETS.md).
 </footer>
 
+<dialog id="dlg-history" aria-labelledby="hist-h">
+  <div class="dlg-h"><h2 id="hist-h" data-i18n="history">History</h2><button type="button" class="iconbtn" data-close data-i18n-label="close" aria-label="Close"></button></div>
+  <div class="dlg-b">
+    <p class="fineprint" style="margin:0" data-i18n="histNote">Only your last 10 questions are kept, on this device. Answers and measurements are never saved.</p>
+    <ul class="hist" id="hist"></ul>
+    <p class="fineprint" id="hist-empty" style="margin:0" data-i18n="noHist">No questions yet.</p>
+    <button type="button" class="secondary" id="hist-clear" data-i18n="clearHist">Clear history</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-settings" aria-labelledby="set-h">
+  <div class="dlg-h"><h2 id="set-h" data-i18n="settings">Settings</h2><button type="button" class="iconbtn" data-close data-i18n-label="close" aria-label="Close"></button></div>
+  <div class="dlg-b">
+    <fieldset><legend data-i18n="uiLang">Interface language</legend>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="set-lang" value="hi"><span lang="hi">हिन्दी</span></label>
+        <label class="chip"><input type="radio" name="set-lang" value="en"><span lang="en">English</span></label>
+        <label class="chip"><input type="radio" name="set-lang" value="hinglish"><span lang="hi-Latn">Hinglish</span></label>
+      </div></fieldset>
+    <fieldset><legend data-i18n="defAud">Default: who is asking</legend>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="set-aud" value="health_worker"><span data-i18n="hw">Health worker</span></label>
+        <label class="chip"><input type="radio" name="set-aud" value="clinician"><span data-i18n="cl">Clinician</span></label>
+      </div></fieldset>
+    <fieldset><legend data-i18n="theme">Theme</legend>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="set-theme" value="system"><span data-i18n="themeSys">System</span></label>
+        <label class="chip"><input type="radio" name="set-theme" value="light"><span data-i18n="themeLight">Light</span></label>
+        <label class="chip"><input type="radio" name="set-theme" value="dark"><span data-i18n="themeDark">Dark</span></label>
+      </div></fieldset>
+    <button type="button" class="secondary" id="set-clear" data-i18n="clearHist">Clear history</button>
+  </div>
+</dialog>
+
 <script>
-// One-click examples. Calculator inputs are illustrative numbers (the same
+/* ---------- content ---------- */
+// One-tap cases. Calculator inputs are illustrative numbers (the same
 // arithmetic inputs as tests/test_calculators.py), not a patient; the cardiac
-// example loads a real row of the UCI dataset.
+// case loads a real row of the UCI dataset.
 const EXAMPLES = [
-  { tag: "Multi-agent", cls: "t-multi", q: "Diabetic patient with eGFR 50 — what blood pressure threshold applies?",
-    hint: "Cardiac + Renal + Endocrine agents, Ultra-tier synthesis" },
-  { tag: "Red flag → deferral", cls: "t-red", q: "My father has sudden facial droop and slurred speech",
-    hint: "Stopped in code before any agent or model call" },
-  { tag: "Referral → deferral", cls: "t-ref", q: "Patient with ascites and a history of hepatitis B — what next?",
-    hint: "Hepatic agent defers on a protocol referral term" },
-  { tag: "eGFR calculator", cls: "t-tool", q: "What does this patient's eGFR mean?",
-    values: { renal: { age: 60, sex: "male", serum_creatinine: 1.8 } }, hint: "Illustrative inputs, not a patient" },
-  { tag: "FIB-4 calculator", cls: "t-tool", q: "What does this patient's FIB-4 liver score suggest?",
-    values: { hepatic: { age: 50, ast: 40, alt: 25, platelets: 200 } }, hint: "Illustrative inputs, not a patient" },
-  { tag: "Cardiac model", cls: "t-tool", q: "What is this patient's cardiovascular risk?",
-    datasetRow: { organ: "cardiac", row: 0 }, hint: "Real row from the UCI Cleveland dataset" },
-  { tag: "Guideline lookup", cls: "t-rag", q: "What GFR value suggests kidney disease?",
-    hint: "Single agent, answer grounded in NIDDK excerpt" },
-  { tag: "Health worker · Hinglish", cls: "t-multi", q: "Diabetes wale mareez ka blood pressure kitna hona chahiye?",
-    mode: { audience: "health_worker", language: "hinglish" }, hint: "Simple answer, ends with the next step" },
-  { tag: "Health worker · Hindi red flag", cls: "t-red", q: "मरीज़ को सीने में दर्द हो रहा है",
-    mode: { audience: "health_worker", language: "hi" }, hint: "Emergency message in Hindi, no model call" },
+  { tag: "Multi-agent", cls: "c-b", ic: "team", q: "Diabetic patient with eGFR 50 — what blood pressure threshold applies?" },
+  { tag: "Red flag → deferral", cls: "c-r", ic: "warn", q: "My father has sudden facial droop and slurred speech" },
+  { tag: "Referral → deferral", cls: "c-a", ic: "bang", q: "Patient with ascites and a history of hepatitis B — what next?" },
+  { tag: "eGFR calculator", cls: "c-g", ic: "calc", q: "What does this patient's eGFR mean?", values: { renal: { age: 60, sex: "male", serum_creatinine: 1.8 } } },
+  { tag: "FIB-4 calculator", cls: "c-g", ic: "calc", q: "What does this patient's FIB-4 liver score suggest?", values: { hepatic: { age: 50, ast: 40, alt: 25, platelets: 200 } } },
+  { tag: "Cardiac model", cls: "c-g", ic: "heart", q: "What is this patient's cardiovascular risk?", datasetRow: { organ: "cardiac", row: 0 } },
+  { tag: "Guideline lookup", cls: "c-b", ic: "book", q: "What GFR value suggests kidney disease?" },
+  { tag: "Health worker · Hinglish", cls: "c-b", ic: "chat", q: "Diabetes wale mareez ka blood pressure kitna hona chahiye?", mode: { audience: "health_worker", language: "hinglish" } },
+  { tag: "Health worker · हिन्दी", cls: "c-r", ic: "chat", q: "मरीज़ को सीने में दर्द हो रहा है", mode: { audience: "health_worker", language: "hi" } },
 ];
-const MODE_NOTES = {
-  clinician: "Full detail: numbers, thresholds, risk-tool output and sources, in English.",
-  health_worker: "Simple words, in English, Hindi or Hinglish. Every answer ends with a clear next step and when " +
-                 "to refer. Same engine, guardrails and sources as clinician mode.",
+
+// Interface words only — never medical content. Medical text always comes from the backend.
+const UI = {
+  en: { nav_home: "Home", nav_ask: "Ask", nav_history: "History", nav_settings: "Settings",
+        live: "Live", mock: "Mock", offline: "Offline", connecting: "Connecting…",
+        who: "Who is asking?", hw: "Health worker", hwSub: "Simple words · Hindi", cl: "Clinician", clSub: "Full detail · numbers", ansLang: "Answer language",
+        ask: "What do you want to ask?", ph: "Type a question about a patient — e.g. Diabetic patient with eGFR 50, which BP target applies?",
+        mic: "Speak your question", micStop: "Stop listening", go: "Ask MedBot", hint: "Ctrl/⌘+Enter to ask", measure: "Measurements",
+        safety: "For emergencies, call local emergency services.", team: "Specialist Team", teamSub: "Each question goes only to the specialists it needs.",
+        st1: "Assessing symptoms", st2: "Running agents", st3: "Synthesizing answer",
+        o_cardiac: "Heart", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Lungs", o_neuro: "Brain",
+        s_ok: "answered", s_warn: "not sure", s_bad: "deferred", s_off: "not consulted",
+        eyebrow: "For primary health centres · WHO PEN", h1: "Six specialists. One careful answer.",
+        heroP: "Each question goes to the organ specialists it needs, is answered only from cited WHO and NIH guidance, and says plainly when a patient needs a doctor.",
+        T_r: "Emergency", T_a: "Refer to a doctor", T_g: "Guidance", T_n: "Please clarify",
+        M_r: "Stopped at once: send for emergency care.", M_a: "A referral sign, or not sure enough: a doctor decides.",
+        M_g: "Answer from the cited guidelines.", M_n: "No specialist matched the question.",
+        B_r: "Emergency — act now", B_a: "Refer to a doctor", B_g: "Guidance from the guidelines", B_n: "Please clarify the question",
+        S_r: "Stopped by the safety check.", S_a: "MedBot found a referral sign or isn't sure enough — a clinician should decide.",
+        S_g: "Based on the cited sources below. Use your clinical judgement.", S_n: "MedBot couldn't tell which body system this is about.",
+        src: "Sources", cap_r: "Emergency sign found — stopped before any AI call", cap_s: "The AI safety check found an emergency sign — stopped", working: "The specialist team is working on it…",
+        consulted: "{n} of 6 specialists consulted · {s} s", clarifyCap: "No specialist matched — please clarify the question.",
+        how: "How this answer was made", notes: "Specialist notes", time: "time", calls: "calls", specs: "specialists", tokens: "tokens",
+        cases: "Try a case", seeAll: "See all", seeLess: "Show less", casesNote: "Calculator inputs are illustrative numbers, not real patients.",
+        history: "History", histNote: "Only your last 10 questions are kept, on this device. Answers and measurements are never saved.",
+        noHist: "No questions yet.", clearHist: "Clear history", settings: "Settings", uiLang: "Interface language", defAud: "Default: who is asking",
+        theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Close", filled: "{x}/{n} filled",
+        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer",
+        emptyQ: "Please type a question first.", toolNote: "A tool runs only when its specialist is consulted. If a value is missing, the specialist asks for it instead of guessing.",
+        needs: "No result yet — the specialist needs:", invalid: "No result:", riskTitle: "Heart risk estimate", modeCl: "Clinician", modeHw: "Health worker" },
+  hi: { nav_home: "होम", nav_ask: "पूछें", nav_history: "इतिहास", nav_settings: "सेटिंग्स",
+        live: "लाइव", mock: "मॉक", offline: "ऑफ़लाइन", connecting: "जुड़ रहा है…",
+        who: "कौन पूछ रहा है?", hw: "स्वास्थ्य कार्यकर्ता", hwSub: "आसान शब्द · हिन्दी", cl: "डॉक्टर", clSub: "पूरी जानकारी · आँकड़े", ansLang: "जवाब की भाषा",
+        ask: "आप क्या पूछना चाहते हैं?", ph: "मरीज़ के बारे में सवाल लिखें — जैसे: डायबिटीज़ के मरीज़ का BP कितना होना चाहिए?",
+        mic: "बोलकर पूछें", micStop: "सुनना बंद करें", go: "MedBot से पूछें", hint: "Ctrl/⌘+Enter से पूछें", measure: "जाँच के आँकड़े",
+        safety: "आपात स्थिति में तुरंत एम्बुलेंस या नज़दीकी अस्पताल से संपर्क करें।", team: "विशेषज्ञ टीम", teamSub: "हर सवाल सिर्फ़ ज़रूरी विशेषज्ञों के पास जाता है।",
+        st1: "लक्षणों की जाँच", st2: "विशेषज्ञ काम पर", st3: "जवाब तैयार",
+        o_cardiac: "दिल", o_renal: "गुर्दा", o_hepatic: "लिवर", o_endocrine: "डायबिटीज़", o_respiratory: "फेफड़े", o_neuro: "दिमाग",
+        s_ok: "जवाब दिया", s_warn: "पक्का नहीं", s_bad: "रोका गया", s_off: "नहीं पूछा गया",
+        eyebrow: "प्राथमिक स्वास्थ्य केंद्रों के लिए · WHO PEN", h1: "छह विशेषज्ञ। एक सावधान जवाब।",
+        heroP: "हर सवाल ज़रूरी अंग-विशेषज्ञों के पास जाता है, जवाब सिर्फ़ WHO और NIH के दिए गए स्रोतों से आता है, और साफ़ बताता है कि कब मरीज़ को डॉक्टर के पास भेजना है।",
+        T_r: "आपातकाल", T_a: "डॉक्टर के पास भेजें", T_g: "सलाह", T_n: "सवाल साफ़ करें",
+        M_r: "तुरंत रोका गया: आपात इलाज के लिए भेजें।", M_a: "रेफ़रल का संकेत या पक्का नहीं: डॉक्टर तय करें।",
+        M_g: "दिए गए दिशानिर्देशों से जवाब।", M_n: "कोई विशेषज्ञ सवाल से मेल नहीं खाया।",
+        B_r: "आपातकाल — तुरंत कार्रवाई करें", B_a: "डॉक्टर के पास भेजें", B_g: "दिशानिर्देशों से सलाह", B_n: "कृपया सवाल साफ़ करें",
+        S_r: "सुरक्षा जाँच ने रोक दिया।", S_a: "रेफ़रल का संकेत मिला या MedBot पक्का नहीं है — डॉक्टर तय करें।",
+        S_g: "नीचे दिए स्रोतों पर आधारित। अपने विवेक का इस्तेमाल करें।", S_n: "MedBot समझ नहीं पाया कि सवाल किस अंग के बारे में है।",
+        src: "स्रोत", cap_r: "आपात संकेत मिला — AI से पहले ही रोक दिया", cap_s: "AI सुरक्षा जाँच को आपात संकेत मिला — रोक दिया", working: "विशेषज्ञ टीम काम कर रही है…",
+        consulted: "6 में से {n} विशेषज्ञों से पूछा · {s} सेकंड", clarifyCap: "कोई विशेषज्ञ मेल नहीं खाया — कृपया सवाल साफ़ करें।",
+        how: "यह जवाब कैसे बना", notes: "विशेषज्ञों के नोट", time: "समय", calls: "कॉल", specs: "विशेषज्ञ", tokens: "टोकन",
+        cases: "कोई केस आज़माएँ", seeAll: "सभी देखें", seeLess: "कम दिखाएँ", casesNote: "कैलकुलेटर के आँकड़े उदाहरण हैं, असली मरीज़ नहीं।",
+        history: "इतिहास", histNote: "इस डिवाइस पर सिर्फ़ आपके आख़िरी 10 सवाल रखे जाते हैं। जवाब और आँकड़े कभी सेव नहीं होते।",
+        noHist: "अभी कोई सवाल नहीं।", clearHist: "इतिहास मिटाएँ", settings: "सेटिंग्स", uiLang: "स्क्रीन की भाषा", defAud: "शुरुआत में: कौन पूछ रहा है",
+        theme: "थीम", themeSys: "सिस्टम", themeLight: "लाइट", themeDark: "डार्क", close: "बंद करें", filled: "{n} में से {x} भरे",
+        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका",
+        emptyQ: "पहले सवाल लिखें।", toolNote: "कोई टूल तभी चलता है जब उसके विशेषज्ञ से पूछा जाए। कोई आँकड़ा न हो, तो विशेषज्ञ अंदाज़ा नहीं लगाता, पूछता है।",
+        needs: "अभी नतीजा नहीं — विशेषज्ञ को चाहिए:", invalid: "नतीजा नहीं:", riskTitle: "दिल के जोखिम का अनुमान", modeCl: "डॉक्टर", modeHw: "स्वास्थ्य कार्यकर्ता" },
+  hinglish: { nav_home: "Home", nav_ask: "Poochein", nav_history: "History", nav_settings: "Settings",
+        live: "Live", mock: "Mock", offline: "Offline", connecting: "Jud raha hai…",
+        who: "Kaun pooch raha hai?", hw: "Health worker", hwSub: "Aasaan shabd · Hindi", cl: "Doctor", clSub: "Poori jaankari · aankde", ansLang: "Jawaab ki bhasha",
+        ask: "Aap kya poochna chahte hain?", ph: "Mareez ke baare mein sawaal likhein — jaise: Diabetes wale mareez ka BP kitna hona chahiye?",
+        mic: "Bolkar poochein", micStop: "Sunna band karein", go: "MedBot se poochein", hint: "Ctrl/⌘+Enter se poochein", measure: "Jaanch ke aankde",
+        safety: "Emergency mein turant ambulance ya nazdeeki hospital se sampark karein.", team: "Specialist Team", teamSub: "Har sawaal sirf zaroori specialists ke paas jaata hai.",
+        st1: "Lakshan ki jaanch", st2: "Specialists kaam par", st3: "Jawaab taiyaar",
+        o_cardiac: "Dil", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Phephde", o_neuro: "Dimaag",
+        s_ok: "jawaab diya", s_warn: "pakka nahi", s_bad: "roka gaya", s_off: "nahi poocha gaya",
+        eyebrow: "Primary health centres ke liye · WHO PEN", h1: "Chhe specialists. Ek saavdhaan jawaab.",
+        heroP: "Har sawaal zaroori organ specialists ke paas jaata hai, jawaab sirf WHO aur NIH ke diye gaye sources se aata hai, aur saaf batata hai ki kab mareez ko doctor ke paas bhejna hai.",
+        T_r: "Emergency", T_a: "Doctor ke paas bhejein", T_g: "Salah", T_n: "Sawaal saaf karein",
+        M_r: "Turant roka gaya: emergency care ke liye bhejein.", M_a: "Referral ka sign ya pakka nahi: doctor decide karein.",
+        M_g: "Diye gaye guidelines se jawaab.", M_n: "Koi specialist sawaal se match nahi hua.",
+        B_r: "Emergency — turant action lein", B_a: "Doctor ke paas bhejein", B_g: "Guidelines se salah", B_n: "Kripya sawaal saaf karein",
+        S_r: "Safety check ne rok diya.", S_a: "Referral ka sign mila ya MedBot pakka nahi hai — doctor decide karein.",
+        S_g: "Neeche diye sources par aadharit. Apne vivek ka istemaal karein.", S_n: "MedBot samajh nahi paya ki sawaal kis ang ke baare mein hai.",
+        src: "Sources", cap_r: "Emergency sign mila — AI se pehle hi rok diya", cap_s: "AI safety check ko emergency sign mila — rok diya", working: "Specialist team kaam kar rahi hai…",
+        consulted: "6 mein se {n} specialists se poocha · {s} sec", clarifyCap: "Koi specialist match nahi hua — kripya sawaal saaf karein.",
+        how: "Yeh jawaab kaise bana", notes: "Specialists ke notes", time: "samay", calls: "calls", specs: "specialists", tokens: "tokens",
+        cases: "Koi case try karein", seeAll: "Sab dekhein", seeLess: "Kam dikhayein", casesNote: "Calculator ke aankde udaharan hain, asli mareez nahi.",
+        history: "History", histNote: "Is device par sirf aapke aakhri 10 sawaal rakhe jaate hain. Jawaab aur aankde kabhi save nahi hote.",
+        noHist: "Abhi koi sawaal nahi.", clearHist: "History mitayein", settings: "Settings", uiLang: "Screen ki bhasha", defAud: "Shuru mein: kaun pooch raha hai",
+        theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Band karein", filled: "{n} mein se {x} bhare",
+        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka",
+        emptyQ: "Pehle sawaal likhein.", toolNote: "Koi tool tabhi chalta hai jab uske specialist se poocha jaaye. Koi aankda na ho, toh specialist andaaza nahi lagata, poochta hai.",
+        needs: "Abhi nateeja nahi — specialist ko chahiye:", invalid: "Nateeja nahi:", riskTitle: "Dil ke risk ka andaaza", modeCl: "Doctor", modeHw: "Health worker" },
 };
-const LANG_NAMES = { en: "English", hi: "Hindi", hinglish: "Hinglish" };
+const LANG_NAMES = { en: "English", hi: "हिन्दी", hinglish: "Hinglish" };
 const LANG_ATTR = { en: "en", hi: "hi", hinglish: "hi-Latn" };
 const DEFER_LABELS = { red_flag: "red flag", referral: "referral", low_confidence: "low confidence" };
-let schema = null, health = null;
+const TOOL_ORDER = ["renal", "hepatic", "cardiac"];
+const TOOL_NAMES = { renal: "Kidney · eGFR", hepatic: "Liver · FIB-4", cardiac: "Heart · risk" };
+const ORGANS = [
+  { key: "cardiac", name: "Cardiac", icon: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>' },
+  { key: "renal", name: "Renal", icon: '<path d="M14 4c-5-1-9 3-8.5 8.5.4 4.6 4.6 7.5 8 5.5 1.6-1 1.2-3-.3-3.8-1.2-.6-1.3-2.4 0-3.1 1.6-.9 3.3-1.6 3.3-3.7C16.5 5.7 15.6 4.3 14 4z"/>' },
+  { key: "hepatic", name: "Hepatic", icon: '<path d="M3.5 10c1.5-3.5 9-5.5 16.5-4 .8 3.6-2.5 9-9 11-4 1.2-8.6-1.6-7.5-7z"/>' },
+  { key: "endocrine", name: "Endocrine", icon: '<path d="M12 3.5c3 4 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 3-6.5 6-10.5z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>' },
+  { key: "respiratory", name: "Respiratory", icon: '<path d="M12 4v8M12 12c-1.5-2-6-3-6.5 2.5-.3 3.5 1 6 3.5 5.5 2-.4 3-2 3-4.5M12 12c1.5-2 6-3 6.5 2.5.3 3.5-1 6-3.5 5.5-2-.4-3-2-3-4.5"/>' },
+  { key: "neuro", name: "Neuro", icon: '<path d="M12 5v14M12 5c-2.5-1.5-6.5 0-6.5 3.5-2 1-2 4.5 0 5.5 0 3 3.5 4.5 6.5 3M12 5c2.5-1.5 6.5 0 6.5 3.5 2 1 2 4.5 0 5.5 0 3-3.5 4.5-6.5 3"/>' },
+];
+const ICON = {
+  check: '<path d="M5 12.5l4 4 10-10"/>', bang: '<path d="M12 5v9M12 18h.01"/>', dash: '<path d="M6 12h12"/>', cross: '<path d="M6 6l12 12M18 6L6 18"/>',
+  warn: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>', q: '<path d="M9.2 9a3 3 0 1 1 4.2 2.7c-.9.4-1.4 1.2-1.4 2.1M12 17h.01"/>',
+  chev: '<path d="M6 9l6 6 6-6"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  home: '<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
+  ask: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
+  history: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  team: '<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3.5 18c.5-3 2.3-4.5 4.5-4.5s4 1.5 4.5 4.5M11.5 18c.5-3 2.3-4.5 4.5-4.5s4 1.5 4.5 4.5"/>',
+  calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  book: '<path d="M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V19c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5z"/><path d="M12 6v13.5"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>', trash: '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
+};
+const LEVEL_IC = { r: "warn", a: "bang", g: "check", n: "q" };
+const SCALES = {   // bands use only thresholds the backend already quotes from its cited sources
+  renal: { max: 120, ticks: [0, 15, 60, 120], zones: [[0, 15, "z-r", "15 or less — kidney failure"], [15, 60, "z-a", "below 60 — may mean kidney disease"], [60, 120, "z-g", "60 or more — normal range"]] },
+  hepatic: { max: 5, ticks: [0, 1.45, 3.25, 5], zones: [[0, 1.45, "z-g", "below 1.45"], [1.45, 3.25, "z-a", "1.45 – 3.25"], [3.25, 5, "z-r", "above 3.25"]] },
+};
 
-const $ = (sel, root = document) => root.querySelector(sel);
-function el(tag, attrs = {}, ...children) {
+let schema = null, health = null, stepTimer = null, scanTimer = null, last = null, recog = null, curTool = null;
+const results = {};   // organ -> risk result of the last answer
+const S = { ui: "en", audience: "clinician", answer: "en", theme: "system", defAud: "clinician" };
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function el(tag, attrs = {}, ...kids) {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v === true ? "" : v);
   }
-  for (const c of children) if (c != null) n.append(c);
+  for (const c of kids) if (c != null && c !== false) n.append(c);
   return n;
 }
+function svgFrom(markup, cls = "i") {   // only ever called with the fixed icon strings above — never server or user text
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); s.setAttribute("focusable", "false");
+  if (cls) s.setAttribute("class", cls);
+  s.innerHTML = markup; return s;
+}
+const icon = (name, cls = "i") => svgFrom(ICON[name], cls);
+const t = (key, vars) => {
+  let s = (UI[S.ui] || UI.en)[key] ?? UI.en[key] ?? key;
+  for (const [k, v] of Object.entries(vars || {})) s = s.replace(`{${k}}`, v);
+  return s;
+};
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* optional */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* optional */ } },
+};
+function organOf(a) {
+  if (a.organ) return a.organ;
+  const hit = Object.entries(schema?.agents || {}).find(([, v]) => v.display_name === a.display_name);
+  return hit ? hit[0] : null;
+}
+const isNarrow = () => window.matchMedia("(max-width: 899px)").matches;
+const motion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
+/* ---------- settings, theme, interface language ---------- */
+function saveSettings() { store.set("medbot-settings", { ui: S.ui, theme: S.theme, defAud: S.defAud }); }
+function applyTheme() {
+  if (S.theme === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", S.theme);
+}
+function setUi(lang, save = true) {
+  S.ui = UI[lang] ? lang : "en";
+  document.documentElement.lang = LANG_ATTR[S.ui];
+  $$('input[name="uilang"], input[name="set-lang"]').forEach(i => i.checked = i.value === S.ui);
+  applyLanguage();
+  if (save) saveSettings();
+}
+function applyLanguage() {
+  $$("[data-i18n]").forEach(n => { n.textContent = t(n.dataset.i18n); });
+  $$("[data-i18n-ph]").forEach(n => n.placeholder = t(n.dataset.i18nPh));
+  $$("[data-i18n-label]").forEach(n => n.setAttribute("aria-label", t(n.dataset.i18nLabel)));
+  $$(".tile").forEach(n => updateTileLabel(n));
+  setPill();
+  $("#seeall").textContent = t($("#caserow").classList.contains("all") ? "seeLess" : "seeAll");
+  updateCounts();
+  if (recog) $("#mic").setAttribute("aria-label", t($("#mic").getAttribute("aria-pressed") === "true" ? "micStop" : "mic"));
+  renderHistory();
+  if (last) { renderResult(last, false); settleTeam(last, false); }
+}
+function setPill() {
+  const pill = $("#status");
+  if (!pill) return;
+  if (!health) { pill.className = "status " + (pill.dataset.off ? "s-off" : "s-wait"); pill.textContent = ""; pill.append(el("span", { class: "lbl", text: t(pill.dataset.off ? "offline" : "connecting") })); return; }
+  pill.className = "status " + (health.mock ? "s-mock" : "s-live");
+  pill.textContent = ""; pill.append(el("span", { class: "lbl", text: t(health.mock ? "mock" : "live") }));
+  pill.title = `Orchestrator: ${health.orchestrator_model}\nSpecialists: ${health.agent_model}`;
+}
+
+/* ---------- who is asking ---------- */
 function getMode() {
   const audience = $('input[name="audience"]:checked').value;
-  return { audience, language: audience === "health_worker" ? $("#language").value : "en" };
+  return { audience, language: audience === "health_worker" ? $('input[name="language"]:checked').value : "en" };
 }
-
-function setMode(m, save = true) {
-  const radio = $(`input[name="audience"][value="${m.audience}"]`);
-  if (radio) radio.checked = true;
-  if (m.language && LANG_NAMES[m.language]) $("#language").value = m.language;
+function setMode(m) {
+  const a = $(`input[name="audience"][value="${m.audience}"]`); if (a) a.checked = true;
+  if (m.language) { const l = $(`input[name="language"][value="${m.language}"]`); if (l) l.checked = true; }
+  syncChips();
+}
+function syncChips() {
   const hw = getMode().audience === "health_worker";
-  $("#langwrap").hidden = !hw;
-  $("#modenote").textContent = MODE_NOTES[getMode().audience];
-  if (save) try { localStorage.setItem("medbot-mode", JSON.stringify(getMode())); } catch (e) { /* optional */ }
+  $("#langs").style.opacity = hw ? "1" : ".6";
+  $("#question").lang = LANG_ATTR[getMode().language];
 }
 
-function initMode() {
-  let saved = null;
-  try { saved = JSON.parse(localStorage.getItem("medbot-mode")); } catch (e) { /* optional */ }
-  setMode(saved || { audience: "clinician", language: "en" }, false);
-  document.querySelectorAll('input[name="audience"]').forEach(r => r.onchange = () => setMode({ audience: r.value }));
-  $("#language").onchange = () => setMode({ audience: "health_worker", language: $("#language").value });
-}
-
-async function init() {
-  initMode();
-  for (const ex of EXAMPLES) {
-    const b = el("button", { type: "button", class: "ex" },
-      el("span", { class: "tag " + ex.cls, text: ex.tag }), el("span", { class: "q", text: ex.q }),
-      ex.hint ? el("span", { class: "hint", text: ex.hint }) : null);
-    b.onclick = () => runExample(ex);
-    $("#examples").append(b);
-  }
-  try {
-    health = await (await fetch("api/health")).json();
-    const mode = $("#mode");
-    if (health.mock) { mode.className = "badge b-mock"; mode.textContent = "MOCK MODE — model replies are labelled stubs"; }
-    else { mode.className = "badge b-live"; mode.textContent = "LIVE on Nebius Token Factory"; }
-    $("#models").append(
-      el("span", {}, "Orchestrator: ", el("code", { text: health.orchestrator_model })),
-      el("span", {}, "Agents: ", el("code", { text: health.agent_model })));
-    schema = await (await fetch("api/schema")).json();
-    renderForms();
-  } catch (e) {
-    $("#mode").className = "badge b-bad"; $("#mode").textContent = "backend unreachable";
+/* ---------- specialist team + stepper ---------- */
+function buildTeam() {
+  for (const o of ORGANS) {
+    const tile = el("li", { class: `tile t-${o.key}`, id: `o-${o.key}`, "data-organ": o.key },
+      el("span", { class: "ic" }, svgFrom(o.icon, null)),
+      el("span", { class: "nm", "data-i18n": "o_" + o.key, text: UI.en["o_" + o.key] }),
+      el("span", { class: "ag", text: o.name }),
+      el("span", { class: "st", role: "img" }));
+    $("#tiles").append(tile);
+    updateTileLabel(tile);
   }
 }
+function updateTileLabel(tile) {
+  const st = ["ok", "warn", "bad"].find(c => tile.classList.contains(c));
+  const badge = $(".st", tile);
+  if (st) badge.setAttribute("aria-label", t("s_" + st)); else badge.removeAttribute("aria-label");
+}
+function setTile(key, state) {
+  const n = $(`#o-${key}`); if (!n) return;
+  n.className = `tile t-${key}` + (state ? " " + state : "");
+  const st = $(".st", n); st.textContent = "";
+  const ic = { ok: "check", warn: "dash", bad: "cross" }[state];
+  if (ic) st.append(icon(ic));
+  updateTileLabel(n);
+}
+function setStep(i, state) {   // i: 1..3; state: "", active, done, halt, skip
+  const li = $(`#stepper li[data-step="${i}"]`);
+  li.className = state || "";
+  const dot = $(".dot", li); dot.textContent = "";
+  if (state === "done") dot.append(icon("check")); else if (state === "halt") dot.append(icon("cross"));
+  else if (state === "skip") dot.append(icon("dash")); else dot.textContent = String(i);
+}
+function resetTeam() {
+  clearInterval(scanTimer); clearTimeout(stepTimer);
+  $("#team").classList.remove("stopped"); $("#orch").classList.remove("busy");
+  for (const o of ORGANS) setTile(o.key, "");
+  [1, 2, 3].forEach(i => setStep(i, ""));
+  const cap = $("#cap"); cap.textContent = ""; cap.dataset.i18n = "teamSub"; cap.textContent = t("teamSub");
+}
+function runTeam() {
+  resetTeam();
+  $("#orch").classList.add("busy");
+  delete $("#cap").dataset.i18n; $("#cap").textContent = t("working");
+  setStep(1, "active");
+  let k = 0;
+  scanTimer = setInterval(() => { ORGANS.forEach((o, i) => setTile(o.key, i === k % ORGANS.length ? "scan" : "")); k++; }, 320);
+  // The stepper advances on a timer while waiting; the final state below always comes from the response.
+  stepTimer = setTimeout(() => { setStep(1, "done"); setStep(2, "active");
+    stepTimer = setTimeout(() => { setStep(2, "done"); setStep(3, "active"); }, 2200); }, 700);
+}
+function settleTeam(d, animate = true) {
+  clearInterval(scanTimer); clearTimeout(stepTimer);
+  $("#orch").classList.remove("busy");
+  for (const o of ORGANS) setTile(o.key, "");
+  const cap = $("#cap"); delete cap.dataset.i18n; cap.textContent = "";
+  if (d.routing_method === "red_flag" || d.routing_method === "safety_model") {
+    $("#team").classList.add("stopped");
+    setStep(1, "halt"); setStep(2, "skip"); setStep(3, "skip");
+    cap.append(icon("warn"), el("span", { text: t(d.routing_method === "red_flag" ? "cap_r" : "cap_s") }));
+    return;
+  }
+  $("#team").classList.remove("stopped");
+  const byKey = Object.fromEntries((d.agents || []).map(a => [organOf(a), a]));
+  const used = new Set(d.agents_consulted || []);
+  const synth = (d.model_calls || []).some(c => c.step === "Synthesis");
+  setStep(1, "done");
+  setStep(2, used.size ? "done" : "skip");
+  setStep(3, synth ? "done" : "skip");
+  for (const o of ORGANS) if (!used.has(o.key)) setTile(o.key, "off");
+  [...used].forEach((key, i) => {
+    const a = byKey[key];
+    const st = !a || !a.deferred ? "ok" : a.defer_kind === "low_confidence" ? "warn" : "bad";
+    if (animate) setTimeout(() => setTile(key, st), 140 * i); else setTile(key, st);
+  });
+  cap.textContent = d.needs_clarification ? t("clarifyCap") : t("consulted", { n: used.size, s: (d.total_ms / 1000).toFixed(1) });
+}
 
+/* ---------- measurements ---------- */
 function fieldInput(f, organ) {
   const id = `f-${organ}-${f.key}`;
   let input;
@@ -305,272 +939,477 @@ function fieldInput(f, organ) {
     input.append(el("option", { value: "", text: "—" }));
     for (const c of f.choices) input.append(el("option", { value: c, text: c.replaceAll("_", " ") }));
   } else {
-    const hint = f.range ? `${f.range[0]}–${f.range[1]}` : `${f.min_exclusive ? ">" : "≥"} ${f.min}`;
-    input = el("input", { id, type: "number", step: "any", inputmode: "decimal", "data-key": f.key,
-                          "data-organ": organ, placeholder: hint });
+    const hint = f.range ? `${f.range[0]}–${f.range[1]}` : (f.min != null ? `${f.min_exclusive ? ">" : "≥"} ${f.min}` : "");
+    input = el("input", { id, type: "number", step: "any", inputmode: "decimal", "data-key": f.key, "data-organ": organ, placeholder: hint });
   }
+  input.addEventListener("input", updateCounts);
   const unit = f.unit && f.kind !== "categorical" ? ` (${f.unit})` : "";
   return el("div", { class: "field" }, el("label", { for: id, text: f.label + unit }), input);
 }
-
-function clearForm(organ) {
-  document.querySelectorAll(`#riskforms [data-organ="${organ}"]`).forEach(i => i.value = "");
-  const src = $(`#src-${organ}`); if (src) src.textContent = "";
-}
-
-function fillForm(organ, values, source) {
-  for (const [k, v] of Object.entries(values)) {
-    const inp = $(`#riskforms [data-organ="${organ}"][data-key="${k}"]`);
-    if (inp) inp.value = v;
+const inputsOf = organ => $$(`#toolpanel [data-organ="${organ}"]`);
+function updateCounts() {
+  if (!schema) return;
+  let total = 0;
+  for (const organ of Object.keys(schema.risk_models)) {
+    const n = inputsOf(organ).filter(i => i.value !== "").length; total += n;
+    const tab = $(`#tab-${organ}`); if (!tab) continue;
+    const dot = $(".dot", tab);
+    if (n && !dot) tab.append(el("span", { class: "dot", "aria-hidden": "true" }));
+    if (!n && dot) dot.remove();
   }
-  const src = $(`#src-${organ}`); if (src) src.textContent = source || "";
-  const box = $(`#model-${organ}`); if (box) box.open = true;
+  $("#mcount").textContent = String(total);
+  const f = $("#filled");
+  if (curTool && inputsOf(curTool).length) {
+    f.hidden = false;
+    f.textContent = t("filled", { x: inputsOf(curTool).filter(i => i.value !== "").length, n: inputsOf(curTool).length });
+  } else f.hidden = true;
 }
-
+function renderTools() {
+  const tabs = $("#tabs"), panel = $("#toolpanel");
+  tabs.textContent = ""; panel.textContent = "";
+  const organs = TOOL_ORDER.filter(o => schema.risk_models[o]).concat(Object.keys(schema.risk_models).filter(o => !TOOL_ORDER.includes(o)));
+  if (!organs.length) { panel.append(el("p", { class: "fineprint", text: "No measurement tools available." })); return; }
+  for (const organ of organs) {
+    const m = schema.risk_models[organ];
+    const tab = el("button", { type: "button", role: "tab", id: `tab-${organ}`, "aria-selected": "false", "aria-controls": `panel-${organ}`, tabindex: "-1",
+                               text: TOOL_NAMES[organ] || `${schema.agents[organ]?.display_name || organ} · ${m.title}` });
+    tab.onclick = () => showTool(organ, true);
+    tabs.append(tab);
+    const about = m.kind === "model" ? `Trained model — ${m.dataset}: ${m.population}. ${m.disclaimer}` : `${m.title}. Source: ${m.citation}`;
+    const load = m.kind === "model" ? el("button", { type: "button", class: "textbtn", "data-i18n": "loadRow", text: t("loadRow") }) : null;
+    if (load) load.onclick = () => loadRow(organ, Math.floor(Math.random() * 50)).catch(() => {});
+    const clear = el("button", { type: "button", class: "textbtn", "data-i18n": "clear", text: t("clear") });
+    clear.onclick = () => clearForm(organ);
+    panel.append(el("div", { role: "tabpanel", id: `panel-${organ}`, "aria-labelledby": `tab-${organ}`, hidden: true },
+      el("div", { class: "result", id: `res-${organ}`, hidden: true }),
+      el("div", { class: "inputs", id: `in-${organ}`, style: "display:grid;gap:10px" },
+        el("p", { class: "fineprint", style: "margin:0", text: about }),
+        el("div", { class: "fields" }, ...m.fields.map(f => fieldInput(f, organ))),
+        el("div", { class: "tool-actions" }, load, clear, el("span", { class: "fineprint", id: `src-${organ}` })))));
+  }
+  panel.append(el("p", { class: "fineprint", style: "margin:10px 0 0", "data-i18n": "toolNote", text: t("toolNote") }));
+  tabs.addEventListener("keydown", e => {
+    const list = $$("#tabs [role=tab]"), i = list.indexOf(document.activeElement);
+    if (i < 0) return;
+    const j = e.key === "ArrowRight" ? (i + 1) % list.length : e.key === "ArrowLeft" ? (i - 1 + list.length) % list.length
+            : e.key === "Home" ? 0 : e.key === "End" ? list.length - 1 : -1;
+    if (j >= 0) { e.preventDefault(); list[j].focus(); list[j].click(); }
+  });
+  showTool(organs[0]);
+}
+function showTool(organ, focus = false) {
+  curTool = organ;
+  $$("#tabs [role=tab]").forEach(b => { const on = b.id === `tab-${organ}`; b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; });
+  $$("#toolpanel [role=tabpanel]").forEach(p => p.hidden = p.id !== `panel-${organ}`);
+  if (focus) $(`#tab-${organ}`).focus();
+  updateCounts();
+}
+function clearForm(organ) {
+  inputsOf(organ).forEach(i => i.value = "");
+  const src = $(`#src-${organ}`); if (src) src.textContent = "";
+  updateCounts();
+}
+function fillForm(organ, values, source) {
+  for (const [k, v] of Object.entries(values)) { const inp = $(`#toolpanel [data-organ="${organ}"][data-key="${k}"]`); if (inp) inp.value = v; }
+  const src = $(`#src-${organ}`); if (src) src.textContent = source || "";
+  updateCounts();
+}
 async function loadRow(organ, row) {
-  const ex = await (await fetch(`api/example/${organ}?row=${row}`)).json();
+  const r = await fetch(`api/example/${organ}?row=${row}`);
+  if (!r.ok) throw new Error("no example");
+  const ex = await r.json();
   fillForm(organ, ex.values, ex.source);
 }
-
-function renderForms() {
-  const root = $("#riskforms");
-  root.textContent = "";
-  for (const [organ, m] of Object.entries(schema.risk_models)) {
-    const name = schema.agents[organ].display_name;
-    const fields = el("div", { class: "fields" }, ...m.fields.map(f => fieldInput(f, organ)));
-    const load = m.kind === "model" ? el("button", { type: "button", class: "small", text: "Load a real dataset row" }) : null;
-    const clear = el("button", { type: "button", class: "small", text: "Clear" });
-    const src = el("span", { class: "note", id: `src-${organ}` });
-    if (load) load.onclick = () => loadRow(organ, Math.floor(Math.random() * 50));
-    clear.onclick = () => clearForm(organ);
-    const about = m.kind === "model"
-      ? [el("p", { class: "note", text: `Trained model — ${m.dataset}: ${m.population}.` }),
-         el("p", { class: "note disclaimer", style: "margin-top:0", text: m.disclaimer })]
-      : [el("p", { class: "note", text: m.formula }),
-         el("p", { class: "note", text: `Source: ${m.citation}` }),
-         ...m.caveats.map(c => el("p", { class: "note", text: c }))];
-    root.append(el("details", { class: "model", id: `model-${organ}` },
-      el("summary", {}, `${name} — ${m.title} `,
-         el("span", { class: "kind badge " + (m.kind === "model" ? "b-warn" : "b-ok"),
-                      text: m.kind === "model" ? "trained model" : "published equation" })),
-      el("div", { class: "body" }, ...about, fields,
-        el("div", { class: "row", style: "margin-top:8px" }, load, clear, src))));
-  }
-}
-
-async function runExample(ex) {
-  if (ex.mode) setMode(ex.mode);
-  $("#question").value = ex.q;
-  if (schema) for (const organ of Object.keys(schema.risk_models)) {
-    clearForm(organ);
-    const box = $(`#model-${organ}`); if (box) box.open = false;
-  }
-  try {
-    if (ex.values) for (const [organ, v] of Object.entries(ex.values)) fillForm(organ, v, "Illustrative inputs, not a patient.");
-    if (ex.datasetRow) await loadRow(ex.datasetRow.organ, ex.datasetRow.row);
-  } catch (e) { /* the question still runs; the agent will ask for any missing values */ }
-  $("#ask").requestSubmit();
-}
-
 function collectValues() {
-  // Each fieldset is one tool's input. Age/sex appear in several; send the
-  // values from whichever fieldset has tool-specific fields filled in.
+  // Each tool's fields are one input set. Age/sex appear in several; send the
+  // values from whichever set has tool-specific fields filled in.
   // Shared fields must agree — one patient per question.
   const values = {}, from = {};
   for (const organ of Object.keys(schema?.risk_models || {})) {
-    const inputs = [...document.querySelectorAll(`#riskforms [data-organ="${organ}"]`)];
-    const used = inputs.some(i => i.value !== "" && !["age", "sex"].includes(i.dataset.key));
-    if (!used) continue;
+    const inputs = inputsOf(organ);
+    if (!inputs.some(i => i.value !== "" && !["age", "sex"].includes(i.dataset.key))) continue;
     for (const i of inputs) {
       if (i.value === "") continue;
       const v = i.type === "number" ? Number(i.value) : i.value, k = i.dataset.key;
       if (k in values && values[k] !== v)
-        throw new Error(`"${k}" is ${values[k]} in the ${from[k]} form but ${v} in the ${organ} form — use one patient per question.`);
+        throw new Error(`"${k}" is ${values[k]} for ${from[k]} but ${v} for ${organ} — use one patient per question.`);
       values[k] = v; from[k] = organ;
     }
   }
   return Object.keys(values).length ? values : null;
 }
+function showInputs(organ, show) { const inp = $(`#in-${organ}`); if (inp) inp.hidden = !show; }
 
+/* ---------- column 3 results ---------- */
+function scaleEl(cfg, value) {
+  const p = v => Math.max(0, Math.min(100, v / cfg.max * 100));
+  return el("div", { class: "scale", role: "img", "aria-label": `Value ${value} on a scale from 0 to ${cfg.max}` },
+    el("div", { class: "pin" }, el("span", { style: `left:${p(value)}%` })),
+    el("div", { class: "track" }, ...cfg.zones.map(([a, b, c]) => el("div", { class: c, style: `width:${p(b) - p(a)}%` }))),
+    el("div", { class: "ticks" }, ...cfg.ticks.map(v => el("span", { style: `left:${p(v)}%`, text: String(v) }))),
+    el("div", { class: "zlegend" }, ...cfg.zones.map(([, , c, l]) => el("span", {}, el("i", { class: c }), l))));
+}
+function disclaimer(r) {
+  return [r.disclaimer ? el("div", { class: "disclaim" }, icon("warn"), el("span", { text: r.disclaimer })) : null,
+          r.citation ? el("div", { class: "small", text: r.citation }) : null];
+}
+function renderMeasurements(d) {
+  for (const k of Object.keys(results)) delete results[k];
+  $$("#toolpanel .result").forEach(n => { n.textContent = ""; n.hidden = true; });
+  $$("#toolpanel .inputs").forEach(n => n.hidden = false);
+  const risk = $("#riskcard"); risk.textContent = ""; risk.hidden = true;
+  let first = null;
+  for (const a of d.agents || []) {
+    if (!a.risk) continue;
+    const organ = organOf(a), r = a.risk; results[organ] = r;
+    const box = $(`#res-${organ}`); if (!box) continue;
+    first = first || organ;
+    box.hidden = false; box.style.cssText = "display:grid;gap:10px";
+    if (r.status === "needs_values") {
+      box.append(el("div", { class: "notice" }, el("b", { text: t("needs") }),
+        el("ul", {}, ...(r.missing || []).map(m => el("li", { text: m.label + (m.unit ? ` (${m.unit})` : "") })))));
+    } else if (r.status === "invalid") {
+      box.append(el("div", { class: "notice" }, el("b", { text: t("invalid") }), el("ul", {}, ...(r.problems || []).map(p => el("li", { text: p })))));
+    } else if (r.kind === "calculator") {
+      box.append(el("div", { class: "reading" }, el("span", { class: "v", text: r.value.toFixed(r.decimals) }), el("span", { class: "u", text: `${r.unit || ""} ${r.measure || ""}`.trim() })));
+      const sc = SCALES[organ]; if (sc) box.append(scaleEl(sc, r.value));
+      if (r.interpretation) box.append(el("div", { class: "interp", text: r.interpretation }));
+      if (r.interpretation_source) box.append(el("div", { class: "small", text: `Threshold source: ${r.interpretation_source}` }));
+      for (const c of r.caveats || []) box.append(el("div", { class: "small", text: c }));
+      box.append(...disclaimer(r));
+      const edit = el("button", { type: "button", class: "textbtn", text: t("editVals") });
+      edit.onclick = () => { showInputs(organ, true); edit.remove(); };
+      box.append(edit);
+      showInputs(organ, false);
+    } else {
+      // trained model: the probability card lives below the measurement card
+      const pct = Math.round(r.probability * 100), v = r.validation || {};
+      risk.hidden = false;
+      risk.append(el("div", { class: "card-h" }, el("h2", { text: t("riskTitle") }), el("span", { class: "tag a", text: "Trained model" })),
+        el("div", { class: "reading" }, el("span", { class: "v", text: `${pct}%` }), r.target ? el("span", { class: "u", text: `model estimate of ${r.target}` }) : null),
+        el("div", { class: "scale", role: "img", "aria-label": `${pct} percent` },
+          el("div", { class: "pin" }, el("span", { style: `left:${pct}%` })),
+          el("div", { class: "track", style: "background:var(--sunk)" }, el("div", { class: "z-b", style: `width:${pct}%` })),
+          el("div", { class: "ticks" }, el("span", { style: "left:0%", text: "0%" }), el("span", { style: "left:50%", text: "50%" }), el("span", { style: "left:100%", text: "100%" }))),
+        r.top_factors?.length ? el("div", { class: "small", text: "Biggest contributions compared with a typical patient in the dataset:" }) : null,
+        r.top_factors?.length ? el("table", { class: "factors" }, el("tbody", {}, ...r.top_factors.map(f => el("tr", {},
+          el("td", { text: `${f.label} = ${String(f.value).replaceAll("_", " ")}` }),
+          el("td", { class: "n", text: `${f.effect >= 0 ? "+" : "−"}${Math.abs(f.effect * 100).toFixed(0)} pts` }))))) : null,
+        v.n_samples ? el("div", { class: "small", text: `Validation (cross-validated, ${v.n_samples} patients): AUC ${v.cv_auc_mean.toFixed(2)}, ` +
+          `sensitivity ${v.sensitivity.toFixed(2)}, specificity ${v.specificity.toFixed(2)}.` + (r.population ? ` Population: ${r.population}.` : "") }) : null,
+        ...disclaimer(r));
+      box.append(el("div", { class: "small", text: `${pct}% — ${t("riskTitle")} ↓` }));
+    }
+  }
+  if (first) showTool(first);
+}
+function renderSourcesCard(d) {
+  const card = $("#srccard"); card.textContent = "";
+  const answered = (d.agents || []).filter(a => !a.deferred && a.citations?.length);
+  const urls = [...new Set(answered.flatMap(a => a.citations))];
+  if (!urls.length) { card.hidden = true; return; }
+  card.hidden = false;
+  card.append(el("h2", { style: "font-size:17px", text: t("src") }),
+    el("ol", {}, ...urls.map(u => el("li", {}, /^https?:\/\//.test(u) ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: new URL(u).hostname.replace(/^www\d?\./, "") }) : u,
+      el("span", { text: answered.filter(a => a.citations.includes(u)).map(a => a.display_name).join(", ") })))));
+}
+
+/* ---------- answer rendering ---------- */
+// Server text only ever becomes text nodes. Lines starting "1." / "-" become real list items;
+// "**bold**" and "# heading" markers become <strong> / bold paragraphs, built with textContent.
+function inline(parent, text) {
+  text.split(/(\*\*[^*]+\*\*)/g).forEach(part => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) parent.append(el("strong", { text: part.slice(2, -2) }));
+    else if (part) parent.append(document.createTextNode(part));
+  });
+  return parent;
+}
+function richText(text, lang) {
+  const root = el("div", { class: "answer-text", lang });
+  let list = null, kind = null;
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const line = raw.trim();
+    const num = line.match(/^(\d+)[.)]\s+(.*)$/), bul = line.match(/^[-*•]\s+(.*)$/);
+    if (num || bul) {
+      const k = num ? "ol" : "ul";
+      if (!list || kind !== k) { list = el(k); kind = k; if (num && num[1] !== "1") list.setAttribute("start", num[1]); root.append(list); }
+      list.append(inline(el("li"), num ? num[2] : bul[1]));
+      continue;
+    }
+    list = null; kind = null;
+    if (!line || /^-{3,}$/.test(line)) continue;
+    const hd = line.match(/^#{1,6}\s+(.*)$/);
+    root.append(hd ? inline(el("p", { class: "hd" }), hd[1]) : inline(el("p"), line));
+  }
+  return root;
+}
+function sourceList(urls) {
+  return el("ol", {}, ...urls.map(u => el("li", {}, /^https?:\/\//.test(u) ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: u }) : u)));
+}
+function triageOf(d) {
+  if (d.routing_method === "red_flag" || d.routing_method === "safety_model") return "r";
+  if (d.needs_clarification) return "n";
+  if (d.deferred) return "a";
+  return "g";
+}
+function answerCard(d) {
+  const lvl = triageOf(d), lang = LANG_ATTR[d.language] || "en";
+  const calls = d.model_calls || [];
+  const tags = el("div", { class: "tags" },
+    el("span", { class: "tag", text: d.audience === "health_worker" ? `${t("modeHw")} · ${LANG_NAMES[d.language] || d.language}` : t("modeCl") }),
+    calls.length ? el("span", { class: "tag nv", text: "Nemotron" }) : null,
+    d.mock ? el("span", { class: "tag mock", text: "Mock" }) : null);
+  const card = el("article", { class: "card" + (lvl === "r" ? " urgent" : ""), "aria-labelledby": "ans-h" },
+    el("div", { class: `triage tr-${lvl}` }, el("div", { class: "ic" }, icon(LEVEL_IC[lvl])),
+      el("div", { class: "tx" }, el("h2", { id: "ans-h", text: t("B_" + lvl) }), el("p", { text: t("S_" + lvl) })), tags));
+  const body = el("div", { class: "answer-body" });
+  if (d.final_answer) body.append(richText(d.final_answer, lang));
+  const cited = [...new Set((d.agents || []).filter(a => !a.deferred).flatMap(a => a.citations || []))];
+  if (cited.length) body.append(el("div", { class: "sources" }, el("h3", { text: t("src") }), sourceList(cited)));
+  card.append(body);
+  return card;
+}
+const TIERS = { orchestrator: "Orchestrator", agent: "Specialist", router: "Router" };
+function modelId(id) {   // the ID exactly as the API returned it, allowed to wrap only after "/"
+  const code = el("code", { class: "mid" });
+  String(id).split("/").forEach((part, i, all) => {
+    code.append(el("span", { style: "white-space:nowrap", text: part + (i < all.length - 1 ? "/" : "") }));
+    if (i < all.length - 1) code.append(el("wbr"));
+  });
+  return code;
+}
+function traceTable(d) {
+  const calls = d.model_calls || [], maxMs = Math.max(1, ...calls.map(c => c.latency_ms || 0));
+  const tbody = el("tbody");
+  let n = 0;
+  const add = (cls, title, desc, call) => {
+    n++;
+    const u = call?.usage;
+    tbody.append(el("tr", { class: cls },
+      el("td", {}, el("span", { class: "n", text: String(n) })),
+      el("td", {}, el("div", { class: "nm", text: title }), desc ? el("div", { class: "d", text: desc }) : null),
+      el("td", {}, call ? el("span", { class: "tag nv", text: "Nemotron" }) : el("span", { class: "tag", text: "code" }), call?.mock ? el("span", { class: "tag mock", text: "mock", style: "margin-top:4px" }) : null),
+      el("td", {}, call?.model ? modelId(call.model) : null, call ? el("div", { class: "d", text: `${TIERS[call.role] || call.role || ""} tier` }) : null),
+      el("td", { class: "num" }, call && !call.mock && call.latency_ms != null ? `${call.latency_ms} ms` : null,
+        call && !call.mock && call.latency_ms != null ? el("div", { class: "lbar", "aria-hidden": "true" }, el("span", { style: `width:${Math.max(3, call.latency_ms / maxMs * 100)}%` })) : null),
+      el("td", { class: "num" }, u && u.total_tokens != null ? `${u.prompt_tokens ?? "?"} → ${u.completion_tokens ?? "?"}` : null)));
+  };
+  const red = d.routing_method === "red_flag";
+  add(red ? "x" : "", "Emergency check", red ? "Emergency sign found — stopped here. No specialist, no AI call." : "No emergency sign.");
+  if (!red) {
+    if (d.safety) {
+      const s = d.safety, call = calls.find(c => c.step === "Safety check");
+      const txt = { emergency: `Possible emergency${s.sign ? ` (${s.sign})` : ""} — deferred as urgent.`, clear: "No emergency sign found.",
+                    unavailable: `Unavailable (${s.reason}) — the rule-based result stands.`, skipped: `Skipped (${s.reason}).` }[s.status] || s.status;
+      add(call ? (s.status === "emergency" ? "x" : "m") : "", "AI safety check", `${txt} It can only add caution, never remove it.`, call);
+    }
+    const rc = calls.find(c => c.step === "Routing");
+    const routed = d.agents_consulted?.length ? `→ ${d.agents_consulted.join(", ")}` : "→ no specialist; asked to clarify";
+    const why = `${routed}${d.routing_reason ? ". " + d.routing_reason : ""}`;
+    add(rc ? "m" : "", d.routing_method === "keyword_fallback" ? "Routing (keyword fallback)" : "Routing", rc ? why : `Keywords ${why}`, rc);
+    for (const a of d.agents || []) {
+      if (a.call) add("m", `${a.display_name} specialist`, null, a.call);
+      else add("", `${a.display_name} specialist`, `Guardrail deferred (${DEFER_LABELS[a.defer_kind] || a.defer_kind}) — no AI call.`);
+      if (a.risk) add("", `${a.display_name} measurement`, `${a.risk.title}: ${a.risk.status}`);
+    }
+    for (const c of calls.filter(c => /discarded/.test(c.step))) add("m", c.step, null, c);
+    const syn = calls.find(c => c.step === "Synthesis");
+    if (syn) add("m", "Final answer", null, syn);
+    else if ((d.agents || []).length) add("", "Final answer", "Written by a rule — the answer was deferred.");
+  }
+  return el("table", { class: "trace" },
+    el("thead", {}, el("tr", {}, ...["#", "Step", "Type", "Model", "Latency", "Tokens"].map((h, i) => el("th", { scope: "col", class: i >= 4 ? "num" : null, text: h })))),
+    tbody);
+}
+function expander(title, extra, body) {
+  return el("details", { class: "card ex" }, el("summary", {}, el("h2", { text: title }), extra, icon("chev", "i chev")), el("div", { class: "exb" }, ...body));
+}
+function renderResult(d, scroll = true) {
+  const root = $("#results");
+  root.textContent = "";
+  root.append(answerCard(d));
+  const calls = d.model_calls || [], tokens = calls.reduce((s, c) => s + (c.usage?.total_tokens || 0), 0);
+  const stats = el("span", { class: "hstats" },
+    d.total_ms != null ? el("span", {}, el("b", { text: `${(d.total_ms / 1000).toFixed(1)} s` }), ` ${t("time")}`) : null,
+    el("span", {}, el("b", { text: String(calls.length) }), ` ${t("calls")}`),
+    el("span", {}, el("b", { text: String((d.agents || []).length) }), ` ${t("specs")}`),
+    tokens ? el("span", {}, el("b", { text: tokens.toLocaleString() }), ` ${t("tokens")}`) : null);
+  root.append(expander(t("how"), stats, [traceTable(d)]));
+  if ((d.agents || []).length) root.append(expander(t("notes"), el("span", { class: "hstats" }, el("span", { text: String(d.agents.length) })), d.agents.map(a => {
+    const st = !a.deferred ? "g" : a.defer_kind === "low_confidence" ? "a" : "r";
+    const box = el("div", { class: "agent" },
+      el("div", { class: "h" }, el("h3", { text: a.display_name }),
+        el("span", { class: `tag ${st}` }, icon(st === "g" ? "check" : st === "a" ? "dash" : "cross"),
+          a.deferred ? "deferred · " + (DEFER_LABELS[a.defer_kind] || a.defer_kind) : "answered"),
+        a.call?.mock ? el("span", { class: "tag mock", text: "mock" }) : null),
+      el("div", { class: "body", lang: LANG_ATTR[d.language] || "en", text: a.deferred ? a.reason : a.answer }));
+    if (a.retrieved_headings?.length) box.append(el("div", { class: "small", text: "Guideline sections used: " + a.retrieved_headings.join(" · ") }));
+    if (a.citations?.length) box.append(el("div", { class: "sources" }, el("h3", { text: t("src") }), sourceList(a.citations)));
+    return box;
+  })));
+  renderMeasurements(d);
+  renderSourcesCard(d);
+  if (scroll) root.scrollIntoView({ behavior: motion(), block: "start" });
+}
+
+/* ---------- history (question text, time, triage level only) ---------- */
+const HKEY = "medbot-history";
+const getHist = () => { const h = store.get(HKEY); return Array.isArray(h) ? h : []; };
+function addHist(q, level) { store.set(HKEY, [{ q: q.slice(0, 1000), time: Date.now(), level }, ...getHist().filter(h => h.q !== q)].slice(0, 10)); renderHistory(); }
+function clearHist() { store.del(HKEY); renderHistory(); }
+function renderHistory() {
+  const ul = $("#hist"); if (!ul) return;
+  ul.textContent = "";
+  const h = getHist();
+  $("#hist-empty").hidden = h.length > 0;
+  for (const item of h) {
+    const lvl = ["r", "a", "g", "n"].includes(item.level) ? item.level : "n";
+    const b = el("button", { type: "button" }, el("span", { class: "q", text: String(item.q) }),
+      el("span", { class: "m" }, el("span", { class: `tag ${{ r: "r", a: "a", g: "g", n: "" }[lvl]}` }, icon(LEVEL_IC[lvl]), t("T_" + lvl)),
+        el("span", { text: new Date(item.time).toLocaleString() })));
+    b.onclick = () => { $("#dlg-history").close(); $("#question").value = String(item.q); onInput(); $("#question").focus(); };
+    ul.append(el("li", {}, b));
+  }
+}
+
+/* ---------- voice input ---------- */
+function initMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const mic = $("#mic");
+  if (!SR) { mic.hidden = true; return; }
+  mic.hidden = false; mic.append(icon("mic"));
+  let base = "";
+  mic.onclick = () => {
+    if (recog) { recog.stop(); return; }
+    recog = new SR();
+    const lang = getMode().audience === "health_worker" ? getMode().language : S.ui;
+    recog.lang = lang === "en" ? "en-IN" : "hi-IN";
+    recog.interimResults = true; recog.continuous = false;
+    base = $("#question").value ? $("#question").value.replace(/\s*$/, " ") : "";
+    recog.onresult = e => {
+      const text = [...e.results].map(r => r[0].transcript).join("");
+      $("#question").value = (base + text).slice(0, 1000); onInput();
+    };
+    recog.onend = recog.onerror = () => { recog = null; mic.setAttribute("aria-pressed", "false"); mic.setAttribute("aria-label", t("mic")); $("#question").focus(); };
+    mic.setAttribute("aria-pressed", "true"); mic.setAttribute("aria-label", t("micStop"));
+    try { recog.start(); } catch (e) { recog = null; mic.setAttribute("aria-pressed", "false"); }
+  };
+}
+
+/* ---------- navigation ---------- */
+function nav(where) {
+  $$(".rail button").forEach(b => b.toggleAttribute("aria-current", false));
+  if (where === "home") { window.scrollTo({ top: 0, behavior: motion() }); }
+  if (where === "ask") { $("#question").scrollIntoView({ behavior: motion(), block: "center" }); $("#question").focus({ preventScroll: true }); }
+  if (where === "history") { renderHistory(); $("#dlg-history").showModal(); }
+  if (where === "settings") openSettings();
+  const b = $(`.rail button[data-nav="${where}"]`); if (b && (where === "home" || where === "ask")) b.setAttribute("aria-current", "page");
+}
+function openSettings() {
+  $$('input[name="set-lang"]').forEach(i => i.checked = i.value === S.ui);
+  $$('input[name="set-aud"]').forEach(i => i.checked = i.value === S.defAud);
+  $$('input[name="set-theme"]').forEach(i => i.checked = i.value === S.theme);
+  $("#dlg-settings").showModal();
+}
+function onInput() { $("#count").textContent = `${$("#question").value.length}/1000`; }
+
+/* ---------- start ---------- */
+async function init() {
+  $$("[data-ico]").forEach(n => { n.append(icon(n.dataset.ico)); if (!n.className) n.style.display = "inline-grid"; });
+  $("#gear").append(icon("gear")); $$("[data-close]").forEach(b => { b.append(icon("close")); b.onclick = () => b.closest("dialog").close(); });
+  buildTeam();
+  const saved = store.get("medbot-settings") || {};
+  S.theme = ["system", "light", "dark"].includes(saved.theme) ? saved.theme : "system";
+  S.defAud = saved.defAud === "health_worker" ? "health_worker" : "clinician";
+  applyTheme();
+  setMode({ audience: S.defAud, language: UI[saved.ui] ? saved.ui : "en" });
+  setUi(UI[saved.ui] ? saved.ui : "en", false);
+
+  $$('input[name="uilang"]').forEach(r => r.onchange = () => setUi(r.value));
+  $$('input[name="audience"]').forEach(r => r.onchange = () => syncChips());
+  $$('input[name="language"]').forEach(r => r.onchange = () => { setMode({ audience: "health_worker" }); setUi(r.value); });
+  $$('input[name="set-lang"]').forEach(r => r.onchange = () => setUi(r.value));
+  $$('input[name="set-aud"]').forEach(r => r.onchange = () => { S.defAud = r.value; saveSettings(); });
+  $$('input[name="set-theme"]').forEach(r => r.onchange = () => { S.theme = r.value; applyTheme(); saveSettings(); });
+  $("#set-clear").onclick = clearHist; $("#hist-clear").onclick = clearHist;
+  $("#gear").onclick = openSettings;
+  $$(".rail button").forEach(b => b.onclick = () => nav(b.dataset.nav));
+  $("#question").addEventListener("input", onInput);
+  $("#question").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("#ask").requestSubmit(); });
+  $("#mtoggle").onclick = () => { $("#mcard").scrollIntoView({ behavior: motion(), block: "start" }); $("#mcard").focus({ preventScroll: true }); };
+  $("#seeall").onclick = () => {
+    const row = $("#caserow"), all = row.classList.toggle("all");
+    $("#seeall").setAttribute("aria-expanded", String(all)); $("#seeall").textContent = t(all ? "seeLess" : "seeAll");
+  };
+  for (const ex of EXAMPLES) {
+    const lang = ex.mode?.language || "en";
+    const b = el("button", { type: "button", class: "case " + ex.cls },
+      el("span", { class: "ic" }, icon(ex.ic)),
+      el("b", { text: ex.tag }),
+      el("span", { class: "q", lang: LANG_ATTR[lang], text: ex.q }),
+      el("span", { class: "lg", lang: LANG_ATTR[lang], text: LANG_NAMES[lang] }));
+    b.onclick = () => runExample(ex);
+    $("#caserow").append(b);
+  }
+  initMic();
+  onInput();
+  renderHistory();
+  try {
+    health = await (await fetch("api/health")).json();
+    setPill();
+    schema = await (await fetch("api/schema")).json();
+    renderTools();
+  } catch (e) {
+    health = null; $("#status").dataset.off = "1"; setPill();
+  }
+}
+async function runExample(ex) {
+  setMode(ex.mode || { audience: "clinician", language: getMode().language });
+  if (ex.mode) setUi(ex.mode.language);
+  $("#question").value = ex.q; onInput();
+  if (schema) for (const organ of Object.keys(schema.risk_models)) clearForm(organ);
+  try {
+    if (ex.values) for (const [organ, v] of Object.entries(ex.values)) { fillForm(organ, v, "Illustrative inputs, not a patient."); showTool(organ); }
+    if (ex.datasetRow) { await loadRow(ex.datasetRow.organ, ex.datasetRow.row); showTool(ex.datasetRow.organ); }
+  } catch (e) { /* the question still runs; the specialist asks for any missing values */ }
+  $("#ask").requestSubmit();
+}
+
+/* ---------- ask ---------- */
 $("#ask").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const question = $("#question").value.trim();
-  if (!question) return;
-  $("#submit").disabled = true; $("#status").textContent = "Consulting agents…";
+  $("#formerr").textContent = "";
+  if (!question) { $("#formerr").textContent = t("emptyQ"); $("#question").focus(); return; }
+  let patient_values;
+  try { patient_values = collectValues(); } catch (e) { $("#formerr").textContent = e.message; return; }
+  if (recog) recog.stop();
+  $("#submit").disabled = true;
+  last = null;
+  const res = $("#results");
+  res.textContent = "";
+  res.append(el("div", { class: "card working", "aria-busy": "true" }, el("span", { class: "bars", "aria-hidden": "true" }, el("i"), el("i"), el("i")),
+    el("span", { text: t("working") })));
+  (isNarrow() ? $("#results") : $("#team")).scrollIntoView({ behavior: motion(), block: "nearest" });
+  runTeam();
   try {
-    const res = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-                                         body: JSON.stringify({ question, patient_values: collectValues(), ...getMode() }) });
-    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-    renderResult(await res.json());
-    $("#status").textContent = "";
-    if (window.matchMedia("(max-width: 900px)").matches) $("#results").scrollIntoView({ behavior: "smooth" });
+    const r = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
+                                       body: JSON.stringify({ question, patient_values, ...getMode() }) });
+    if (!r.ok) { let m = await r.text(); try { m = JSON.parse(m).detail || m; } catch (e) { /* plain text */ } throw new Error(typeof m === "string" ? m : JSON.stringify(m)); }
+    const d = await r.json();
+    last = d;
+    settleTeam(d);
+    renderResult(d);
+    addHist(question, triageOf(d));
   } catch (e) {
-    $("#status").innerHTML = ""; $("#status").append(el("span", { class: "err", text: "Request failed: " + e.message }));
+    resetTeam();
+    res.textContent = "";
+    res.append(el("div", { class: "card" }, el("div", { class: "triage tr-n", style: "border-radius:var(--r-lg)" }, el("div", { class: "ic" }, icon("bang")),
+      el("div", { class: "tx" }, el("h2", { text: t("err") }), el("p", { text: e.message })))));
   } finally {
     $("#submit").disabled = false;
   }
 });
-
-function sourceList(urls) {
-  return el("ul", { class: "src" }, ...urls.map(u =>
-    el("li", {}, /^https?:\/\//.test(u) ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: u }) : u)));
-}
-
-function riskBox(r) {
-  const box = el("div", { class: "risk" }, el("div", { class: "label", style: "margin-top:0",
-                 text: r.kind === "calculator" ? "Calculator (published equation)" : "Risk model (trained)" }));
-  if (r.status === "needs_values") {
-    box.append(el("div", { text: "No result — the agent needs these values first:" }),
-               el("ul", { class: "src" }, ...r.missing.map(m => el("li", { text: m.label + (m.unit ? ` (${m.unit})` : "") }))));
-  } else if (r.status === "invalid") {
-    box.append(el("div", { text: "No result:" }), el("ul", { class: "src" }, ...r.problems.map(p => el("li", { text: p }))));
-  } else if (r.kind === "calculator") {
-    box.append(
-      el("div", {}, el("span", { class: "pct", text: r.value.toFixed(r.decimals) }), ` ${r.unit} — ${r.measure}`),
-      el("div", { text: r.interpretation }),
-      el("div", { class: "note", text: `Threshold source: ${r.interpretation_source}. Formula: ${r.formula}` }),
-      ...r.caveats.map(c => el("div", { class: "note", text: c })));
-  } else {
-    const pct = Math.round(r.probability * 100);
-    const bar = el("div", { class: "bar" }, el("span", { style: `width:${pct}%` }));
-    const rows = r.top_factors.map(f => el("tr", {},
-      el("td", { text: `${f.label} = ${String(f.value).replaceAll("_", " ")}` }),
-      el("td", { class: "num", text: `${f.effect >= 0 ? "+" : "−"}${Math.abs(f.effect * 100).toFixed(0)} pts` })));
-    const v = r.validation;
-    box.append(
-      el("div", {}, el("span", { class: "pct", text: `${pct}%` }), ` model estimate of ${r.target}`), bar,
-      el("div", { class: "note", text: "Largest contributions vs a typical patient in the dataset:" }),
-      el("table", { class: "factors" }, ...rows),
-      el("div", { class: "note", style: "margin-top:6px",
-                  text: `Validation (cross-validated, ${v.n_samples} patients): AUC ${v.cv_auc_mean.toFixed(2)}, ` +
-                        `sensitivity ${v.sensitivity.toFixed(2)}, specificity ${v.specificity.toFixed(2)} at 50%. ` +
-                        `Population: ${r.population}.` }));
-  }
-  box.append(el("div", { class: "disclaimer", text: r.disclaimer }), el("div", { class: "note", text: r.citation }));
-  return box;
-}
-
-function tokensText(c) {
-  if (c.usage && c.usage.total_tokens != null)
-    return `${c.usage.prompt_tokens ?? "?"} in · ${c.usage.completion_tokens ?? "?"} out`;
-  return c.mock ? "tokens n/a (mock)" : "tokens not reported";
-}
-
-const TIERS = { orchestrator: "Orchestrator tier", agent: "Agent tier", router: "Router tier" };
-
-function modelStep(step, c, detail) {
-  const tier = TIERS[c.role] || "Agent tier";
-  return el("li", {},
-    el("span", { class: "step" }, step + " ", el("span", { class: "badge b-nv", text: "Nemotron" }),
-       c.mock ? el("span", { class: "badge b-mock", text: "mock" }) : null),
-    el("span", { class: "who" }, `${tier}: `, el("code", { text: c.model }),
-       detail ? el("span", { class: "detail", text: detail }) : null),
-    el("span", { class: "stats" }, c.mock ? "no network call" : `${c.latency_ms ?? "?"} ms`, el("br"), tokensText(c)));
-}
-
-const SAFETY_TEXT = {
-  emergency: s => `Possible emergency${s.sign ? ` (${s.sign})` : ""} — answer deferred as urgent.`,
-  clear: () => "No emergency sign found — nothing changed.",
-  unavailable: s => `Check unavailable (${s.reason}) — keyword result stands.`,
-  skipped: s => `Skipped (${s.reason}).`,
-};
-
-function safetyStep(d, calls) {
-  const s = d.safety;
-  if (!s) return null;
-  const text = (SAFETY_TEXT[s.status] || (() => s.status))(s) + " Can only add a deferral, never remove one.";
-  const call = calls.find(c => c.step === "Safety check");
-  return call ? modelStep("1b. Safety check", call, text) : codeStep("1b. Safety check", text);
-}
-
-function codeStep(step, what) {
-  return el("li", {},
-    el("span", { class: "step" }, step + " ", el("span", { class: "badge b-code", text: "code" })),
-    el("span", { class: "who", text: what }),
-    el("span", { class: "stats", text: "deterministic" }));
-}
-
-function traceList(d) {
-  const ol = el("ol", { class: "trace" });
-  const calls = d.model_calls || [];
-  ol.append(codeStep("1. Red-flag check", d.routing_method === "red_flag"
-    ? "Emergency symptom found — answer stopped here, no agents, no model call." : "No global red flag."));
-  if (d.routing_method === "red_flag") return ol;
-  const safety = safetyStep(d, calls);
-  if (safety) ol.append(safety);
-  const routingCall = calls.find(c => c.step === "Routing");
-  const routed = d.agents_consulted.length ? `→ ${d.agents_consulted.join(", ")}` : "→ no agent; asked the user to clarify";
-  const why = `${routed}. Reason: ${d.routing_reason || "n/a"}`;
-  if (routingCall) ol.append(modelStep(d.routing_method === "keyword_fallback" ? "2. Routing (fell back to keywords)" : "2. Routing", routingCall, why));
-  else ol.append(codeStep("2. Routing", `Keywords ${why}`));
-  for (const a of d.agents) {
-    if (a.call) ol.append(modelStep(`3. ${a.display_name} agent`, a.call));
-    else ol.append(codeStep(`3. ${a.display_name} agent`,
-      `Guardrail deferred (${DEFER_LABELS[a.defer_kind] || a.defer_kind}) — no model call.`));
-    if (a.risk) ol.append(codeStep(`   ${a.display_name} risk tool`, `${a.risk.title}: ${a.risk.status}`));
-  }
-  const synth = calls.find(c => c.step === "Synthesis");
-  if (synth) ol.append(modelStep("4. Synthesis", synth));
-  else if (d.agents.length) ol.append(codeStep("4. Synthesis", "Skipped — the answer was deferred."));
-  return ol;
-}
-
-function totalsText(d) {
-  const calls = [...(d.model_calls || [])];
-  const tokens = calls.reduce((s, c) => s + (c.usage?.total_tokens || 0), 0);
-  const parts = [`Total ${d.total_ms} ms`, `${calls.length} Nemotron call${calls.length === 1 ? "" : "s"}`];
-  if (tokens) parts.push(`${tokens} tokens`);
-  if (d.agents.length > 1) parts.push("agents run in parallel");
-  return parts.join(" · ");
-}
-
-function renderResult(d) {
-  const root = $("#results");
-  root.textContent = "";
-
-  const finalCls = "panel final" + (d.deferred ? " deferred" : "");
-  const status = d.needs_clarification ? el("span", { class: "badge b-warn", text: "needs clarification" })
-               : d.deferred ? el("span", { class: "badge b-bad", text: "deferred" })
-               : el("span", { class: "badge b-ok", text: "answered" });
-  const hw = d.audience === "health_worker";
-  const modeBadge = el("span", { class: "badge b-code",
-                                 text: hw ? `Health worker · ${LANG_NAMES[d.language]}` : "Clinician" });
-  const final = el("div", { class: finalCls },
-    el("div", { class: "row", style: "margin-bottom:6px" }, el("h2", { style: "margin:0", text: "Final answer" }), status,
-       modeBadge, d.mock ? el("span", { class: "badge b-mock", text: "MOCK" }) : null),
-    el("div", { class: "text", lang: LANG_ATTR[d.language] || "en", text: d.final_answer }));
-  const cited = [...new Set(d.agents.filter(a => !a.deferred).flatMap(a => a.citations))];
-  if (hw && cited.length) final.append(el("div", { class: "label", text: "Sources" }), sourceList(cited));
-  root.append(final);
-
-  root.append(el("div", { class: "panel", style: "margin-top:16px" },
-    el("h2", { text: "Pipeline trace" }), traceList(d), el("div", { class: "totals", text: totalsText(d) })));
-
-  if (!d.agents.length) return;
-  // Health-worker mode keeps the full agent detail one click away, for the doctor.
-  const agents = hw
-    ? el("details", { class: "panel agents", style: "margin-top:16px" },
-         el("summary", { text: `Agent details for the doctor (${d.agents.length})` }))
-    : el("div", { class: "panel", style: "margin-top:16px" }, el("h2", { text: `Agents consulted (${d.agents.length})` }));
-  for (const a of d.agents) {
-    const badge = a.deferred
-      ? el("span", { class: "badge " + (a.defer_kind === "low_confidence" ? "b-warn" : "b-bad"),
-                     text: "deferred · " + (DEFER_LABELS[a.defer_kind] || a.defer_kind) })
-      : el("span", { class: "badge b-ok", text: "answered" });
-    const card = el("div", { class: "agent" },
-      el("div", { class: "head" }, el("h3", { text: a.display_name }), badge,
-         a.call?.mock ? el("span", { class: "badge b-mock", text: "MOCK reply" }) : null));
-    card.append(el("div", { class: "label", text: a.deferred ? "Deferral reason" : "Answer" }),
-                el("div", { class: "text", text: a.deferred ? a.reason : a.answer }));
-    if (a.risk) card.append(riskBox(a.risk));
-    if (a.retrieved_headings.length)
-      card.append(el("div", { class: "label", text: "Retrieved guideline sections" }),
-                  el("div", { class: "note", style: "margin:0", text: a.retrieved_headings.join(" · ") }));
-    if (a.citations.length) card.append(el("div", { class: "label", text: "Sources" }), sourceList(a.citations));
-    agents.append(card);
-  }
-  root.append(agents);
-}
 
 init();
 </script>
