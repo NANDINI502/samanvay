@@ -74,7 +74,16 @@ Reference: https://huggingface.co/docs/hub/spaces-sdks-docker and
 https://huggingface.co/docs/hub/spaces-config-reference
 
 1. **Create the Space.** On https://huggingface.co/new-space choose a name,
-   SDK **Docker** (blank template), hardware **CPU basic** is enough.
+   SDK **Docker** (blank template), hardware **CPU basic** is enough,
+   visibility **Public**, license **MIT**.
+
+   As of 2026-10-24 the new-Space form says "Gradio and Docker Spaces
+   require a paid plan" — only Static Spaces are free, and a Static Space
+   can't run this FastAPI server. So this route needs HF **PRO**.
+   Free alternative: a Render free web service (Docker runtime, deploy from a
+   public Git repository URL; it spins down after 15 min idle and takes about
+   a minute to wake — https://render.com/docs/free). The app used ~186 MB RAM
+   after startup and one request in a local test.
 2. **Add secrets and variables** (Space → Settings → Variables and secrets):
    - **New secret:** `NEBIUS_API_KEY` = your Token Factory key.
    - **New variables:** `NEMOTRON_ORCHESTRATOR_MODEL`, `NEMOTRON_AGENT_MODEL`
