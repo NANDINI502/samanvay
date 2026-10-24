@@ -95,3 +95,21 @@ def test_chat_thinking_switch(monkeypatch, thinking, expected):
     with pytest.raises(RuntimeError):
         client.chat([{"role": "user", "content": "hi"}], model="m", thinking=thinking)
     assert {k: v for k, v in sent.items() if k == "extra_body"} == expected
+
+
+def test_reply_cut_off_at_max_tokens_is_never_returned(monkeypatch):
+    # live, a cut-off Ultra reply was its reasoning, shown as the answer
+    choice = type("Choice", (), {"finish_reason": "length",
+                                 "message": type("Msg", (), {"content": "The user asks: ..."})()})()
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            return type("Resp", (), {"choices": [choice]})()
+
+    class FakeClient:
+        chat = type("Chat", (), {"completions": FakeCompletions()})()
+
+    monkeypatch.setattr(client, "mock_enabled", lambda: False)
+    monkeypatch.setattr(client, "_client", lambda: FakeClient())
+    with pytest.raises(client.TruncatedReply):
+        client.chat([{"role": "user", "content": "hi"}], model="m", max_tokens=5)

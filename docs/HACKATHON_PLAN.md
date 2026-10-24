@@ -16,19 +16,28 @@ Work one step at a time and stop for the owner's OK after each.
 | F | Health-worker mode in the UI (see below) | Done (mock mode); Hindi/Hinglish model answers untested until live |
 | — | Guardrail fix: "dil ka daura" / "दिल का दौरा" labelled "seizure"; map to "chest pain" | Done |
 | G | Live Nebius check | Done 2026-10-20: new key works; Ultra ID fixed; reasoning off for router/safety; keyword matches added to Nemotron routing; live eval `eval/results/20261020T070006Z.json` (all metrics 100%) |
-| H | Native tool calling | Next (key works) |
-| I | Model-tier benchmark | Next (key works) |
-| J | Nebius embeddings | Next (key works) |
-| K | Tavily fallback | Next (key works) |
-| L | Final live run, README, DEPLOY.md, commit | Next (key works) |
+| — | UI redesign v2 (three-column dashboard, history, voice input) | Done (commit 1883786) |
+| 0 | Re-check 2026-10-24: `pytest tests/` 239 passed, 1 xfailed (expected); live eval `eval/results/20261024T064325Z.json` all metrics 100% (63 cases); committed the 21 Oct leftover fixes (TruncatedReply on max_tokens cut-off, default max_tokens 4000, stricter grounding prompts) | Done |
+| 1 | Deploy (Nebius Serverless Endpoint, else free Docker host) | Next |
+| K | Tavily fallback (step 2) | After 1 |
+| I | Model-tier benchmark (step 3) | After K |
+| H | Native tool calling (step 4) | Only if 1–3 done and ≥2 days left; else skip and say so in README |
+| J | Nebius embeddings (step 5) | Skip unless everything else is done; keep TF-IDF |
+| L | Final live run, README, leak check (step 6) | Last |
 
-## Current session order
+## Current session order (from 2026-10-24)
 
-0. Save this plan; run `pytest tests/` and `python -m eval.run`; if both pass,
-   commit everything so far (no push).
-1. Finish F.
-2. Guardrail fix for heart-attack phrases.
-3. Commit, then wait for confirmation that the Nebius key works.
+0. Check: git status/log, `pytest tests/`, live `python -m eval.run`; fix failures first.
+1. Deploy → demo URL; check every "Try a case" in both audiences at phone width.
+2. K — Tavily fallback.
+3. I — tier benchmark.
+4. H — native tool calling (conditional, see table).
+5. J — skip unless everything else is done.
+6. L — final run, README sections, leak check. Owner writes <FEEDBACK>, gives <DEMO_URL>/<GITHUB_REPO_URL>, and pushes.
+
+One step at a time; commit after each; stop for the owner's OK. No pushing.
+Note: `.env` sets `MEDBOT_MOCK_LLM` to a mock value; run the live eval with
+`MEDBOT_MOCK_LLM=0 python -m eval.run` (load_dotenv never overrides the shell).
 
 ## Step details
 

@@ -26,6 +26,11 @@ AGENT_MODEL = os.environ.get("NEMOTRON_AGENT_MODEL", "nvidia/nemotron-3-super-12
 ROUTER_MODEL = os.environ.get("NEMOTRON_ROUTER_MODEL") or AGENT_MODEL
 
 
+class TruncatedReply(RuntimeError):
+    """The model hit max_tokens. The text may be cut off mid-answer or, if it
+    ended while still reasoning, be the reasoning itself: never show it."""
+
+
 @dataclass
 class ChatResult:
     text: str
@@ -65,7 +70,7 @@ def _mock_reply(messages: list[dict], model: str) -> ChatResult:
     return ChatResult(text=f"[MOCK {model}] Would answer from: {preview}...", model=model, mock=True)
 
 
-def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_tokens: int = 800,
+def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_tokens: int = 4000,
          timeout: float | None = None, thinking: bool = True) -> ChatResult:
     """Single call against a Nebius Token Factory model.
 
@@ -74,7 +79,10 @@ def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_toke
     Nemotron 3 reasons before answering, and the reasoning counts against
     `max_tokens`. `thinking=False` turns it off (chat_template_kwargs,
     honoured by Token Factory) for short strict-JSON calls, where a small
-    budget would otherwise end before any answer is written.
+    budget would otherwise end before any answer is written. With reasoning
+    on, the default budget leaves room for both (live, Ultra synthesis used
+    all of an 800-token budget and returned its reasoning as the answer).
+    A reply cut off at `max_tokens` raises TruncatedReply.
     Set MEDBOT_MOCK_LLM=1 to run the full pipeline offline with stub replies.
     """
     start = time.perf_counter()
@@ -92,6 +100,8 @@ def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_toke
         **({} if thinking else {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}),
     )
     latency = time.perf_counter() - start
+    if response.choices[0].finish_reason == "length":
+        raise TruncatedReply(f"{model} reply cut off at max_tokens={max_tokens}")
     text = response.choices[0].message.content or ""
     raw = response.model_dump() if hasattr(response, "model_dump") else None
     u = (raw or {}).get("usage") or {}

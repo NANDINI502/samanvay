@@ -432,6 +432,11 @@ reproduces these numbers exactly (tested).
 - Health-worker mode: the risk-tool block and its disclaimer stay in
   English; the model-written part of an answer in Hindi/Hinglish is
   untested until live access works (mock replies are English stubs).
+- Grounding is enforced by prompt, not code: live, an agent sometimes
+  drew a conclusion its excerpts don't state (from "test people with high
+  blood pressure for kidney disease" to "high blood pressure can damage the
+  kidneys"). The prompts now forbid this and it became rarer, but the eval
+  checks only that sources are cited, not that every sentence is supported.
 - Not a medical device; no clinical validation of the system as a whole.
 
 ## Feedback on Nebius & NVIDIA tools
