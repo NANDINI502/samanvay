@@ -3,7 +3,13 @@
 Two targets, one `Dockerfile`:
 
 - **A. Hugging Face Spaces (Docker SDK)** — the simplest public demo URL.
+  HF builds the image on its servers, so no local Docker is needed.
 - **B. Nebius Serverless AI Endpoints** — runs the app container on Nebius AI Cloud.
+  An endpoint runs a ready-made image from a registry; it doesn't build a
+  `Dockerfile`. Either pull the image HF already built (B0, no Docker) or
+  build and push your own (B1–B5, needs Docker).
+
+Recommended order: A first (free, gives the demo URL), then B0.
 
 The app itself never runs a model locally: every Nemotron call goes to
 Nebius Token Factory through `orchestrator/client.py`. So the container needs
@@ -82,8 +88,14 @@ https://huggingface.co/docs/hub/spaces-config-reference
    `deploy/huggingface/README.md` so the GitHub README stays clean; it
    becomes the Space's README when you push:
 
+   On Windows run this in Git Bash (it has `tar`; `git lfs` ships with Git
+   for Windows). When `git push` asks for a password, paste a Hugging Face
+   **access token with write access** (https://huggingface.co/settings/tokens),
+   not your account password. Never put the token in the clone URL — it would
+   be saved in `.git/config`.
+
    ```bash
-   # from the repo root, with a Hugging Face access token that has write access
+   # from the repo root
    git clone https://huggingface.co/spaces/<HF_USER>/<SPACE_NAME> ../medbot-space
    git archive HEAD | tar -x -C ../medbot-space          # tracked files only — never .env
    cp deploy/huggingface/README.md ../medbot-space/README.md
@@ -118,10 +130,44 @@ References (Nebius docs):
 - Container Registry quickstart: https://docs.nebius.com/container-registry/quickstart
 - SecretStash (CLI service name `mysterybox`): https://docs.nebius.com/mysterybox/secrets/create
 
-Prerequisites (from the quickstart): Nebius AI Cloud CLI installed and
-configured (`cat ~/.nebius/config.yaml` shows your project ID), `jq`,
-Docker, membership of a group with at least the `editor` role, and quota
-for at least one VM and one VPC allocation. You also need a subnet ID.
+- CLI install (Ubuntu and macOS only): https://docs.nebius.com/cli/install
+- Cloud Shell (CLI in the browser): https://docs.nebius.com/cli/cloud-shell
+
+Prerequisites (from the quickstart, checked 2026-10-24): a Nebius AI Cloud
+project (console.nebius.com — separate from the Token Factory console), a
+group with at least the `editor` role, quota for at least one VM (Compute)
+and one allocation (Virtual Networks), and a subnet ID. The endpoint's VM is
+billed while it runs; the quickstart doesn't list prices, so check the
+pricing page for your platform/preset before creating it.
+
+The CLI supports only Ubuntu and macOS. On Windows, use the web console:
+its **Create endpoint** form, or **Cloud Shell** (an Ubuntu session of up to
+one hour with the CLI, Git and Python preinstalled; Docker isn't listed, so
+it can't build the image).
+
+### B0. No local Docker: run the image Hugging Face built
+
+After step A, Hugging Face hosts the built image in its registry. The Space
+page's **Run with Docker** button (top-right menu) shows the exact image
+reference, `registry.hf.space/<HF_USER>-<SPACE_NAME>:latest` — copy it from
+there, since long Space names get shortened. **Not yet tested end to end.**
+
+1. Web console → **Serverless AI** → **Endpoints** → **Create endpoint**.
+2. **Image:** the reference from *Run with Docker*. If the pull fails with
+   an authorization error, add registry credentials: username = your HF
+   username, password = an HF **read** token (store it as a secret).
+3. **Container port:** `7860`.
+4. **Environment variables:** `MEDBOT_MOCK_LLM=0`,
+   `NEMOTRON_ORCHESTRATOR_MODEL`, `NEMOTRON_AGENT_MODEL` (confirmed IDs).
+5. **Secret environment variables → Create secret:** key `NEBIUS_API_KEY`,
+   value = your Token Factory key.
+6. **Computing resources:** a CPU platform/preset (the quickstart uses
+   `cpu-d3` / `4vcpu-16gb`); no GPU needed. Leave authentication off for a
+   browser demo (see step 3 below), then create.
+7. Open the endpoint's HTTPS URL and check `/api/health` as in step 4 below.
+
+To ship a new version: push to the Space, wait for the build, then create a
+new endpoint (there is no in-place update) and delete the old one.
 
 ### 1. Build and push the image to Nebius Container Registry
 
@@ -173,6 +219,9 @@ nebius ai endpoint create \
   --subnet-id <subnet_ID>
 ```
 
+- `--public` (a public IP on the VM) isn't needed: per the docs, each HTTP
+  port is reachable through the endpoint's managed HTTPS URL.
+
 - `cpu-d3` / `4vcpu-16gb` is the CPU platform/preset used in the Nebius
   endpoints quickstart; the app needs no GPU. List what your project offers
   with `nebius compute platform list --parent-id <project_ID> --format json`.
@@ -216,6 +265,11 @@ new endpoint, then delete the old one.
 
 ## What was verified before handing this over
 
+- 2026-10-24: `git archive HEAD` (the exact file set pushed to the Space)
+  contains no `.env` (only the placeholder `.env.example`) and no file over
+  1 MB. Started from that export with no key and `MEDBOT_MOCK_LLM=0`:
+  indexes built, `/api/health` → `ready: false, api_key_configured: false`,
+  a chest-pain red flag deferred, a model-backed question returned `503`.
 - The image's file set (the repo minus everything in `.dockerignore`) was
   run with the image's start command, `MEDBOT_MOCK_LLM=0` and no key: the
   app started, built all retrieval indexes, `/api/health` reported
