@@ -17,7 +17,7 @@ Work one step at a time and stop for the owner's OK after each.
 | — | Guardrail fix: "dil ka daura" / "दिल का दौरा" labelled "seizure"; map to "chest pain" | Done |
 | G | Live Nebius check | Done 2026-10-20: new key works; Ultra ID fixed; reasoning off for router/safety; keyword matches added to Nemotron routing; live eval `eval/results/20261020T070006Z.json` (all metrics 100%) |
 | — | UI redesign v2 (three-column dashboard, history, voice input) | Done (commit 1883786) |
-| 0 | Re-check 2026-10-24: `pytest tests/` 239 passed, 1 xfailed (expected); live eval `eval/results/20261024T064325Z.json` all metrics 100% (63 cases); committed the 21 Oct leftover fixes (TruncatedReply on max_tokens cut-off, default max_tokens 4000, stricter grounding prompts) | Done |
+| 0 | Re-check 2026-10-24: `pytest tests/` 239 passed, 1 xfailed (expected); live eval `eval/results/20261024T064325Z.json` all metrics 100% (63 cases); committed the 21 Oct leftover fixes (TruncatedReply on max_tokens cut-off, default max_tokens 4000, stricter grounding prompts). Second re-check same day at 805b291: pytest 239 passed, 1 xfailed; live eval `eval/results/20261024T074922Z.json` all metrics 100% (63 cases, 0 errors) | Done |
 | 1 | Deploy (Nebius Serverless Endpoint, else free Docker host) | Next |
 | K | Tavily fallback (step 2) | After 1 |
 | I | Model-tier benchmark (step 3) | After K |
