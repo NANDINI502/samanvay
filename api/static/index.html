@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2E3A8C">
-<title>MedBot Orchestrator</title>
+<title>Samanvay</title>
+<meta name="description" content="Samanvay — Six specialists. One careful answer.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%229%22 fill=%22%232E3A8C%22/%3E%3Cpath d=%22M13.5 7h5v6.5H25v5h-6.5V25h-5v-6.5H7v-5h6.5z%22 fill=%22%23F6F3EC%22/%3E%3C/svg%3E">
 <!-- Type: Anek (headings) and Mukta (text) both come from Ek Type, Mumbai, and ship matched Latin + Devanagari,
      so English, हिन्दी and Hinglish read as one voice. System fonts take over if Google Fonts can't load. -->
@@ -433,7 +434,7 @@
 <header class="bar">
   <div class="in">
     <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z"/></svg></div>
-    <div class="brandname"><b>MedBot Orchestrator</b><small>NVIDIA Nemotron · Nebius</small></div>
+    <div class="brandname"><b data-i18n="brand">Samanvay</b><small>NVIDIA Nemotron · Nebius</small></div>
     <div class="grow"></div>
     <span id="status" class="status s-wait" role="status">…</span>
     <div class="seg" role="radiogroup" aria-label="Interface language" id="uilang">
@@ -490,7 +491,7 @@
             <div class="actions">
               <button class="secondary" id="mtoggle" type="button" aria-controls="mcard">
                 <span data-i18n="measure">Measurements</span><span class="badge-n" id="mcount">0</span></button>
-              <button class="primary" id="submit" type="submit"><span data-i18n="go">Ask MedBot</span><span aria-hidden="true">→</span></button>
+              <button class="primary" id="submit" type="submit"><span data-i18n="go">Ask Samanvay</span><span aria-hidden="true">→</span></button>
             </div>
             <div class="hint" data-i18n="hint">Ctrl/⌘+Enter</div>
             <div id="formerr" class="formerr" role="alert"></div>
@@ -649,7 +650,7 @@ const UI = {
         live: "Live", mock: "Mock", offline: "Offline", connecting: "Connecting…",
         who: "Who is asking?", hw: "Health worker", hwSub: "Simple words · Hindi", cl: "Clinician", clSub: "Full detail · numbers", ansLang: "Answer language",
         ask: "What do you want to ask?", ph: "Type a question about a patient — e.g. Diabetic patient with eGFR 50, which BP target applies?",
-        mic: "Speak your question", micStop: "Stop listening", go: "Ask MedBot", hint: "Ctrl/⌘+Enter to ask", measure: "Measurements",
+        mic: "Speak your question", micStop: "Stop listening", brand: "Samanvay", go: "Ask Samanvay", hint: "Ctrl/⌘+Enter to ask", measure: "Measurements",
         safety: "For emergencies, call local emergency services.", team: "Specialist Team", teamSub: "Each question goes only to the specialists it needs.",
         st1: "Assessing symptoms", st2: "Running agents", st3: "Synthesizing answer",
         o_cardiac: "Heart", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Lungs", o_neuro: "Brain",
@@ -660,8 +661,8 @@ const UI = {
         M_r: "Stopped at once: send for emergency care.", M_a: "A referral sign, or not sure enough: a doctor decides.",
         M_g: "Answer from the cited guidelines.", M_n: "No specialist matched the question.",
         B_r: "Emergency — act now", B_a: "Refer to a doctor", B_g: "Guidance from the guidelines", B_n: "Please clarify the question",
-        S_r: "Stopped by the safety check.", S_a: "MedBot found a referral sign or isn't sure enough — a clinician should decide.",
-        S_g: "Based on the cited sources below. Use your clinical judgement.", S_n: "MedBot couldn't tell which body system this is about.",
+        S_r: "Stopped by the safety check.", S_a: "Samanvay found a referral sign or isn't sure enough — a clinician should decide.",
+        S_g: "Based on the cited sources below. Use your clinical judgement.", S_n: "Samanvay couldn't tell which body system this is about.",
         src: "Sources", cap_r: "Emergency sign found — stopped before any AI call", cap_s: "The AI safety check found an emergency sign — stopped", working: "The specialist team is working on it…",
         consulted: "{n} of 6 specialists consulted · {s} s", clarifyCap: "No specialist matched — please clarify the question.",
         how: "How this answer was made", notes: "Specialist notes", time: "time", calls: "calls", specs: "specialists", tokens: "tokens",
@@ -676,7 +677,7 @@ const UI = {
         live: "लाइव", mock: "मॉक", offline: "ऑफ़लाइन", connecting: "जुड़ रहा है…",
         who: "कौन पूछ रहा है?", hw: "स्वास्थ्य कार्यकर्ता", hwSub: "आसान शब्द · हिन्दी", cl: "डॉक्टर", clSub: "पूरी जानकारी · आँकड़े", ansLang: "जवाब की भाषा",
         ask: "आप क्या पूछना चाहते हैं?", ph: "मरीज़ के बारे में सवाल लिखें — जैसे: डायबिटीज़ के मरीज़ का BP कितना होना चाहिए?",
-        mic: "बोलकर पूछें", micStop: "सुनना बंद करें", go: "MedBot से पूछें", hint: "Ctrl/⌘+Enter से पूछें", measure: "जाँच के आँकड़े",
+        mic: "बोलकर पूछें", micStop: "सुनना बंद करें", brand: "समन्वय", go: "समन्वय से पूछें", hint: "Ctrl/⌘+Enter से पूछें", measure: "जाँच के आँकड़े",
         safety: "आपात स्थिति में तुरंत एम्बुलेंस या नज़दीकी अस्पताल से संपर्क करें।", team: "विशेषज्ञ टीम", teamSub: "हर सवाल सिर्फ़ ज़रूरी विशेषज्ञों के पास जाता है।",
         st1: "लक्षणों की जाँच", st2: "विशेषज्ञ काम पर", st3: "जवाब तैयार",
         o_cardiac: "दिल", o_renal: "गुर्दा", o_hepatic: "लिवर", o_endocrine: "डायबिटीज़", o_respiratory: "फेफड़े", o_neuro: "दिमाग",
@@ -687,8 +688,8 @@ const UI = {
         M_r: "तुरंत रोका गया: आपात इलाज के लिए भेजें।", M_a: "रेफ़रल का संकेत या पक्का नहीं: डॉक्टर तय करें।",
         M_g: "दिए गए दिशानिर्देशों से जवाब।", M_n: "कोई विशेषज्ञ सवाल से मेल नहीं खाया।",
         B_r: "आपातकाल — तुरंत कार्रवाई करें", B_a: "डॉक्टर के पास भेजें", B_g: "दिशानिर्देशों से सलाह", B_n: "कृपया सवाल साफ़ करें",
-        S_r: "सुरक्षा जाँच ने रोक दिया।", S_a: "रेफ़रल का संकेत मिला या MedBot पक्का नहीं है — डॉक्टर तय करें।",
-        S_g: "नीचे दिए स्रोतों पर आधारित। अपने विवेक का इस्तेमाल करें।", S_n: "MedBot समझ नहीं पाया कि सवाल किस अंग के बारे में है।",
+        S_r: "सुरक्षा जाँच ने रोक दिया।", S_a: "रेफ़रल का संकेत मिला या समन्वय पक्का नहीं है — डॉक्टर तय करें।",
+        S_g: "नीचे दिए स्रोतों पर आधारित। अपने विवेक का इस्तेमाल करें।", S_n: "समन्वय समझ नहीं पाया कि सवाल किस अंग के बारे में है।",
         src: "स्रोत", cap_r: "आपात संकेत मिला — AI से पहले ही रोक दिया", cap_s: "AI सुरक्षा जाँच को आपात संकेत मिला — रोक दिया", working: "विशेषज्ञ टीम काम कर रही है…",
         consulted: "6 में से {n} विशेषज्ञों से पूछा · {s} सेकंड", clarifyCap: "कोई विशेषज्ञ मेल नहीं खाया — कृपया सवाल साफ़ करें।",
         how: "यह जवाब कैसे बना", notes: "विशेषज्ञों के नोट", time: "समय", calls: "कॉल", specs: "विशेषज्ञ", tokens: "टोकन",
@@ -703,7 +704,7 @@ const UI = {
         live: "Live", mock: "Mock", offline: "Offline", connecting: "Jud raha hai…",
         who: "Kaun pooch raha hai?", hw: "Health worker", hwSub: "Aasaan shabd · Hindi", cl: "Doctor", clSub: "Poori jaankari · aankde", ansLang: "Jawaab ki bhasha",
         ask: "Aap kya poochna chahte hain?", ph: "Mareez ke baare mein sawaal likhein — jaise: Diabetes wale mareez ka BP kitna hona chahiye?",
-        mic: "Bolkar poochein", micStop: "Sunna band karein", go: "MedBot se poochein", hint: "Ctrl/⌘+Enter se poochein", measure: "Jaanch ke aankde",
+        mic: "Bolkar poochein", micStop: "Sunna band karein", brand: "Samanvay", go: "Samanvay se poochein", hint: "Ctrl/⌘+Enter se poochein", measure: "Jaanch ke aankde",
         safety: "Emergency mein turant ambulance ya nazdeeki hospital se sampark karein.", team: "Specialist Team", teamSub: "Har sawaal sirf zaroori specialists ke paas jaata hai.",
         st1: "Lakshan ki jaanch", st2: "Specialists kaam par", st3: "Jawaab taiyaar",
         o_cardiac: "Dil", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Phephde", o_neuro: "Dimaag",
@@ -714,8 +715,8 @@ const UI = {
         M_r: "Turant roka gaya: emergency care ke liye bhejein.", M_a: "Referral ka sign ya pakka nahi: doctor decide karein.",
         M_g: "Diye gaye guidelines se jawaab.", M_n: "Koi specialist sawaal se match nahi hua.",
         B_r: "Emergency — turant action lein", B_a: "Doctor ke paas bhejein", B_g: "Guidelines se salah", B_n: "Kripya sawaal saaf karein",
-        S_r: "Safety check ne rok diya.", S_a: "Referral ka sign mila ya MedBot pakka nahi hai — doctor decide karein.",
-        S_g: "Neeche diye sources par aadharit. Apne vivek ka istemaal karein.", S_n: "MedBot samajh nahi paya ki sawaal kis ang ke baare mein hai.",
+        S_r: "Safety check ne rok diya.", S_a: "Referral ka sign mila ya Samanvay pakka nahi hai — doctor decide karein.",
+        S_g: "Neeche diye sources par aadharit. Apne vivek ka istemaal karein.", S_n: "Samanvay samajh nahi paya ki sawaal kis ang ke baare mein hai.",
         src: "Sources", cap_r: "Emergency sign mila — AI se pehle hi rok diya", cap_s: "AI safety check ko emergency sign mila — rok diya", working: "Specialist team kaam kar rahi hai…",
         consulted: "6 mein se {n} specialists se poocha · {s} sec", clarifyCap: "Koi specialist match nahi hua — kripya sawaal saaf karein.",
         how: "Yeh jawaab kaise bana", notes: "Specialists ke notes", time: "samay", calls: "calls", specs: "specialists", tokens: "tokens",
@@ -818,6 +819,7 @@ function setUi(lang, save = true) {
 }
 function applyLanguage() {
   $$("[data-i18n]").forEach(n => { n.textContent = t(n.dataset.i18n); });
+  document.title = t("brand");
   $$("[data-i18n-ph]").forEach(n => n.placeholder = t(n.dataset.i18nPh));
   $$("[data-i18n-label]").forEach(n => n.setAttribute("aria-label", t(n.dataset.i18nLabel)));
   $$(".tile").forEach(n => updateTileLabel(n));

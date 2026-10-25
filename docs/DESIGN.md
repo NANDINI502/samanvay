@@ -1,10 +1,10 @@
-# MedBot Orchestrator — design rationale
+# Samanvay — design rationale
 
 This page explains why the web UI looks and behaves the way it does. Every choice starts from the people who will use it and the situation they are in.
 
 ## Who it is for
 
-MedBot is built around the WHO PEN protocol for primary health centres, so there are two kinds of user. The first is a **community health worker** (for example an ASHA or ANM in India). They often use a low-end Android phone in bright daylight, may be more comfortable in Hindi or Hinglish than in clinical English, and need a clear next action: is this an emergency, should I refer, or can I follow the guideline? The second is a **clinician or medical officer** at a PHC. They want numbers, sources and how the answer was reached, so they can check it before trusting it.
+Samanvay is built around the WHO PEN protocol for primary health centres, so there are two kinds of user. The first is a **community health worker** (for example an ASHA or ANM in India). They often use a low-end Android phone in bright daylight, may be more comfortable in Hindi or Hinglish than in clinical English, and need a clear next action: is this an emergency, should I refer, or can I follow the guideline? The second is a **clinician or medical officer** at a PHC. They want numbers, sources and how the answer was reached, so they can check it before trusting it.
 
 Both users are making decisions about someone else's health, so the interface must never look more certain than the system is.
 
@@ -14,7 +14,7 @@ One static page, three columns on a desktop (1200px and wider), with a thin icon
 
 - **Top bar** (indigo): name, "NVIDIA Nemotron · Nebius", a Live / Mock / Offline pill from `/api/health`, the interface-language switch (हिन्दी · English · Hinglish) and Settings.
 - **Rail:** Home, Ask, History, Settings. Below 900px it becomes a bottom tab bar, where a thumb can reach it.
-- **Column 1, asking:** "Who is asking?" (Health worker, with its answer-language chips inside the same card, or Clinician), the question box with a microphone and a 0/1000 counter, Measurements (n) and Ask MedBot, the green "Decision support, not diagnosis." strip, then the Specialist Team.
+- **Column 1, asking:** "Who is asking?" (Health worker, with its answer-language chips inside the same card, or Clinician), the question box with a microphone and a 0/1000 counter, Measurements (n) and Ask Samanvay, the green "Decision support, not diagnosis." strip, then the Specialist Team.
 - **Column 2, the answer:** a hero card for first-time visitors, the four triage meanings (Emergency, Refer to a doctor, Guidance, Please clarify), then the answer card, "How this answer was made" and "Specialist notes".
 - **Column 3, numbers:** the Measurements card (eGFR, FIB-4 and heart-risk inputs, or the result once calculated), the heart-risk card and a Sources card that says which specialist used each source.
 - **Try a case:** a horizontally scrolling row of one-tap examples, with "See all" to wrap them.
@@ -49,7 +49,7 @@ Status colours are reserved for status. **Colour is never the only signal:** eve
 - **Headings:** Anek Latin and Anek Devanagari.
 - **Body text:** Mukta.
 
-Both families come from Ek Type, a Mumbai type foundry, and each was designed with Latin and Devanagari together. This matters because the same screen often mixes English, Hindi and Hinglish (e.g. "MedBot से पूछें"). Matched families keep line height and stroke weight consistent across scripts, so the mixed text reads as one voice instead of two fonts fighting.
+Both families come from Ek Type, a Mumbai type foundry, and each was designed with Latin and Devanagari together. This matters because the same screen often mixes English, Hindi and Hinglish (e.g. "Samanvay" / "समन्वय से पूछें"). Matched families keep line height and stroke weight consistent across scripts, so the mixed text reads as one voice instead of two fonts fighting.
 
 Body text is 17–18px (an answer is 18px, and 20px bold for an emergency) because the main users read on phones, sometimes outdoors. If Google Fonts cannot load, the page falls back to system fonts and still works.
 

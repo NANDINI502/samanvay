@@ -1,4 +1,4 @@
-# Deploying MedBot Orchestrator
+# Deploying Samanvay
 
 One `Dockerfile`, three targets:
 
@@ -195,7 +195,7 @@ https://huggingface.co/docs/hub/spaces-config-reference
    cp deploy/huggingface/README.md ../medbot-space/README.md
    cd ../medbot-space
    git lfs install && git lfs track "*.joblib"   # the Hub can reject binary files pushed without LFS/Xet
-   git add -A && git commit -m "Deploy MedBot Orchestrator" && git push
+   git add -A && git commit -m "Deploy Samanvay" && git push
    ```
 
    The only binary file is `models/cardiac/model.joblib` (7 KB). If the

@@ -1,4 +1,4 @@
-# MedBot Orchestrator — demo web app (FastAPI + static page).
+# Samanvay — demo web app (FastAPI + static page).
 #
 # Works for both deploy targets in DEPLOY.md:
 #   - Hugging Face Spaces (Docker SDK): runs as user ID 1000, listens on 7860

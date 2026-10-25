@@ -9,7 +9,7 @@ client = TestClient(app)
 
 
 def test_page_and_health():
-    assert "MedBot Orchestrator" in client.get("/").text
+    assert "Samanvay" in client.get("/").text
     h = client.get("/api/health").json()
     assert h["mock"] is True
     assert set(h["risk_models"]) == {"cardiac", "renal", "hepatic"}

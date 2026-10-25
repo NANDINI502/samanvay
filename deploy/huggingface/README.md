@@ -1,5 +1,5 @@
 ---
-title: MedBot Orchestrator
+title: Samanvay
 emoji: 🩺
 colorFrom: blue
 colorTo: green
@@ -8,7 +8,7 @@ app_port: 7860
 short_description: Multi-agent clinical decision support on Nemotron
 ---
 
-# MedBot Orchestrator
+# Samanvay
 
 Multi-agent clinical decision support on Nebius Token Factory + NVIDIA
 Nemotron. **Decision support, not diagnosis.**

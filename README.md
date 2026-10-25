@@ -1,4 +1,6 @@
-# MedBot Orchestrator
+# Samanvay
+
+*Six specialists. One careful answer.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
@@ -6,6 +8,8 @@
 ![Models: NVIDIA Nemotron](https://img.shields.io/badge/models-NVIDIA%20Nemotron-76b900.svg)
 
 **Open source under the [MIT License](LICENSE).**
+
+Samanvay (समन्वय) means 'coordination' in Sanskrit. It brings six specialist AI agents together into one careful answer.
 
 Multi-agent clinical decision support **designed for health workers and
 doctors in Indian primary health centres**, built for the **Nebius x NVIDIA
