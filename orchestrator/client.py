@@ -24,6 +24,10 @@ AGENT_MODEL = os.environ.get("NEMOTRON_AGENT_MODEL", "nvidia/nemotron-3-super-12
 # Router: a short strict-JSON classification, so the cheapest tier that routes
 # correctly is the goal; defaults to the agent model until benchmarked.
 ROUTER_MODEL = os.environ.get("NEMOTRON_ROUTER_MODEL") or AGENT_MODEL
+# Hard ceiling on max_tokens for every call (bounds spend on a public demo).
+# The default equals the largest budget any call asks for, so it changes
+# nothing unless lowered; lower it and long answers raise TruncatedReply.
+MAX_TOKENS_CAP = int(os.environ.get("MEDBOT_MAX_TOKENS_CAP", "4000"))
 
 
 class TruncatedReply(RuntimeError):
@@ -82,9 +86,11 @@ def chat(messages: list[dict], *, model: str, temperature: float = 0.2, max_toke
     budget would otherwise end before any answer is written. With reasoning
     on, the default budget leaves room for both (live, Ultra synthesis used
     all of an 800-token budget and returned its reasoning as the answer).
-    A reply cut off at `max_tokens` raises TruncatedReply.
+    A reply cut off at `max_tokens` raises TruncatedReply. `max_tokens` is
+    clamped to MAX_TOKENS_CAP.
     Set MEDBOT_MOCK_LLM=1 to run the full pipeline offline with stub replies.
     """
+    max_tokens = max(1, min(max_tokens, MAX_TOKENS_CAP))
     start = time.perf_counter()
     if mock_enabled():
         result = _mock_reply(messages, model)

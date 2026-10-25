@@ -1,15 +1,16 @@
 # Deploying MedBot Orchestrator
 
-Two targets, one `Dockerfile`:
+One `Dockerfile`, three targets:
 
-- **A. Hugging Face Spaces (Docker SDK)** — the simplest public demo URL.
-  HF builds the image on its servers, so no local Docker is needed.
+- **R. Render free web service (Docker) — the route used for the submission.**
+  Render builds the `Dockerfile` from the public GitHub repo, so no local
+  Docker is needed.
+- **A. Hugging Face Spaces (Docker SDK)** — as of 2026-10-24 Docker Spaces
+  need HF PRO, so this is no longer the free route.
 - **B. Nebius Serverless AI Endpoints** — runs the app container on Nebius AI Cloud.
   An endpoint runs a ready-made image from a registry; it doesn't build a
   `Dockerfile`. Either pull the image HF already built (B0, no Docker) or
   build and push your own (B1–B5, needs Docker).
-
-Recommended order: A first (free, gives the demo URL), then B0.
 
 The app itself never runs a model locally: every Nemotron call goes to
 Nebius Token Factory through `orchestrator/client.py`. So the container needs
@@ -42,7 +43,24 @@ only a CPU, and the only secret is your Token Factory API key.
 | `MEDBOT_MOCK_LLM` | no | `0` for live (image default), `1` for labelled stub replies |
 | `NEBIUS_BASE_URL` | no | Optional; defaults to `https://api.tokenfactory.nebius.com/v1/` |
 | `EMBED_BACKEND` | no | `tfidf` (image default) |
-| `PORT` | no | Optional; image default `7860` |
+| `PORT` | no | Optional; image default `7860` (Render injects `10000`, and the start command uses it) |
+| `MEDBOT_RATE_PER_IP` | no | `/api/ask` questions per client IP per window; default `10` (`0` = off) |
+| `MEDBOT_RATE_WINDOW_S` | no | Per-IP window in seconds; default `3600` |
+| `MEDBOT_DAILY_CAP` | no | `/api/ask` questions per UTC day, all clients together; default `200` (`0` = off) |
+| `MEDBOT_MAX_TOKENS_CAP` | no | Ceiling on `max_tokens` for every model call; default `4000` (the largest budget any call uses; lower values make long answers fail as truncated) |
+
+### Public-demo limits
+
+Anyone with the URL can spend your Token Factory credits, so `/api/ask` is
+rate-limited in process (`api/ratelimit.py`): per client IP (first
+`X-Forwarded-For` entry) and a global daily cap. When a limit is hit the API
+returns `429` and the page shows **Demo limit reached** with the reason.
+Red-flag deferrals count too (simpler, and conservative). `/api/health`
+and the page itself are never limited and `/api/health` makes no model
+call, so an uptime pinger costs nothing. Counters live in memory and reset
+when the process restarts or the free instance spins down. A client can
+forge `X-Forwarded-For` to get round the per-IP limit; the daily cap still
+bounds total spend.
 
 Retrieval indexes are built when the container starts (a few seconds with
 TF-IDF), so they always match `EMBED_BACKEND`.
@@ -68,6 +86,73 @@ Open http://127.0.0.1:7860.
 
 ---
 
+## R. Render free web service (Docker)
+
+References (checked 2026-10-25): https://render.com/docs/free,
+https://render.com/docs/docker, https://render.com/docs/web-services
+
+What the docs say, and what it means here:
+- Free web services spin down after **15 minutes without inbound traffic**
+  and take **about one minute** to wake. An uptime monitor hitting
+  `/api/health` every 5 minutes keeps the instance up.
+- Each workspace gets **750 free instance hours per calendar month**. One
+  always-on service uses at most 744 (31 days × 24 h), so keep only this
+  one free service awake. If the hours run out, free services are
+  suspended until the next month.
+- Render "may restart a Free service at any time" and local files are lost
+  on restart. Fine here: indexes are rebuilt at startup (about 4 s) and the
+  rate-limit counters reset.
+- Render can suspend a free service for "unusually high outbound traffic".
+  The daily cap bounds calls to Token Factory.
+- `PORT` defaults to `10000` on Render. The image's start command binds
+  `${PORT}`, so nothing needs setting.
+- Render passes dashboard environment variables to the Docker build as
+  build args too. The `Dockerfile` declares no `ARG`, so the key can't end
+  up in an image layer; it is only read at runtime.
+- Memory (measured 2026-10-25 on Windows, peak working set of the uvicorn
+  process): about 185 MB after a cold start that built all six indexes, and
+  194 MB peak after a live multi-agent question (6 Nemotron calls). This
+  was not measured inside Render; check its Metrics tab after deploying.
+  The free instance has 512 MB RAM; the pages above don't state it, so
+  confirm on the instance-type picker.
+
+### Steps
+
+1. **Push the repo to GitHub, public** (Render deploys free services from a
+   public repository URL without linking an account).
+2. Render dashboard → **New** → **Web Service**.
+3. **Source:** choose **Public Git Repository** and paste
+   `https://github.com/<GITHUB_USER>/<REPO>`. Or connect GitHub and pick the
+   repo.
+4. **Name:** e.g. `medbot-orchestrator` (this becomes
+   `https://medbot-orchestrator.onrender.com` if it's free).
+   **Language:** **Docker**. **Branch:** `main`. **Region:** any.
+   **Root Directory** and **Dockerfile Path** stay as they are: `Dockerfile`
+   is at the repo root.
+5. **Instance Type:** **Free**.
+6. **Environment Variables:**
+   - `NEBIUS_API_KEY` = your Token Factory key. Type it here only.
+   - `NEMOTRON_ORCHESTRATOR_MODEL` = `nvidia/Nemotron-3-Ultra-550b-a55b`
+   - `NEMOTRON_AGENT_MODEL` = `nvidia/nemotron-3-super-120b-a12b`
+   - `MEDBOT_MOCK_LLM` = `0`
+   - Optional: `MEDBOT_DAILY_CAP`, `MEDBOT_RATE_PER_IP` (defaults 200 and 10/hour).
+7. **Advanced → Health Check Path:** `/api/health`.
+8. **Deploy Web Service.** Watch **Logs** until you see
+   `Uvicorn running on http://0.0.0.0:10000`.
+9. Open `https://<name>.onrender.com/api/health` and check
+   `"ready": true, "mock": false, "api_key_configured": true`.
+10. Open the page, run each **Try a case** in both audiences at phone width,
+    and check the header says **LIVE on Nebius Token Factory** and the
+    trace shows latency and tokens per Nemotron call.
+11. **Keep it awake:** UptimeRobot → **New monitor** → **HTTP(s)**, URL
+    `https://<name>.onrender.com/api/health`, interval **5 minutes**.
+
+Pushes to `main` redeploy the service when Auto-Deploy is on (Settings →
+Build & Deploy; not checked in the docs above). Turn it off after the
+deadline if you want the judged version frozen.
+
+---
+
 ## A. Hugging Face Spaces (Docker)
 
 Reference: https://huggingface.co/docs/hub/spaces-sdks-docker and
@@ -80,10 +165,7 @@ https://huggingface.co/docs/hub/spaces-config-reference
    As of 2026-10-24 the new-Space form says "Gradio and Docker Spaces
    require a paid plan" — only Static Spaces are free, and a Static Space
    can't run this FastAPI server. So this route needs HF **PRO**.
-   Free alternative: a Render free web service (Docker runtime, deploy from a
-   public Git repository URL; it spins down after 15 min idle and takes about
-   a minute to wake — https://render.com/docs/free). The app used ~186 MB RAM
-   after startup and one request in a local test.
+   The free route is now section R (Render).
 2. **Add secrets and variables** (Space → Settings → Variables and secrets):
    - **New secret:** `NEBIUS_API_KEY` = your Token Factory key.
    - **New variables:** `NEMOTRON_ORCHESTRATOR_MODEL`, `NEMOTRON_AGENT_MODEL`

@@ -669,7 +669,7 @@ const UI = {
         history: "History", histNote: "Only your last 10 questions are kept, on this device. Answers and measurements are never saved.",
         noHist: "No questions yet.", clearHist: "Clear history", settings: "Settings", uiLang: "Interface language", defAud: "Default: who is asking",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Close", filled: "{x}/{n} filled",
-        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer",
+        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer", limit: "Demo limit reached",
         emptyQ: "Please type a question first.", toolNote: "A tool runs only when its specialist is consulted. If a value is missing, the specialist asks for it instead of guessing.",
         needs: "No result yet — the specialist needs:", invalid: "No result:", riskTitle: "Heart risk estimate", modeCl: "Clinician", modeHw: "Health worker" },
   hi: { nav_home: "होम", nav_ask: "पूछें", nav_history: "इतिहास", nav_settings: "सेटिंग्स",
@@ -696,7 +696,7 @@ const UI = {
         history: "इतिहास", histNote: "इस डिवाइस पर सिर्फ़ आपके आख़िरी 10 सवाल रखे जाते हैं। जवाब और आँकड़े कभी सेव नहीं होते।",
         noHist: "अभी कोई सवाल नहीं।", clearHist: "इतिहास मिटाएँ", settings: "सेटिंग्स", uiLang: "स्क्रीन की भाषा", defAud: "शुरुआत में: कौन पूछ रहा है",
         theme: "थीम", themeSys: "सिस्टम", themeLight: "लाइट", themeDark: "डार्क", close: "बंद करें", filled: "{n} में से {x} भरे",
-        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका",
+        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका", limit: "डेमो की सीमा पूरी हो गई",
         emptyQ: "पहले सवाल लिखें।", toolNote: "कोई टूल तभी चलता है जब उसके विशेषज्ञ से पूछा जाए। कोई आँकड़ा न हो, तो विशेषज्ञ अंदाज़ा नहीं लगाता, पूछता है।",
         needs: "अभी नतीजा नहीं — विशेषज्ञ को चाहिए:", invalid: "नतीजा नहीं:", riskTitle: "दिल के जोखिम का अनुमान", modeCl: "डॉक्टर", modeHw: "स्वास्थ्य कार्यकर्ता" },
   hinglish: { nav_home: "Home", nav_ask: "Poochein", nav_history: "History", nav_settings: "Settings",
@@ -723,7 +723,7 @@ const UI = {
         history: "History", histNote: "Is device par sirf aapke aakhri 10 sawaal rakhe jaate hain. Jawaab aur aankde kabhi save nahi hote.",
         noHist: "Abhi koi sawaal nahi.", clearHist: "History mitayein", settings: "Settings", uiLang: "Screen ki bhasha", defAud: "Shuru mein: kaun pooch raha hai",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Band karein", filled: "{n} mein se {x} bhare",
-        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka",
+        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka", limit: "Demo ki limit poori ho gayi",
         emptyQ: "Pehle sawaal likhein.", toolNote: "Koi tool tabhi chalta hai jab uske specialist se poocha jaaye. Koi aankda na ho, toh specialist andaaza nahi lagata, poochta hai.",
         needs: "Abhi nateeja nahi — specialist ko chahiye:", invalid: "Nateeja nahi:", riskTitle: "Dil ke risk ka andaaza", modeCl: "Doctor", modeHw: "Health worker" },
 };
@@ -1395,7 +1395,7 @@ $("#ask").addEventListener("submit", async (ev) => {
   try {
     const r = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
                                        body: JSON.stringify({ question, patient_values, ...getMode() }) });
-    if (!r.ok) { let m = await r.text(); try { m = JSON.parse(m).detail || m; } catch (e) { /* plain text */ } throw new Error(typeof m === "string" ? m : JSON.stringify(m)); }
+    if (!r.ok) { let m = await r.text(); try { m = JSON.parse(m).detail || m; } catch (e) { /* plain text */ } const err = new Error(typeof m === "string" ? m : JSON.stringify(m)); err.limit = r.status === 429; throw err; }
     const d = await r.json();
     last = d;
     settleTeam(d);
@@ -1405,7 +1405,7 @@ $("#ask").addEventListener("submit", async (ev) => {
     resetTeam();
     res.textContent = "";
     res.append(el("div", { class: "card" }, el("div", { class: "triage tr-n", style: "border-radius:var(--r-lg)" }, el("div", { class: "ic" }, icon("bang")),
-      el("div", { class: "tx" }, el("h2", { text: t("err") }), el("p", { text: e.message })))));
+      el("div", { class: "tx" }, el("h2", { text: t(e.limit ? "limit" : "err") }), el("p", { text: e.message })))));
   } finally {
     $("#submit").disabled = false;
   }

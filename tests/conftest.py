@@ -15,3 +15,12 @@ def built_indexes():
     for organ in ORGANS:
         if not (Path(INDEX_DIR) / f"{organ}.faiss").exists():
             build_index(organ)
+
+
+@pytest.fixture(autouse=True)
+def fresh_demo_limits():
+    """Each test starts with an empty /api/ask rate-limit budget (defaults stay on)."""
+    from api.ratelimit import limiter
+    limiter.reset()
+    yield
+    limiter.reset()

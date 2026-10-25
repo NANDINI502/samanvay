@@ -10,7 +10,8 @@ Endpoints:
   GET  /api/schema     agents + risk-tool input fields (for the form)
   GET  /api/example/{organ}   one real row from a trained model's UCI dataset (cardiac only;
                               calculators have no dataset)
-  POST /api/ask        {"question": "...", "patient_values": {...},
+  POST /api/ask        (rate-limited per IP + daily cap, see api/ratelimit.py; 429 when reached)
+                       {"question": "...", "patient_values": {...},
                         "audience": "clinician"|"health_worker", "language": "en"|"hi"|"hinglish"}
                        -> full trace (audience/language change only the wording; see orchestrator/audience.py)
 
@@ -26,11 +27,12 @@ from importlib import import_module
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from agents.registry import AGENT_CONFIGS, ORGANS
+from api.ratelimit import client_ip, limiter
 from models.common import DISCLAIMER, row_to_values
 from models.tool import RISK_ORGANS, TRAINED_MODELS, has_risk_model, required_inputs, tool_info
 from orchestrator import client as llm
@@ -39,8 +41,6 @@ from orchestrator.router import handle_query
 from rag.ingest import INDEX_DIR, build_index
 
 STATIC = Path(__file__).resolve().parent / "static"
-
-
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -117,7 +117,10 @@ def example(organ: str, row: int = 0) -> dict:
 
 
 @app.post("/api/ask")
-def ask(req: AskRequest) -> dict:
+def ask(req: AskRequest, request: Request) -> dict:
+    blocked = limiter.check(client_ip(request.headers, request.client.host if request.client else None))
+    if blocked:
+        raise HTTPException(429, blocked)
     values = {k: v for k, v in (req.patient_values or {}).items() if v not in (None, "")} or None
     start = time.perf_counter()
     try:

@@ -18,7 +18,7 @@ Work one step at a time and stop for the owner's OK after each.
 | G | Live Nebius check | Done 2026-10-20: new key works; Ultra ID fixed; reasoning off for router/safety; keyword matches added to Nemotron routing; live eval `eval/results/20261020T070006Z.json` (all metrics 100%) |
 | — | UI redesign v2 (three-column dashboard, history, voice input) | Done (commit 1883786) |
 | 0 | Re-check 2026-10-24: `pytest tests/` 239 passed, 1 xfailed (expected); live eval `eval/results/20261024T064325Z.json` all metrics 100% (63 cases); committed the 21 Oct leftover fixes (TruncatedReply on max_tokens cut-off, default max_tokens 4000, stricter grounding prompts). Second re-check same day at 805b291: pytest 239 passed, 1 xfailed; live eval `eval/results/20261024T074922Z.json` all metrics 100% (63 cases, 0 errors) | Done |
-| 1 | Deploy (Nebius Serverless Endpoint, else free Docker host) | In progress: no Docker/WSL/Nebius CLI on the Windows build machine, so HF Space first (HF builds the Dockerfile), then Nebius endpoint from the HF-built image (DEPLOY.md B0, untested). Waiting for owner to create the Space and add the secret |
+| 1 | Deploy (Render free web service, Docker; owner keeps it awake with UptimeRobot on /api/health) | In progress: 2026-10-25 demo hardening done — /api/ask rate-limited (per-IP + daily cap, 429 "Demo limit reached" in UI), /api/health unlimited and model-free, MEDBOT_MAX_TOKENS_CAP on every call; memory peak 194 MB with one live question (Windows, cold index build ~185 MB); pytest 245 passed, 1 xfailed; live eval `eval/results/20261025T143339Z.json` all 100% (63 cases, 0 errors). Waiting for owner to push the public GitHub repo and create the Render service (DEPLOY.md section R) |
 | K | Tavily fallback (step 2) | After 1 |
 | I | Model-tier benchmark (step 3) | After K |
 | H | Native tool calling (step 4) | Only if 1–3 done and ≥2 days left; else skip and say so in README |
@@ -28,7 +28,7 @@ Work one step at a time and stop for the owner's OK after each.
 ## Current session order (from 2026-10-24)
 
 0. Check: git status/log, `pytest tests/`, live `python -m eval.run`; fix failures first.
-1. Deploy → demo URL; check every "Try a case" in both audiences at phone width.
+1. Deploy (Render, DEPLOY.md R) → demo URL; check every "Try a case" in both audiences at phone width.
 2. K — Tavily fallback.
 3. I — tier benchmark.
 4. H — native tool calling (conditional, see table).
