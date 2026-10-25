@@ -23,6 +23,7 @@ import re
 from dataclasses import dataclass
 
 from guardrails.checks import GLOBAL_RED_FLAGS
+from orchestrator import client
 from orchestrator.client import chat_as_agent, mock_enabled, redact
 
 TIMEOUT_S = float(os.environ.get("MEDBOT_SAFETY_TIMEOUT_S", "10"))
@@ -71,7 +72,8 @@ def check(query: str) -> SafetyResult:
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": query}]
     call = None
     try:
-        result = chat_as_agent(messages, max_tokens=120, temperature=0, timeout=TIMEOUT_S, thinking=False)
+        result = chat_as_agent(messages, model=client.SAFETY_MODEL, max_tokens=120, temperature=0,
+                               timeout=TIMEOUT_S, thinking=False)
         call = result.trace("Safety check")
         emergency, sign, reason = parse(result.text)
     except Exception as e:  # fail open to the deterministic result, which already ran

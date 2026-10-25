@@ -1,0 +1,3223 @@
+{
+  "timestamp": "2026-10-25T15:52:54+00:00",
+  "defaults": {
+    "router": "nvidia/nemotron-3-super-120b-a12b",
+    "safety": "nvidia/nemotron-3-super-120b-a12b",
+    "agent": "nvidia/nemotron-3-super-120b-a12b",
+    "orchestrator": "nvidia/Nemotron-3-Ultra-550b-a55b"
+  },
+  "tiers": {
+    "nano": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "super": "nvidia/nemotron-3-super-120b-a12b",
+    "ultra": "nvidia/Nemotron-3-Ultra-550b-a55b"
+  },
+  "results": {
+    "router": {
+      "nano": {
+        "routing_accuracy": {
+          "value": 1.0,
+          "hits": 37,
+          "total": 37
+        },
+        "keyword_net_needed": 4,
+        "fallbacks": 0,
+        "calls": 37,
+        "latency_p50_ms": 1322,
+        "latency_p95_ms": 1623,
+        "tokens_mean": 250,
+        "cases": [
+          {
+            "id": "single-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-03",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-04",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-05",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-06",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-07",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-08",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-01",
+            "expected": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "multi-02",
+            "expected": [
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "multi-03",
+            "expected": [
+              "cardiac",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-04",
+            "expected": [
+              "cardiac",
+              "endocrine"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "multi-05",
+            "expected": [
+              "endocrine",
+              "hepatic"
+            ],
+            "got": [
+              "endocrine",
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-06",
+            "expected": [
+              "cardiac",
+              "respiratory"
+            ],
+            "got": [
+              "cardiac",
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-01",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-03",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-04",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-05",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-06",
+            "expected": [
+              "cardiac",
+              "neuro"
+            ],
+            "got": [
+              "cardiac",
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "offtopic-01",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-02",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-03",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-03",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-04",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-03",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-04",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-guard-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-07",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-08",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-09",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "web-01",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "web-02",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          }
+        ],
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "wall_s": 51
+      },
+      "super": {
+        "routing_accuracy": {
+          "value": 1.0,
+          "hits": 37,
+          "total": 37
+        },
+        "keyword_net_needed": 2,
+        "fallbacks": 0,
+        "calls": 37,
+        "latency_p50_ms": 1572,
+        "latency_p95_ms": 2276,
+        "tokens_mean": 264,
+        "cases": [
+          {
+            "id": "single-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-03",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-04",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-05",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-06",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-07",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-08",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-01",
+            "expected": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "multi-02",
+            "expected": [
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-03",
+            "expected": [
+              "cardiac",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-04",
+            "expected": [
+              "cardiac",
+              "endocrine"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-05",
+            "expected": [
+              "endocrine",
+              "hepatic"
+            ],
+            "got": [
+              "endocrine",
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-06",
+            "expected": [
+              "cardiac",
+              "respiratory"
+            ],
+            "got": [
+              "cardiac",
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-01",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-03",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-04",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-05",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-06",
+            "expected": [
+              "cardiac",
+              "neuro"
+            ],
+            "got": [
+              "cardiac",
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-01",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-02",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-03",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-03",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-04",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-03",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-04",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-guard-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-07",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-08",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-09",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "web-01",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "web-02",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          }
+        ],
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "wall_s": 58
+      },
+      "ultra": {
+        "routing_accuracy": {
+          "value": 1.0,
+          "hits": 37,
+          "total": 37
+        },
+        "keyword_net_needed": 1,
+        "fallbacks": 0,
+        "calls": 37,
+        "latency_p50_ms": 1465,
+        "latency_p95_ms": 1536,
+        "tokens_mean": 259,
+        "cases": [
+          {
+            "id": "single-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-03",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-04",
+            "expected": [
+              "respiratory"
+            ],
+            "got": [
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-05",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-06",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-07",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "single-08",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-01",
+            "expected": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": true
+          },
+          {
+            "id": "multi-02",
+            "expected": [
+              "endocrine",
+              "renal"
+            ],
+            "got": [
+              "endocrine",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-03",
+            "expected": [
+              "cardiac",
+              "renal"
+            ],
+            "got": [
+              "cardiac",
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-04",
+            "expected": [
+              "cardiac",
+              "endocrine"
+            ],
+            "got": [
+              "cardiac",
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-05",
+            "expected": [
+              "endocrine",
+              "hepatic"
+            ],
+            "got": [
+              "endocrine",
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "multi-06",
+            "expected": [
+              "cardiac",
+              "respiratory"
+            ],
+            "got": [
+              "cardiac",
+              "respiratory"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-01",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-03",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-04",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-05",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-06",
+            "expected": [
+              "cardiac",
+              "neuro"
+            ],
+            "got": [
+              "cardiac",
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-01",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-02",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "offtopic-03",
+            "expected": [],
+            "got": [],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-02",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-03",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-04",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-01",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-03",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-range-04",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "tool-guard-02",
+            "expected": [
+              "renal"
+            ],
+            "got": [
+              "renal"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-07",
+            "expected": [
+              "endocrine"
+            ],
+            "got": [
+              "endocrine"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-08",
+            "expected": [
+              "hepatic"
+            ],
+            "got": [
+              "hepatic"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "referral-09",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "web-01",
+            "expected": [
+              "neuro"
+            ],
+            "got": [
+              "neuro"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          },
+          {
+            "id": "web-02",
+            "expected": [
+              "cardiac"
+            ],
+            "got": [
+              "cardiac"
+            ],
+            "method": "nemotron",
+            "keyword_added": false
+          }
+        ],
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "wall_s": 53
+      }
+    },
+    "safety": {
+      "nano": {
+        "paraphrase_recall": {
+          "value": 1.0,
+          "hits": 10,
+          "total": 10
+        },
+        "false_alarms": {
+          "value": 0.0541,
+          "hits": 2,
+          "total": 37
+        },
+        "unavailable": 0,
+        "calls": 47,
+        "latency_p50_ms": 1335,
+        "latency_p95_ms": 1512,
+        "tokens_mean": 235,
+        "cases": [
+          {
+            "id": "single-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-04",
+            "emergency_expected": false,
+            "status": "emergency"
+          },
+          {
+            "id": "referral-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-guard-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "paraphrase-01",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-02",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-03",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-04",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-05",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-06",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-07",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-08",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-09",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-10",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "referral-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-09",
+            "emergency_expected": false,
+            "status": "emergency"
+          },
+          {
+            "id": "web-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "web-02",
+            "emergency_expected": false,
+            "status": "clear"
+          }
+        ],
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "wall_s": 64
+      },
+      "super": {
+        "paraphrase_recall": {
+          "value": 1.0,
+          "hits": 10,
+          "total": 10
+        },
+        "false_alarms": {
+          "value": 0.0,
+          "hits": 0,
+          "total": 37
+        },
+        "unavailable": 0,
+        "calls": 47,
+        "latency_p50_ms": 1622,
+        "latency_p95_ms": 1889,
+        "tokens_mean": 250,
+        "cases": [
+          {
+            "id": "single-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-guard-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "paraphrase-01",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-02",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-03",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-04",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-05",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-06",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-07",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-08",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-09",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-10",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "referral-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-09",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "web-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "web-02",
+            "emergency_expected": false,
+            "status": "clear"
+          }
+        ],
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "wall_s": 79
+      },
+      "ultra": {
+        "paraphrase_recall": {
+          "value": 1.0,
+          "hits": 10,
+          "total": 10
+        },
+        "false_alarms": {
+          "value": 0.0,
+          "hits": 0,
+          "total": 37
+        },
+        "unavailable": 0,
+        "calls": 47,
+        "latency_p50_ms": 1468,
+        "latency_p95_ms": 1552,
+        "tokens_mean": 243,
+        "cases": [
+          {
+            "id": "single-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "single-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "multi-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-05",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-06",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "offtopic-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-03",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-range-04",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "tool-guard-02",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "paraphrase-01",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-02",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-03",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-04",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-05",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-06",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-07",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-08",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-09",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "paraphrase-10",
+            "emergency_expected": true,
+            "status": "emergency"
+          },
+          {
+            "id": "referral-07",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-08",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "referral-09",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "web-01",
+            "emergency_expected": false,
+            "status": "clear"
+          },
+          {
+            "id": "web-02",
+            "emergency_expected": false,
+            "status": "clear"
+          }
+        ],
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "wall_s": 68
+      }
+    },
+    "agent": {
+      "nano": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 9736,
+        "end_to_end_p95_ms": 15115,
+        "calls": 29,
+        "latency_p50_ms": 5352,
+        "latency_p95_ms": 10133,
+        "tokens_mean": 981,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1851,
+            "latency_ms": 6076
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2059,
+            "latency_ms": 7411
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2056,
+            "latency_ms": 8163
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2222,
+            "latency_ms": 9071
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1787,
+            "latency_ms": 6399
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2122,
+            "latency_ms": 8169
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2129,
+            "latency_ms": 7571
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2192,
+            "latency_ms": 7815
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4493,
+            "latency_ms": 10560
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3017,
+            "latency_ms": 7775
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4077,
+            "latency_ms": 13059
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5221,
+            "latency_ms": 14553
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4023,
+            "latency_ms": 15115
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4391,
+            "latency_ms": 13846
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3041,
+            "latency_ms": 9736
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3199,
+            "latency_ms": 13335
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3175,
+            "latency_ms": 11863
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2917,
+            "latency_ms": 12803
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3039,
+            "latency_ms": 13124
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2482,
+            "latency_ms": 18623
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2726,
+            "latency_ms": 10022
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2658,
+            "latency_ms": 10258
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 525,
+            "latency_ms": 1659
+          }
+        ],
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "wall_s": 237
+      },
+      "super": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 7215,
+        "end_to_end_p95_ms": 11515,
+        "calls": 29,
+        "latency_p50_ms": 3190,
+        "latency_p95_ms": 6069,
+        "tokens_mean": 952,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1828,
+            "latency_ms": 6208
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1989,
+            "latency_ms": 7215
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1943,
+            "latency_ms": 6286
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1936,
+            "latency_ms": 6886
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1844,
+            "latency_ms": 6429
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1980,
+            "latency_ms": 6408
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1921,
+            "latency_ms": 6844
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2358,
+            "latency_ms": 6538
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5063,
+            "latency_ms": 8792
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2963,
+            "latency_ms": 9042
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4060,
+            "latency_ms": 9905
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3928,
+            "latency_ms": 10102
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3701,
+            "latency_ms": 11701
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4792,
+            "latency_ms": 11515
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2985,
+            "latency_ms": 7737
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3377,
+            "latency_ms": 8829
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3545,
+            "latency_ms": 9938
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2273,
+            "latency_ms": 6828
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2449,
+            "latency_ms": 7171
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2744,
+            "latency_ms": 10299
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2312,
+            "latency_ms": 7521
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3212,
+            "latency_ms": 9408
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 512,
+            "latency_ms": 1646
+          }
+        ],
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "wall_s": 183
+      },
+      "ultra": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 7276,
+        "end_to_end_p95_ms": 8923,
+        "calls": 29,
+        "latency_p50_ms": 2643,
+        "latency_p95_ms": 3031,
+        "tokens_mean": 1011,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1918,
+            "latency_ms": 5355
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2027,
+            "latency_ms": 5949
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1951,
+            "latency_ms": 6642
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1952,
+            "latency_ms": 5996
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1811,
+            "latency_ms": 5503
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2308,
+            "latency_ms": 6399
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1962,
+            "latency_ms": 5589
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2863,
+            "latency_ms": 7143
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5280,
+            "latency_ms": 8003
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2885,
+            "latency_ms": 7425
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3969,
+            "latency_ms": 7573
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4381,
+            "latency_ms": 8923
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3632,
+            "latency_ms": 7261
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4196,
+            "latency_ms": 7712
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3716,
+            "latency_ms": 8342
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3660,
+            "latency_ms": 7784
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3849,
+            "latency_ms": 8356
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2779,
+            "latency_ms": 7565
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3221,
+            "latency_ms": 7859
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2683,
+            "latency_ms": 12420
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2293,
+            "latency_ms": 7276
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3021,
+            "latency_ms": 8087
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 525,
+            "latency_ms": 1678
+          }
+        ],
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "wall_s": 165
+      }
+    },
+    "orchestrator": {
+      "nano": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 8694,
+        "end_to_end_p95_ms": 17865,
+        "calls": 22,
+        "latency_p50_ms": 4110,
+        "latency_p95_ms": 10854,
+        "tokens_mean": 1631,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1995,
+            "latency_ms": 6560
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2144,
+            "latency_ms": 7033
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2215,
+            "latency_ms": 8590
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2177,
+            "latency_ms": 8668
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1943,
+            "latency_ms": 6625
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2130,
+            "latency_ms": 7241
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2329,
+            "latency_ms": 7525
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3033,
+            "latency_ms": 9444
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5001,
+            "latency_ms": 10348
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3421,
+            "latency_ms": 8601
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5137,
+            "latency_ms": 14931
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 6506,
+            "latency_ms": 17865
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5058,
+            "latency_ms": 14999
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5172,
+            "latency_ms": 12368
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4158,
+            "latency_ms": 13233
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4952,
+            "latency_ms": 14847
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4228,
+            "latency_ms": 18021
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2421,
+            "latency_ms": 8694
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2791,
+            "latency_ms": 8880
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2796,
+            "latency_ms": 10015
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2528,
+            "latency_ms": 8693
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3115,
+            "latency_ms": 9520
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 512,
+            "latency_ms": 1918
+          }
+        ],
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "wall_s": 235
+      },
+      "super": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 9923,
+        "end_to_end_p95_ms": 13056,
+        "calls": 22,
+        "latency_p50_ms": 3947,
+        "latency_p95_ms": 6429,
+        "tokens_mean": 981,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1795,
+            "latency_ms": 6916
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1912,
+            "latency_ms": 6953
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2126,
+            "latency_ms": 8131
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1813,
+            "latency_ms": 7499
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1733,
+            "latency_ms": 7139
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2002,
+            "latency_ms": 9923
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1757,
+            "latency_ms": 6217
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2178,
+            "latency_ms": 10705
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 5098,
+            "latency_ms": 14953
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2912,
+            "latency_ms": 9965
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3401,
+            "latency_ms": 10373
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3893,
+            "latency_ms": 11224
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3538,
+            "latency_ms": 10902
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3901,
+            "latency_ms": 9912
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3316,
+            "latency_ms": 10503
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3891,
+            "latency_ms": 11987
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3765,
+            "latency_ms": 11639
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2190,
+            "latency_ms": 8438
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2411,
+            "latency_ms": 7915
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2391,
+            "latency_ms": 11002
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2316,
+            "latency_ms": 13056
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3120,
+            "latency_ms": 11374
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 524,
+            "latency_ms": 1706
+          }
+        ],
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "wall_s": 218
+      },
+      "ultra": {
+        "eval_checks": {
+          "value": 1.0,
+          "hits": 24,
+          "total": 24
+        },
+        "grounding": {
+          "value": 1.0,
+          "hits": 22,
+          "total": 22
+        },
+        "errors": 0,
+        "end_to_end_p50_ms": 7746,
+        "end_to_end_p95_ms": 11052,
+        "calls": 22,
+        "latency_p50_ms": 3072,
+        "latency_p95_ms": 4511,
+        "tokens_mean": 1138,
+        "cases": [
+          {
+            "id": "single-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1863,
+            "latency_ms": 6482
+          },
+          {
+            "id": "single-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1975,
+            "latency_ms": 5791
+          },
+          {
+            "id": "single-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1848,
+            "latency_ms": 6124
+          },
+          {
+            "id": "single-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1787,
+            "latency_ms": 6342
+          },
+          {
+            "id": "single-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1730,
+            "latency_ms": 5601
+          },
+          {
+            "id": "single-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2108,
+            "latency_ms": 7627
+          },
+          {
+            "id": "single-07",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 1982,
+            "latency_ms": 6955
+          },
+          {
+            "id": "single-08",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2984,
+            "latency_ms": 8429
+          },
+          {
+            "id": "multi-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4750,
+            "latency_ms": 9505
+          },
+          {
+            "id": "multi-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2818,
+            "latency_ms": 6498
+          },
+          {
+            "id": "multi-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3529,
+            "latency_ms": 10276
+          },
+          {
+            "id": "multi-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3717,
+            "latency_ms": 9255
+          },
+          {
+            "id": "multi-05",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4888,
+            "latency_ms": 12458
+          },
+          {
+            "id": "multi-06",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 4226,
+            "latency_ms": 9172
+          },
+          {
+            "id": "tool-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2974,
+            "latency_ms": 8125
+          },
+          {
+            "id": "tool-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3329,
+            "latency_ms": 10479
+          },
+          {
+            "id": "tool-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3196,
+            "latency_ms": 8594
+          },
+          {
+            "id": "tool-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2988,
+            "latency_ms": 9055
+          },
+          {
+            "id": "tool-range-01",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2473,
+            "latency_ms": 7746
+          },
+          {
+            "id": "tool-range-02",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2842,
+            "latency_ms": 8844
+          },
+          {
+            "id": "tool-range-03",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 2331,
+            "latency_ms": 7526
+          },
+          {
+            "id": "tool-range-04",
+            "checks_ok": true,
+            "grounded": true,
+            "tokens_total": 3236,
+            "latency_ms": 11052
+          },
+          {
+            "id": "tool-guard-01",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 0,
+            "latency_ms": 0
+          },
+          {
+            "id": "tool-guard-02",
+            "checks_ok": true,
+            "grounded": null,
+            "tokens_total": 524,
+            "latency_ms": 1584
+          }
+        ],
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "wall_s": 184
+      }
+    }
+  },
+  "markdown": "\n**router** (configured: `nvidia/nemotron-3-super-120b-a12b`)\n\n| Tier | Routing accuracy | Keyword net needed | Fallbacks | p50 | p95 | Tokens/call |\n| --- | --- | --- | --- | --- | --- | --- |\n| nano | 100% (37/37) | 4 | 0 | 1.3 s | 1.6 s | 250 |\n| super | 100% (37/37) | 2 | 0 | 1.6 s | 2.3 s | 264 |\n| ultra | 100% (37/37) | 1 | 0 | 1.5 s | 1.5 s | 259 |\n\n**safety** (configured: `nvidia/nemotron-3-super-120b-a12b`)\n\n| Tier | Paraphrase recall | False alarms | Unavailable | p50 | p95 | Tokens/call |\n| --- | --- | --- | --- | --- | --- | --- |\n| nano | 100% (10/10) | 5% (2/37) | 0 | 1.3 s | 1.5 s | 235 |\n| super | 100% (10/10) | 0% (0/37) | 0 | 1.6 s | 1.9 s | 250 |\n| ultra | 100% (10/10) | 0% (0/37) | 0 | 1.5 s | 1.6 s | 243 |\n\n**agent** (configured: `nvidia/nemotron-3-super-120b-a12b`)\n\n| Tier | Eval checks | Grounding | Errors | Call p50 | Call p95 | Tokens/call | End-to-end p50 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| nano | 100% (24/24) | 100% (22/22) | 0 | 5.4 s | 10.1 s | 981 | 9.7 s |\n| super | 100% (24/24) | 100% (22/22) | 0 | 3.2 s | 6.1 s | 952 | 7.2 s |\n| ultra | 100% (24/24) | 100% (22/22) | 0 | 2.6 s | 3.0 s | 1011 | 7.3 s |\n\n**orchestrator** (configured: `nvidia/Nemotron-3-Ultra-550b-a55b`)\n\n| Tier | Eval checks | Grounding | Errors | Call p50 | Call p95 | Tokens/call | End-to-end p50 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| nano | 100% (24/24) | 100% (22/22) | 0 | 4.1 s | 10.9 s | 1631 | 8.7 s |\n| super | 100% (24/24) | 100% (22/22) | 0 | 3.9 s | 6.4 s | 981 | 9.9 s |\n| ultra | 100% (24/24) | 100% (22/22) | 0 | 3.1 s | 4.5 s | 1138 | 7.7 s |"
+}

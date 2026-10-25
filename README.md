@@ -229,14 +229,13 @@ flowchart TD
 | Role | Configured by | Default model ID | Calls per question |
 | --- | --- | --- | --- |
 | **Orchestrator** — synthesizes the agents' answers into one response | `NEMOTRON_ORCHESTRATOR_MODEL` | `nvidia/Nemotron-3-Ultra-550b-a55b` (Ultra tier) | 1, only when at least one agent answered |
-| **Router** — picks the specialist agents, returns strict JSON with a one-line reason | `NEMOTRON_ROUTER_MODEL` | same as the agent model until benchmarked | 1 |
-| **Specialist agents** — answer from retrieved excerpts; also the one-way safety check | `NEMOTRON_AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` (Super tier) | 1 per consulted agent (run in parallel) + 1 safety check |
+| **Router** — picks the specialist agents, returns strict JSON with a one-line reason | `NEMOTRON_ROUTER_MODEL` | the agent model (Super tier) | 1 |
+| **Safety check** — one-way: can only add an emergency deferral | `NEMOTRON_SAFETY_MODEL` | the agent model (Super tier) | 1 (in parallel with routing and the agents) |
+| **Specialist agents** — answer from retrieved excerpts | `NEMOTRON_AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` (Super tier) | 1 per consulted agent (run in parallel) |
 
-> **Model IDs to confirm.** The defaults above are what the code is
-> configured with today; the Ultra ID has not yet been confirmed against
-> the Token Factory model list. Run `python scripts/check_nebius.py` and
-> set the confirmed IDs in `.env` / the deployment's variables.
-> `<CONFIRMED_MODEL_IDS>`
+All three IDs (Ultra, Super, and Nano `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`)
+were confirmed against the Token Factory model list on 2026-10-20 with
+`python scripts/check_nebius.py`.
 
 **Why this split.**
 
@@ -245,15 +244,79 @@ flowchart TD
   answers support them (e.g. diabetes changing a blood-pressure threshold),
   add no new claims, and keep every citation and disclaimer. It runs once
   per question, so the larger model's cost is paid once.
-- **Agents → smaller tier (Super; Nano is an option).** Each agent's task
-  is narrow: answer from three retrieved excerpts of one corpus, or say the
-  excerpts don't cover it. A question can fan out to several agents, so a
-  smaller model keeps latency and cost down where the work is simplest.
-  All agents currently share one setting, `NEMOTRON_AGENT_MODEL`; pointing
-  it at a Nano-tier model needs no code change.
+- **Agents → Super tier.** Each agent's task is narrow: answer from three
+  retrieved excerpts of one corpus, or say the excerpts don't cover it. All
+  agents share one setting, `NEMOTRON_AGENT_MODEL`. The expectation was
+  that a smaller tier would also be faster; the benchmark below found the
+  opposite on Token Factory in this run (Ultra fastest, Nano slowest).
 - **No model sees ungrounded questions.** Red flags, referral terms and
   weak retrieval are handled in code before any model call, so the safety
   behaviour doesn't depend on which model is configured.
+
+### Tier benchmark: Nano vs Super vs Ultra per role
+
+`MEDBOT_MOCK_LLM=0 python -m scripts.benchmark_tiers` changes one role's
+model at a time (the others keep the defaults above) and runs that role on
+the eval cases that exercise it. Live run 2026-10-25,
+`eval/results/benchmark_20261025T161928Z.json`. Latency and tokens are per
+call of the role being varied; end-to-end is the whole question.
+
+**Router** (37 non-emergency cases; accuracy includes the keyword and
+referral safety nets, as in production)
+
+| Tier | Routing accuracy | Keyword net had to add an organ | Fallbacks | p50 | p95 | Tokens/call |
+| --- | --- | --- | --- | --- | --- | --- |
+| Nano | 100% (37/37) | 4 | 0 | 1.3 s | 1.6 s | 250 |
+| Super (default) | 100% (37/37) | 2 | 0 | 1.6 s | 2.3 s | 264 |
+| Ultra | 100% (37/37) | 1 | 0 | 1.5 s | 1.5 s | 259 |
+
+**Safety check** (10 paraphrased emergencies + 37 non-emergency cases)
+
+| Tier | Paraphrase recall | False alarms | Unavailable | p50 | p95 | Tokens/call |
+| --- | --- | --- | --- | --- | --- | --- |
+| Nano | 100% (10/10) | 5% (2/37) | 0 | 1.3 s | 1.5 s | 235 |
+| Super (default) | 100% (10/10) | 0% (0/37) | 0 | 1.6 s | 1.9 s | 250 |
+| Ultra | 100% (10/10) | 0% (0/37) | 0 | 1.5 s | 1.6 s | 243 |
+
+**Specialist agents** (24 single/multi-organ and risk-tool cases; orchestrator Ultra)
+
+| Tier | Eval checks | Grounding | Errors | Call p50 | Call p95 | Tokens/call | End-to-end p50 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Nano | 100% (24/24) | 100% (22/22) | 0 | 5.4 s | 10.1 s | 981 | 9.7 s |
+| Super (default) | 100% (24/24) | 100% (22/22) | 0 | 3.2 s | 6.1 s | 952 | 7.2 s |
+| Ultra | 100% (24/24) | 100% (22/22) | 0 | 2.6 s | 3.0 s | 1011 | 7.3 s |
+
+**Orchestrator / synthesis** (same 24 cases; agents Super)
+
+| Tier | Eval checks | Grounding | Errors | Call p50 | Call p95 | Tokens/call | End-to-end p50 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Nano | 100% (24/24) | 100% (22/22) | 0 | 4.1 s | 10.9 s | 1631 | 8.7 s |
+| Super | 100% (24/24) | 100% (22/22) | 0 | 3.9 s | 6.4 s | 981 | 9.9 s |
+| Ultra (default) | 100% (24/24) | 100% (22/22) | 0 | 3.1 s | 4.5 s | 1138 | 7.7 s |
+
+**What this says, and what it doesn't.**
+
+- Every tier passed every behaviour check in every role, so on these cases
+  the tier choice is about latency, tokens and a few edge behaviours, not
+  correctness.
+- **Router:** Nano routes as well once the keyword safety net runs, but it
+  left out an organ the keywords had to add back 4 times (Super 2, Ultra 1).
+  Kept on Super; the net is a backstop, not something to lean on.
+- **Safety check:** Nano raised 2 false emergencies, both on referral
+  questions ("suspected ketoacidosis", "possible transient ischemic attack
+  yesterday"). These defer anyway, so the result is the urgent message in
+  place of the referral one: safe, but the wrong message. Kept on Super.
+- **Agents:** Ultra was the fastest tier and Nano the slowest, with similar
+  tokens per call, so model size didn't predict latency here (the run
+  doesn't show why). Kept on Super for now: one run, and the two Super-agent /
+  Ultra-orchestrator runs (the same configuration, measured twice) differ
+  by 0.5 s end to end, which is the noise level here.
+- **Orchestrator:** Ultra was fastest and steadiest (p95 4.5 s); Nano used
+  the most tokens (1,631 per call). Kept on Ultra.
+- Limits: 24–47 cases per role, one run each, one day's Token Factory
+  load. Tokens are reported, not price: per-token prices differ by tier and
+  weren't part of the run. The checks score behaviour (routing, deferral,
+  tool choice, citations), not the medical quality of the wording.
 
 ## How Nebius Token Factory is used
 

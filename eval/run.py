@@ -50,7 +50,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from orchestrator.client import AGENT_MODEL, ORCHESTRATOR_MODEL, ROUTER_MODEL, mock_enabled, redact
+from orchestrator import client as llm
+from orchestrator.client import mock_enabled, redact
 from orchestrator.router import handle_query
 from rag import web
 
@@ -108,6 +109,8 @@ def observe(case: dict) -> dict:
         "web_labelled": bool(web_answers) and all(u in r.final_answer for u in web_urls),
         "grounded": any(url in r.final_answer for url in sources) if answered and not r.deferred else None,
         "model_calls": len(calls),
+        "calls": [{k: c.get(k) for k in ("step", "role", "model", "latency_ms")}
+                  | {"tokens": (c.get("usage") or {}).get("total_tokens")} for c in calls],
         "tokens": tokens,
         "latency_ms": round(latency_s * 1000),
         "final_answer": r.final_answer,
@@ -251,7 +254,8 @@ def run(cases: list[dict], router: str = "nemotron") -> dict:
         "mode": "mock" if mock else "live",
         "router": router,
         "routing_methods": dict(Counter(r["observed"]["routing_method"] for r in rows if "observed" in r)),
-        "models": {"orchestrator": ORCHESTRATOR_MODEL, "agent": AGENT_MODEL, "router": ROUTER_MODEL},
+        "models": {"orchestrator": llm.ORCHESTRATOR_MODEL, "agent": llm.AGENT_MODEL, "router": llm.ROUTER_MODEL,
+                   "safety": llm.SAFETY_MODEL},
         "embed_backend": os.environ.get("EMBED_BACKEND", "tfidf"),
         "metrics": metrics(rows, mock),
         "cases": rows,

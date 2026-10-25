@@ -24,6 +24,8 @@ AGENT_MODEL = os.environ.get("NEMOTRON_AGENT_MODEL", "nvidia/nemotron-3-super-12
 # Router: a short strict-JSON classification, so the cheapest tier that routes
 # correctly is the goal; defaults to the agent model until benchmarked.
 ROUTER_MODEL = os.environ.get("NEMOTRON_ROUTER_MODEL") or AGENT_MODEL
+# One-way safety check (orchestrator/safety.py); empty = the agent model.
+SAFETY_MODEL = os.environ.get("NEMOTRON_SAFETY_MODEL") or AGENT_MODEL
 # Hard ceiling on max_tokens for every call (bounds spend on a public demo).
 # The default equals the largest budget any call asks for, so it changes
 # nothing unless lowered; lower it and long answers raise TruncatedReply.
@@ -132,8 +134,9 @@ def chat_as_orchestrator(messages: list[dict], **kwargs) -> ChatResult:
     return result
 
 
-def chat_as_agent(messages: list[dict], **kwargs) -> ChatResult:
-    result = chat(messages, model=AGENT_MODEL, **kwargs)
+def chat_as_agent(messages: list[dict], model: str | None = None, **kwargs) -> ChatResult:
+    """Agent tier. `model` overrides AGENT_MODEL (the safety check passes SAFETY_MODEL)."""
+    result = chat(messages, model=model or AGENT_MODEL, **kwargs)
     result.role = "agent"
     return result
 
