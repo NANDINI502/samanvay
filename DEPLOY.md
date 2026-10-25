@@ -48,6 +48,8 @@ only a CPU, and the only secret is your Token Factory API key.
 | `MEDBOT_RATE_WINDOW_S` | no | Per-IP window in seconds; default `3600` |
 | `MEDBOT_DAILY_CAP` | no | `/api/ask` questions per UTC day, all clients together; default `200` (`0` = off) |
 | `MEDBOT_MAX_TOKENS_CAP` | no | Ceiling on `max_tokens` for every model call; default `4000` (the largest budget any call uses; lower values make long answers fail as truncated) |
+| `MEDBOT_WEB_FALLBACK` | no | `1` turns on the live web fallback (`rag/web.py`); default off |
+| `TAVILY_API_KEY` | **yes** | Needed only with `MEDBOT_WEB_FALLBACK=1` |
 
 ### Public-demo limits
 
@@ -136,6 +138,7 @@ What the docs say, and what it means here:
    - `NEMOTRON_AGENT_MODEL` = `nvidia/nemotron-3-super-120b-a12b`
    - `MEDBOT_MOCK_LLM` = `0`
    - Optional: `MEDBOT_DAILY_CAP`, `MEDBOT_RATE_PER_IP` (defaults 200 and 10/hour).
+   - Optional web fallback: `MEDBOT_WEB_FALLBACK` = `1` and `TAVILY_API_KEY` = your Tavily key.
 7. **Advanced → Health Check Path:** `/api/health`.
 8. **Deploy Web Service.** Watch **Logs** until you see
    `Uvicorn running on http://0.0.0.0:10000`.

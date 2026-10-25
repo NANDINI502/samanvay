@@ -27,6 +27,8 @@ Aggregation rules (safety first):
   - Any agent deferring for a red flag or referral → the whole answer defers.
   - An agent deferring only for low retrieval confidence → the other agents'
     answers are still synthesized, and the gap is stated explicitly.
+  - An agent that answered from the live web fallback (rag/web.py) is
+    labelled in the synthesis input and in a fixed block after the answer.
 """
 from __future__ import annotations
 
@@ -158,6 +160,9 @@ def risk_notes(responses: dict[str, AgentResponse], patient_values: dict | None)
             lines.append("- " + RiskResult(**r.risk).summary())
         elif r.deferred and AGENT_CONFIGS[o].get("risk_model") and is_requested(o, patient_values):
             lines.append(f"- {AGENT_CONFIGS[o]['display_name']} risk tool not run: the agent deferred ({r.reason})")
+        elif r.source == "live_web" and AGENT_CONFIGS[o].get("risk_model") and is_requested(o, patient_values):
+            lines.append(f"- {AGENT_CONFIGS[o]['display_name']} risk tool not run: this answer comes "
+                         "from a live web source, not the curated sources")
     return "\n\nRisk tool:\n" + "\n".join(lines) if lines else ""
 
 
@@ -239,7 +244,9 @@ def _handle(query: str, patient_values: dict | None, audience: str, language: st
         )
 
     combined = "\n\n".join(
-        f"[{AGENT_CONFIGS[o]['display_name']} agent]\n{r.answer}\nSources: {', '.join(r.citations)}"
+        f"[{AGENT_CONFIGS[o]['display_name']} agent"
+        + (" — LIVE WEB SOURCE, not reviewed guidance; say so" if r.source == "live_web" else "")
+        + f"]\n{r.answer}\nSources: {', '.join(r.citations)}"
         + (f"\nRisk tool output: {RiskResult(**r.risk).summary()}" if r.risk else "")
         for o, r in answered.items()
     )
@@ -254,7 +261,11 @@ def _handle(query: str, patient_values: dict | None, audience: str, language: st
     ]
     synthesis = chat_as_orchestrator(messages)
     calls.append(synthesis.trace("Synthesis"))
-    final = synthesis.text + risk_notes(responses, patient_values) + aud.answered_suffix(audience, language)
+    web_used = [r for r in answered.values() if r.source == "live_web"]
+    final = (synthesis.text + risk_notes(responses, patient_values)
+             + aud.web_source_notes(audience, language, [AGENT_CONFIGS[r.organ]["display_name"] for r in web_used],
+                                    [s for r in web_used for s in r.web_sources])
+             + aud.answered_suffix(audience, language))
     return OrchestratorResponse(
         query=query, agents_consulted=organs, routing_method=method, routing_reason=reason,
         final_answer=final, agent_answers=responses, calls=calls, safety=check.to_dict(),

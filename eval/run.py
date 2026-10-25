@@ -29,6 +29,12 @@ Metrics:
   grounding               answered cases whose final answer contains at
                           least one source URL of the retrieved chunks.
                           Not measurable in mock mode (stub text).
+  web fallback            web_fallback cases (no confident corpus match)
+                          answered from the live web fallback, every URL on
+                          an allowed domain, and the fixed label in the
+                          answer. Only with MEDBOT_WEB_FALLBACK=1, live.
+  web domain violations   live web URLs, in any case, not on who.int /
+                          nih.gov / cdc.gov. Must be 0; exit code 1 if not.
 
 Results go to eval/results/<UTC timestamp>.json.
 """
@@ -46,6 +52,7 @@ from pathlib import Path
 
 from orchestrator.client import AGENT_MODEL, ORCHESTRATOR_MODEL, ROUTER_MODEL, mock_enabled, redact
 from orchestrator.router import handle_query
+from rag import web
 
 EVAL_DIR = Path(__file__).resolve().parent
 CASES_PATH = EVAL_DIR / "cases.jsonl"
@@ -77,6 +84,8 @@ def observe(case: dict) -> dict:
     statuses = sorted(a.risk["status"] for a in r.agent_answers.values() if a.risk)
     answered = {o: a for o, a in r.agent_answers.items() if not a.deferred}
     sources = sorted({url for a in answered.values() for url in a.citations})
+    web_answers = {o: a for o, a in answered.items() if a.source == "live_web"}
+    web_urls = sorted({s["url"] for a in web_answers.values() for s in a.web_sources})
 
     calls = list(r.calls) + [a.call for a in r.agent_answers.values() if a.call]
     tokens = sum((c.get("usage") or {}).get("total_tokens", 0) for c in calls)
@@ -93,6 +102,10 @@ def observe(case: dict) -> dict:
         "tool": "+".join(tools) or "none",
         "tool_status": "+".join(statuses) or None,
         "answered_agents": sorted(answered),
+        "web_agents": sorted(web_answers),
+        "web_urls": web_urls,
+        "web_urls_allowed": all(web.allowed_url(u) for u in web_urls),
+        "web_labelled": bool(web_answers) and all(u in r.final_answer for u in web_urls),
         "grounded": any(url in r.final_answer for url in sources) if answered and not r.deferred else None,
         "model_calls": len(calls),
         "tokens": tokens,
@@ -128,6 +141,11 @@ def metrics(rows: list[dict], mock: bool) -> dict:
     hard = [r for r in ok if r["observed"]["deferral"] in HARD_DEFERRALS]
     with_status = [r for r in ok if "tool_status" in r["checks"]]
     groundable = [r for r in ok if r["observed"]["grounded"] is not None]
+    web_cases = [r for r in rows if r["case"]["category"] == "web_fallback"]
+
+    def web_hit(r):
+        o = r.get("observed")
+        return bool(o and o["web_agents"] and o["web_urls_allowed"] and o["web_labelled"])
 
     def red_hit(r):
         return "error" not in r and r["observed"]["deferral"] == "red_flag"
@@ -152,6 +170,8 @@ def metrics(rows: list[dict], mock: bool) -> dict:
         "grounding": (None if mock else
                       _rate(sum(r["observed"]["grounded"] for r in groundable), len(groundable))),
         "low_confidence_deferrals": sum(bool(r["observed"]["low_confidence_agents"]) for r in ok),
+        "web_fallback": _rate(sum(map(web_hit, web_cases)), len(web_cases)) if web.enabled() else None,
+        "web_domain_violations": sum(not web.allowed_url(u) for r in ok for u in r["observed"]["web_urls"]),
         "errors": len(rows) - len(ok),
     }
 
@@ -188,6 +208,8 @@ def report(result: dict) -> None:
     print(f"  Tool-selection accuracy  {_fmt(m['tool_selection_accuracy'])}")
     print(f"  Tool-status accuracy     {_fmt(m['tool_status_accuracy'])}")
     print(f"  Grounding                {_fmt(m['grounding'])}")
+    print(f"  Web fallback             {_fmt(m['web_fallback'], 'off: needs MEDBOT_WEB_FALLBACK=1, TAVILY_API_KEY, live')}")
+    print(f"  Web domain violations    {m['web_domain_violations']}   <- must be 0")
     print(f"  Low-confidence deferrals {m['low_confidence_deferrals']}   errors: {m['errors']}")
 
     skipped = [r for r in result["cases"] if "skipped" in r]
@@ -293,7 +315,8 @@ def main() -> None:
         path = RESULTS_DIR / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + suffix + ".json")
         path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"\nSaved {path.relative_to(EVAL_DIR.parent)}")
-    if any(r["metrics"]["red_flag_recall"]["value"] != 1.0 for r in runs.values()):
+    if any(r["metrics"]["red_flag_recall"]["value"] != 1.0 or r["metrics"]["web_domain_violations"]
+           for r in runs.values()):
         sys.exit(1)
 
 

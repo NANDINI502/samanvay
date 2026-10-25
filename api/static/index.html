@@ -669,7 +669,7 @@ const UI = {
         history: "History", histNote: "Only your last 10 questions are kept, on this device. Answers and measurements are never saved.",
         noHist: "No questions yet.", clearHist: "Clear history", settings: "Settings", uiLang: "Interface language", defAud: "Default: who is asking",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Close", filled: "{x}/{n} filled",
-        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer", limit: "Demo limit reached",
+        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer", limit: "Demo limit reached", web: "Live web source",
         emptyQ: "Please type a question first.", toolNote: "A tool runs only when its specialist is consulted. If a value is missing, the specialist asks for it instead of guessing.",
         needs: "No result yet — the specialist needs:", invalid: "No result:", riskTitle: "Heart risk estimate", modeCl: "Clinician", modeHw: "Health worker" },
   hi: { nav_home: "होम", nav_ask: "पूछें", nav_history: "इतिहास", nav_settings: "सेटिंग्स",
@@ -696,7 +696,7 @@ const UI = {
         history: "इतिहास", histNote: "इस डिवाइस पर सिर्फ़ आपके आख़िरी 10 सवाल रखे जाते हैं। जवाब और आँकड़े कभी सेव नहीं होते।",
         noHist: "अभी कोई सवाल नहीं।", clearHist: "इतिहास मिटाएँ", settings: "सेटिंग्स", uiLang: "स्क्रीन की भाषा", defAud: "शुरुआत में: कौन पूछ रहा है",
         theme: "थीम", themeSys: "सिस्टम", themeLight: "लाइट", themeDark: "डार्क", close: "बंद करें", filled: "{n} में से {x} भरे",
-        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका", limit: "डेमो की सीमा पूरी हो गई",
+        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका", limit: "डेमो की सीमा पूरी हो गई", web: "लाइव वेब स्रोत",
         emptyQ: "पहले सवाल लिखें।", toolNote: "कोई टूल तभी चलता है जब उसके विशेषज्ञ से पूछा जाए। कोई आँकड़ा न हो, तो विशेषज्ञ अंदाज़ा नहीं लगाता, पूछता है।",
         needs: "अभी नतीजा नहीं — विशेषज्ञ को चाहिए:", invalid: "नतीजा नहीं:", riskTitle: "दिल के जोखिम का अनुमान", modeCl: "डॉक्टर", modeHw: "स्वास्थ्य कार्यकर्ता" },
   hinglish: { nav_home: "Home", nav_ask: "Poochein", nav_history: "History", nav_settings: "Settings",
@@ -723,7 +723,7 @@ const UI = {
         history: "History", histNote: "Is device par sirf aapke aakhri 10 sawaal rakhe jaate hain. Jawaab aur aankde kabhi save nahi hote.",
         noHist: "Abhi koi sawaal nahi.", clearHist: "History mitayein", settings: "Settings", uiLang: "Screen ki bhasha", defAud: "Shuru mein: kaun pooch raha hai",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Band karein", filled: "{n} mein se {x} bhare",
-        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka", limit: "Demo ki limit poori ho gayi",
+        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka", limit: "Demo ki limit poori ho gayi", web: "Live web source",
         emptyQ: "Pehle sawaal likhein.", toolNote: "Koi tool tabhi chalta hai jab uske specialist se poocha jaaye. Koi aankda na ho, toh specialist andaaza nahi lagata, poochta hai.",
         needs: "Abhi nateeja nahi — specialist ko chahiye:", invalid: "Nateeja nahi:", riskTitle: "Dil ke risk ka andaaza", modeCl: "Doctor", modeHw: "Health worker" },
 };
@@ -1111,7 +1111,8 @@ function renderSourcesCard(d) {
   card.hidden = false;
   card.append(el("h2", { style: "font-size:17px", text: t("src") }),
     el("ol", {}, ...urls.map(u => el("li", {}, /^https?:\/\//.test(u) ? el("a", { href: u, target: "_blank", rel: "noopener noreferrer", text: new URL(u).hostname.replace(/^www\d?\./, "") }) : u,
-      el("span", { text: answered.filter(a => a.citations.includes(u)).map(a => a.display_name).join(", ") })))));
+      el("span", { text: answered.filter(a => a.citations.includes(u)).map(a => a.display_name).join(", ")
+        + (answered.some(a => a.source === "live_web" && a.citations.includes(u)) ? ` · ${t("web")}` : "") })))));
 }
 
 /* ---------- answer rendering ---------- */
@@ -1158,7 +1159,8 @@ function answerCard(d) {
   const tags = el("div", { class: "tags" },
     el("span", { class: "tag", text: d.audience === "health_worker" ? `${t("modeHw")} · ${LANG_NAMES[d.language] || d.language}` : t("modeCl") }),
     calls.length ? el("span", { class: "tag nv", text: "Nemotron" }) : null,
-    d.mock ? el("span", { class: "tag mock", text: "Mock" }) : null);
+    d.mock ? el("span", { class: "tag mock", text: "Mock" }) : null,
+    (d.agents || []).some(a => !a.deferred && a.source === "live_web") ? el("span", { class: "tag a", text: t("web") }) : null);
   const card = el("article", { class: "card" + (lvl === "r" ? " urgent" : ""), "aria-labelledby": "ans-h" },
     el("div", { class: `triage tr-${lvl}` }, el("div", { class: "ic" }, icon(LEVEL_IC[lvl])),
       el("div", { class: "tx" }, el("h2", { id: "ans-h", text: t("B_" + lvl) }), el("p", { text: t("S_" + lvl) })), tags));
@@ -1209,7 +1211,8 @@ function traceTable(d) {
     add(rc ? "m" : "", d.routing_method === "keyword_fallback" ? "Routing (keyword fallback)" : "Routing", rc ? why : `Keywords ${why}`, rc);
     for (const a of d.agents || []) {
       if (a.call) add("m", `${a.display_name} specialist`, null, a.call);
-      else add("", `${a.display_name} specialist`, `Guardrail deferred (${DEFER_LABELS[a.defer_kind] || a.defer_kind}) — no AI call.`);
+      else add("", `${a.display_name} specialist`, `Guardrail deferred (${DEFER_LABELS[a.defer_kind] || a.defer_kind})`
+        + (a.web_error ? `; live web fallback found nothing usable (${a.web_error})` : "") + " — no AI call.");
       if (a.risk) add("", `${a.display_name} measurement`, `${a.risk.title}: ${a.risk.status}`);
     }
     for (const c of calls.filter(c => /discarded/.test(c.step))) add("m", c.step, null, c);
@@ -1241,9 +1244,11 @@ function renderResult(d, scroll = true) {
       el("div", { class: "h" }, el("h3", { text: a.display_name }),
         el("span", { class: `tag ${st}` }, icon(st === "g" ? "check" : st === "a" ? "dash" : "cross"),
           a.deferred ? "deferred · " + (DEFER_LABELS[a.defer_kind] || a.defer_kind) : "answered"),
+        a.source === "live_web" ? el("span", { class: "tag a", text: t("web") }) : null,
         a.call?.mock ? el("span", { class: "tag mock", text: "mock" }) : null),
       el("div", { class: "body", lang: LANG_ATTR[d.language] || "en", text: a.deferred ? a.reason : a.answer }));
-    if (a.retrieved_headings?.length) box.append(el("div", { class: "small", text: "Guideline sections used: " + a.retrieved_headings.join(" · ") }));
+    if (a.source === "live_web") box.append(el("div", { class: "small", text: "The curated guidelines had no confident match, so this answer comes from a live search of WHO / NIH / CDC pages. They were not reviewed for this tool." }));
+    else if (a.retrieved_headings?.length) box.append(el("div", { class: "small", text: "Guideline sections used: " + a.retrieved_headings.join(" · ") }));
     if (a.citations?.length) box.append(el("div", { class: "sources" }, el("h3", { text: t("src") }), sourceList(a.citations)));
     return box;
   })));

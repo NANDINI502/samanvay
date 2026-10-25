@@ -10,6 +10,10 @@ Flow per query:
      tier) with the retrieved chunks and the tool output only
      Not allowed → return a deferral with the reason; never fall through to
      an ungrounded model answer, and never run the risk tool
+  4. Only for a low-confidence deferral, and only when the live web fallback
+     is on (rag/web.py): search WHO / NIH / CDC pages; if any are found,
+     answer from those excerpts alone, labelled as a live web source. Red
+     flags and referrals never get here, and the risk tool still doesn't run.
 """
 from __future__ import annotations
 
@@ -19,6 +23,7 @@ from agents.registry import AGENT_CONFIGS
 from guardrails.checks import run_guardrails
 from models.tool import estimate, is_requested
 from orchestrator.client import chat_as_agent
+from rag import web
 from rag.retrieve import corpus_limits, retrieve
 
 SYSTEM_PROMPT_TEMPLATE = """You are the {display_name} specialist agent in \
@@ -39,6 +44,15 @@ exactly as given, and never let it override a guideline rule or present it \
 as a diagnosis. If it says values are missing or invalid, ask the user for \
 exactly those values and do not calculate or estimate anything yourself."""
 
+WEB_PROMPT = """
+
+The curated source material had no confident match for this question, so \
+the excerpts below are from a live web search limited to WHO, NIH and CDC \
+pages. They were not reviewed for this tool. Use them under the same rules: \
+answer only from what they state, name the page (URL) each point comes \
+from, and say plainly that this is a live web source, not the tool's \
+reviewed guidance."""
+
 
 @dataclass
 class AgentResponse:
@@ -51,6 +65,9 @@ class AgentResponse:
     citations: list[str] = field(default_factory=list)
     retrieved_headings: list[str] = field(default_factory=list)
     risk: dict | None = None  # models.tool.RiskResult.to_dict(), when the risk tool ran
+    source: str = "corpus"  # "corpus" | "live_web" (rag/web.py fallback)
+    web_sources: list[dict] = field(default_factory=list)  # [{"title", "url"}] when source == "live_web"
+    web_error: str | None = None  # why the web fallback found nothing usable (redacted)
     call: dict | None = None  # ChatResult.trace(): model, role, latency, tokens; None if no model call
 
 
@@ -70,6 +87,12 @@ class SpecialistAgent:
         headings = [r["heading"] for r in results]
 
         if not guard.allowed:
+            web_error = None
+            if guard.kind == "low_confidence" and web.enabled():
+                hits, web_error = web.search(query)
+                if hits:
+                    return self._answer_from_web(query, hits, headings)
+                web_error = web_error or "no WHO / NIH / CDC result"
             return AgentResponse(
                 organ=self.organ,
                 deferred=True,
@@ -78,6 +101,7 @@ class SpecialistAgent:
                 defer_kind=guard.kind,
                 trigger=guard.matched,
                 retrieved_headings=headings,
+                web_error=web_error,
             )
 
         risk = None
@@ -104,4 +128,22 @@ class SpecialistAgent:
             retrieved_headings=headings,
             risk=risk.to_dict() if risk else None,
             call=result.trace(f"{self.config['display_name']} agent"),
+        )
+
+    def _answer_from_web(self, query: str, hits: list[dict], headings: list[str]) -> AgentResponse:
+        context = "\n\n".join(f"### {h['title'] or h['url']}\nURL: {h['url']}\n{h['content']}" for h in hits)
+        messages = [
+            {"role": "system", "content": self.system_prompt + WEB_PROMPT},
+            {"role": "user", "content": f"Context ({web.LABEL}):\n{context}\n\nQuestion: {query}"},
+        ]
+        result = chat_as_agent(messages)
+        return AgentResponse(
+            organ=self.organ,
+            deferred=False,
+            answer=result.text,
+            citations=[h["url"] for h in hits],
+            retrieved_headings=headings,
+            source="live_web",
+            web_sources=[{"title": h["title"], "url": h["url"]} for h in hits],
+            call=result.trace(f"{self.config['display_name']} agent ({web.LABEL.lower()})"),
         )

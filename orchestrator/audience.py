@@ -185,3 +185,21 @@ def clarify_message(audience: str, language: str, names: str) -> str:
 def answered_suffix(audience: str, language: str) -> str:
     """Appended after the synthesis and risk-tool block: the fixed last line."""
     return "" if audience == "clinician" else "\n\n" + _NEXT_STEP["answered"][language]
+
+
+_WEB_HEADING = {
+    "clinician": ("Live web source (WHO / NIH / CDC search; not this tool's reviewed guidance) "
+                  "used for: {names}. Check these pages yourself:"),
+    "en": "Live web source, not this tool's checked guidance. Used for: {names}. Pages:",
+    "hi": "लाइव वेब स्रोत, इस टूल की जाँची हुई जानकारी नहीं। इनके लिए: {names}। पेज:",
+    "hinglish": "Live web source, is tool ki jaanchi hui jaankari nahi. Inke liye: {names}. Pages:",
+}
+
+
+def web_source_notes(audience: str, language: str, names: list[str], sources: list[dict]) -> str:
+    """Fixed block naming the live web pages an answer used (rag/web.py), so
+    the label reaches the user whatever the synthesis model writes."""
+    if not sources:
+        return ""
+    heading = _WEB_HEADING["clinician" if audience == "clinician" else language].format(names=", ".join(names))
+    return "\n\n" + heading + "\n" + "\n".join(f"- {s['title'] or s['url']}: {s['url']}" for s in sources)
