@@ -23,7 +23,7 @@ tell the user to refer instead of guessing.
 > **Decision support, not diagnosis.** This is a hackathon prototype, not a
 > medical device. It does not replace clinical judgment.
 
-- **Live demo:** `<DEMO_URL>`
+- **Live demo:** https://samanvay-z93y.onrender.com (Render free tier: the first request after 15 idle minutes takes about a minute)
 - **Repository:** https://github.com/NANDINI502/samanvay
 
 ## Contents
@@ -199,7 +199,8 @@ from a live search (`rag/web.py`):
 for the brain?"*. The Nemotron router sends it to Neuro, whose best corpus
 match scores 0.09, so it reaches the fallback. Run live twice on
 2026-10-26, it was answered both times from who.int and cdc.gov pages (eval
-case `web-01`).
+case `web-01`). The pages found vary between runs: on the deployed demo
+(2026-10-27) the same question cited cdc.gov and pmc.ncbi.nlm.nih.gov.
 
 **How often it fires.** Not often, and only by word overlap. TF-IDF scores
 shared words, not meaning, so an in-domain question the corpus doesn't
