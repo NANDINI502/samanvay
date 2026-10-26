@@ -24,7 +24,7 @@ tell the user to refer instead of guessing.
 > medical device. It does not replace clinical judgment.
 
 - **Live demo:** `<DEMO_URL>`
-- **Repository:** `<GITHUB_REPO_URL>`
+- **Repository:** https://github.com/NANDINI502/samanvay
 
 ## Contents
 
@@ -32,12 +32,14 @@ tell the user to refer instead of guessing.
 - [What it does](#what-it-does)
 - [The AI can only make the system more cautious](#the-ai-can-only-make-the-system-more-cautious)
 - [Routing](#routing-nemotron-first-keywords-as-fallback-referrals-always)
+- [Live web fallback (Tavily)](#live-web-fallback-tavily)
 - [Architecture](#architecture)
 - [Which Nemotron model does what, and why](#which-nemotron-model-does-what-and-why)
 - [How Nebius Token Factory is used](#how-nebius-token-factory-is-used)
 - [Other Nebius tools](#other-nebius-tools)
 - [Setup and run](#setup-and-run)
 - [Tests](#tests)
+- [Evaluation](#evaluation)
 - [Risk tools, datasets and metrics](#risk-tools-datasets-and-metrics)
 - [Known limitations](#known-limitations)
 - [Feedback on Nebius & NVIDIA tools](#feedback-on-nebius--nvidia-tools)
@@ -175,6 +177,43 @@ strict one-way contract:
 `python -m eval.run --compare-routers` runs the eval with both routers and
 lists every case where they disagree.
 
+## Live web fallback (Tavily)
+
+When an agent's own corpus has no confident match (best TF-IDF score below
+`MIN_SCORE` = 0.12, `rag/embed.py`), it normally defers ("not sure enough").
+With the fallback on, that one kind of deferral can instead be answered
+from a live search (`rag/web.py`):
+
+- **Only replaces a low-confidence deferral.** Red flags, referral terms
+  and the safety check run first and still defer; the web never answers
+  anything the guardrails stop. Risk tools don't run on web answers.
+- **WHO, NIH and CDC only:** Tavily's `include_domains` (mode `restrict`)
+  plus an https + host check in code. Any error, timeout or no allowed
+  result keeps the deferral.
+- **Labelled.** The answer ends with a fixed *Live web source* block
+  listing the pages used ("not this tool's reviewed guidance").
+- Off unless `MEDBOT_WEB_FALLBACK=1` and `TAVILY_API_KEY` are set; never in
+  mock mode.
+
+**Try it:** the *Live web source* case in the UI, *"Is zika virus dangerous
+for the brain?"*. The Nemotron router sends it to Neuro, whose best corpus
+match scores 0.09, so it reaches the fallback. Run live twice on
+2026-10-26, it was answered both times from who.int and cdc.gov pages (eval
+case `web-01`).
+
+**How often it fires.** Not often, and only by word overlap. TF-IDF scores
+shared words, not meaning, so an in-domain question the corpus doesn't
+cover usually still clears 0.12 when it shares words like *heart*, *liver*
+or *diabetes* with the corpus; the agent then answers from its excerpts
+and is told the corpus's limits. In a probe of 21 such questions
+(2026-10-26, top score per intended organ), 9 scored below 0.12 and would
+use the web if routed there (e.g. *"What is atrial fibrillation?"* 0.07);
+12 scored 0.12–0.25 and stay with the corpus (e.g. *"Is fatty liver
+reversible?"* 0.24). 0.12 was set from `python -m rag.calibrate`: on-topic
+questions mostly score 0.2–0.45, off-topic text up to about 0.2. Raising it
+would send more questions to the web, including some the corpus does
+cover.
+
 ## Architecture
 
 ```mermaid
@@ -261,6 +300,10 @@ the eval cases that exercise it. Live run 2026-10-25,
 `eval/results/benchmark_20261025T161928Z.json`. Latency and tokens are per
 call of the role being varied; end-to-end is the whole question.
 
+> The behaviour checks below use the same self-written eval cases (see
+> [Evaluation](#evaluation)): 100% means the system behaves as designed
+> on these cases, not clinical accuracy.
+
 **Router** (37 non-emergency cases; accuracy includes the keyword and
 referral safety nets, as in production)
 
@@ -340,21 +383,20 @@ referral safety nets, as in production)
 
 ## Other Nebius tools
 
-Documented and ready in [DEPLOY.md](DEPLOY.md); tick what was actually used
-for the submitted demo:
+Token Factory is the only Nebius service the submitted demo uses. The demo
+runs as a Docker web service on Render's free tier. A Nebius deployment is
+documented in [DEPLOY.md](DEPLOY.md) but was not used:
 
 - [ ] **Nebius Serverless AI Endpoints** — runs the app container (CPU preset)
 - [ ] **Nebius Container Registry** — hosts the image
 - [ ] **Nebius SecretStash** — injects `NEBIUS_API_KEY` via `--env-secret`
-
-`<OTHER_NEBIUS_TOOLS_USED>`
 
 ## Setup and run
 
 Requires Python 3.12.
 
 ```bash
-git clone <GITHUB_REPO_URL> && cd medbot-orchestrator-v2
+git clone https://github.com/NANDINI502/samanvay && cd samanvay
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt -c constraints.txt
@@ -408,6 +450,37 @@ All tests run offline (`tests/conftest.py` sets `MEDBOT_MOCK_LLM=1`).
 | `test_check_nebius.py` | Readiness script with faked Token Factory responses; key never printed |
 
 One strict `xfail` documents a known retrieval limitation (below).
+
+## Evaluation
+
+`MEDBOT_MOCK_LLM=0 python -m eval.run` runs every case in `eval/cases.jsonl`
+through the full live pipeline and scores what the system *did*, never what
+it said medically. Final live run 2026-10-26 (Nemotron router, Ultra
+orchestrator, Super agents, web fallback on), `eval/results/20261026T095448Z.json`:
+
+> **What these numbers mean.** The 66 eval cases are test cases we wrote
+> ourselves to check routing and safety behaviour (which agents run, when
+> the system defers, which risk tool runs, whether sources are cited). They
+> are **not clinical validation**. 100% means the system behaves as designed
+> on these cases, not that its answers are clinically accurate.
+
+| Metric | Result |
+| --- | --- |
+| Routing accuracy (exact set of agents) | 100% (37/37) |
+| Red-flag recall (en 8/8, hi 5/5, Hinglish 6/6) | 100% (19/19) |
+| Paraphrased emergencies caught by the safety check | 100% (10/10) |
+| Safety-check false alarms | 0% (0/37) |
+| Deferral precision (red flag vs referral) | 100% (39/39) |
+| Referral recall | 100% (10/10) |
+| Risk-tool selection | 100% (66/66) |
+| Risk-tool status (ok / needs values / invalid) | 100% (8/8) |
+| Grounding (answer cites a retrieved source URL) | 100% (24/24) |
+| Web fallback answered, labelled, allowed domains only | 100% (2/2) |
+| Web domain violations | 0 |
+| Errors | 0 |
+
+Grounding checks only that a retrieved source is cited, not that every
+sentence is supported by it.
 
 ## Risk tools, datasets and metrics
 
@@ -466,9 +539,15 @@ reproduces these numbers exactly (tested).
 
 ## Known limitations
 
-- **Live Nemotron calls not yet verified end to end.** The pipeline was
-  built and tested in mock mode; model IDs must be confirmed with
-  `scripts/check_nebius.py`. `<LIVE_TEST_STATUS>`
+- **Not done: native tool calling** (plan step H: Nemotron calling the
+  risk tools through OpenAI-style `tools`). We chose to skip it so the
+  tool path stayed as tested in the final days. Tools are picked in code
+  instead: an agent runs its risk tool only when the guardrails allow it
+  and the user gave that tool's values. Whether Nemotron on Token Factory
+  supports `tools` was not tested.
+- **Tests run offline; live behaviour is checked by the eval.** `pytest`
+  uses mock replies. Live runs are the eval and tier benchmark above:
+  66 self-written cases, one run at a time.
 - **Lexical retrieval (TF-IDF) by default.** It can't tell an in-domain but
   uncovered question ("liver transplant waiting list rules") from a covered
   one; such questions reach the model, which is told the corpus's limits.
@@ -476,10 +555,9 @@ reproduces these numbers exactly (tested).
   embedding backend is written but untested.
 - Questions with little word overlap (e.g. "when to start a statin") can
   fall under the confidence threshold and defer — safe, but a miss.
-- The Nemotron router is tested with faked replies only until live access
-  works. Its fallback, keyword routing, is simple: ambiguous words can pull
-  in an extra agent, and plurals are missed ("kidneys" doesn't match
-  "kidney"; eval case `multi-03`).
+- The Nemotron router's fallback, keyword routing, is simple: ambiguous
+  words can pull in an extra agent, and plurals are missed ("kidneys"
+  doesn't match "kidney"; eval case `multi-03`).
 - Corpora are short curated excerpts, not full guidelines, and some sources
   are dated (NIDDK CKD page last reviewed 2016) — noted in each file.
 - The cardiac model comes from a small 1980s referral population and is
@@ -489,16 +567,20 @@ reproduces these numbers exactly (tested).
   separately say that a requested risk tool was skipped (the agent card does).
 - All agents share one model setting; per-agent model choice isn't
   configurable yet.
-- The one-way safety check is tested with faked replies only until live
-  access works; its paraphrase recall and false-alarm rate are unmeasured.
-  Its false alarms make answers defer more often (safe, but a cost).
+- The one-way safety check's paraphrase recall (10/10) and false alarms
+  (0/37) are measured on only 10 + 37 self-written cases. Any false alarm
+  makes an answer defer (safe, but a cost).
+- The web fallback's allowed domains include all of nih.gov, so it can
+  cite research papers rather than guidance: live, eval case `web-02` cited
+  pmc.ncbi.nlm.nih.gov articles. How often it fires depends on TF-IDF word
+  overlap (see [Live web fallback](#live-web-fallback-tavily)).
 - Hindi/Hinglish red-flag phrases were translated for this project and
   need native-speaker clinical review (see `guardrails/README.md`). The
   same goes for the health-worker mode's fixed Hindi/Hinglish messages
   (`orchestrator/audience.py`).
 - Health-worker mode: the risk-tool block and its disclaimer stay in
-  English; the model-written part of an answer in Hindi/Hinglish is
-  untested until live access works (mock replies are English stubs).
+  English. The model-written part of an answer in Hindi/Hinglish isn't
+  scored: the eval runs in clinician mode and checks behaviour, not wording.
 - Grounding is enforced by prompt, not code: live, an agent sometimes
   drew a conclusion its excerpts don't state (from "test people with high
   blood pressure for kidney disease" to "high blood pressure can damage the
@@ -526,7 +608,20 @@ on our behalf._
 
 ## What changed during the submission period
 
-`<PASTE_TEXT_HERE>`
+From `git log` (dates are commit dates, UTC+8):
+
+- **2026-10-17** — First build: six RAG specialist agents, deterministic guardrails, eGFR / FIB-4 / cardiac risk tools (UCI kidney and liver models retired), Token Factory check script, FastAPI web UI, Dockerfile.
+- **2026-10-19** — WHO PEN positioning for Indian PHCs; behaviour eval harness (`eval/`); Hindi/Hinglish red flags; one-way safety check; Nemotron router with keyword fallback.
+- **2026-10-19** — Health-worker mode (simple language, Hindi/Hinglish, fixed *Next step*); "dil ka daura" red flag relabelled as chest pain.
+- **2026-10-20** — First live run on Token Factory: Ultra model ID fixed, reasoning off for router/safety JSON calls, keyword matches added to Nemotron routing; live eval all 100%.
+- **2026-10-22** — UI redesign: three-column dashboard, history, voice input.
+- **2026-10-24** — Guard for answers cut off at `max_tokens`; stricter grounding prompts; two live re-checks, all 100%.
+- **2026-10-24** — DEPLOY.md: Hugging Face, Nebius Serverless and Render routes.
+- **2026-10-25** — Public-demo hardening for Render: `/api/ask` rate limits, `MEDBOT_MAX_TOKENS_CAP`.
+- **2026-10-25** — Tavily live web fallback for low-confidence deferrals (WHO/NIH/CDC only); 3 eval cases; live eval 66 cases all 100%.
+- **2026-10-25** — Renamed to Samanvay.
+- **2026-10-26** — Model-tier benchmark (Nano / Super / Ultra per role); safety check gets its own model setting.
+- **2026-10-26** — Final live eval; README: eval results, web fallback, limitations; *Live web source* example in the UI.
 
 ## License
 

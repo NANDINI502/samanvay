@@ -640,6 +640,8 @@ const EXAMPLES = [
   { tag: "FIB-4 calculator", cls: "c-g", ic: "calc", q: "What does this patient's FIB-4 liver score suggest?", values: { hepatic: { age: 50, ast: 40, alt: 25, platelets: 200 } } },
   { tag: "Cardiac model", cls: "c-g", ic: "heart", q: "What is this patient's cardiovascular risk?", datasetRow: { organ: "cardiac", row: 0 } },
   { tag: "Guideline lookup", cls: "c-b", ic: "book", q: "What GFR value suggests kidney disease?" },
+  // Neuro corpus best TF-IDF score 0.09 < MIN_SCORE 0.12: answered from the live web fallback when it is on
+  { tag: "Live web source", cls: "c-b", ic: "globe", q: "Is zika virus dangerous for the brain?" },
   { tag: "Health worker · Hinglish", cls: "c-b", ic: "chat", q: "Diabetes wale mareez ka blood pressure kitna hona chahiye?", mode: { audience: "health_worker", language: "hinglish" } },
   { tag: "Health worker · हिन्दी", cls: "c-r", ic: "chat", q: "मरीज़ को सीने में दर्द हो रहा है", mode: { audience: "health_worker", language: "hi" } },
 ];
@@ -755,6 +757,7 @@ const ICON = {
   calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
   heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
   book: '<path d="M4 5.5C6 4.5 9 4.5 12 6c3-1.5 6-1.5 8-.5V19c-2-1-5-1-8 .5-3-1.5-6-1.5-8-.5z"/><path d="M12 6v13.5"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>', trash: '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
 };
 const LEVEL_IC = { r: "warn", a: "bang", g: "check", n: "q" };
