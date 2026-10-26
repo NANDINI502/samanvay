@@ -39,6 +39,11 @@ GLOBAL_RED_FLAGS = [
     "vomiting blood", "black stool", "coughing blood",
     "unconscious", "seizure", "fainted", "collapse", "collapsed",
     "confusion", "confused",
+    # Spelling, spacing and word-form variants of the flags above (QA 2026-10-27);
+    # no new clinical signs.
+    "chestpain", "face drooping", "facial drooping",
+    "cant breathe", "can't breath", "cant breath", "cannot breath",
+    "seizures", "fainting", "collapsing",
 ]
 
 # English red flag -> Hindi (Devanagari) and Romanised Hinglish translations.
@@ -104,8 +109,8 @@ TRANSLATED_RED_FLAGS: dict[str, dict[str, list[str]]] = {
         "hinglish": ["behosh*"],
     },
     "seizure": {
-        "hi": ["दौरा पड़", "मिर्गी का दौरा"],
-        "hinglish": ["daura pad*", "mirgi ka daura"],
+        "hi": ["दौरा पड़", "दौरे पड़", "मिर्गी का दौरा"],
+        "hinglish": ["daura pad*", "daure pad*", "mirgi ka daura"],
     },
     "fainted": {
         "hi": ["ग़श खा", "चक्कर खाकर गिर", "चक्कर खा कर गिर"],
@@ -143,11 +148,11 @@ HINGLISH_SPELLINGS: dict[str, str] = {
     "tej": "tez",
     **dict.fromkeys(["hoth", "hont", "honth"], "honth"),
     **dict.fromkeys(["nile", "neela", "nila", "neeli", "nili"], "neele"),
-    **dict.fromkeys(["ultee", "ulty"], "ulti"),
+    **dict.fromkeys(["ultee", "ulty", "ultii"], "ulti"),
     "kaali": "kali",
     "kaala": "kala",
     **dict.fromkeys(["khaansi", "khaansee"], "khansi"),
-    "doura": "daura",
+    **dict.fromkeys(["doura", "dora"], "daura"),
     "mirgee": "mirgi",
     **dict.fromkeys(["gash", "ghaash"], "ghash"),
     "bahki": "behki",
@@ -163,11 +168,18 @@ class GuardrailResult:
     matched: str | None = None  # red flags and referrals: the phrase as found in the query
 
 
+_APOSTROPHES = str.maketrans({"’": "'", "‘": "'", "ʼ": "'", "`": "'"})  # ’ ‘ ʼ `
+
+
 def _normalize(text: str) -> str:
-    """Lowercase; for Devanagari, drop the nukta (ख़ = ख) and treat
-    chandrabindu as anusvara (साँस = सांस), so spelling variants match."""
-    text = unicodedata.normalize("NFC", text.lower())
-    return text.replace("़", "").replace("ँ", "ं")
+    """Lowercase and even out spelling and spacing so variants match: curly
+    apostrophes become straight (phones type can’t), hyphens and runs of
+    whitespace become one space (chest-pain, chest  pain). For Devanagari,
+    drop the nukta (ख़ = ख) and the nasal marks chandrabindu and anusvara,
+    which are often left out (साँस = सांस = सास, में = मे, नहीं = नही)."""
+    text = unicodedata.normalize("NFC", text.lower()).translate(_APOSTROPHES)
+    text = re.sub(r"[\s\-‐-—]+", " ", text)  # whitespace, hyphen, Unicode hyphens/dashes
+    return text.replace("़", "").replace("ँ", "").replace("ं", "")  # nukta, chandrabindu, anusvara
 
 
 def _hinglish(text: str) -> str:

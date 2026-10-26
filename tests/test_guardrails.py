@@ -103,3 +103,20 @@ def test_heart_attack_phrase_named_chest_pain_not_seizure():
 def test_seizure_phrases_still_name_seizure():
     for q in ["bachche ko daura pada", "उसे मिर्गी का दौरा आया"]:
         assert check_red_flags(q).flag == "seizure", q
+
+
+def test_spelling_and_spacing_variants():
+    """Phrasings the keyword layer missed in the QA probe (docs/QA_REPORT.md, C-FLAGS)."""
+    for q in ["chest  pain", "chest-pain", "chestpain", "can’t breathe", "cant breathe", "I can't breath",
+              "seizures since morning", "fainting spells today", "patient collapsing", "face drooping on one side",
+              "सीने मे दर्द", "सीने  में दर्द", "सांस नही आ रही", "उसे दौरे पड़ रहे हैं",
+              "seene mein  dard", "khun ki ultii", "dil ka dora pada", "bachche ko daure pad rahe hain"]:
+        g = check_red_flags(q)
+        assert not g.allowed and g.kind == "red_flag", q
+
+
+def test_normalization_does_not_add_matches_inside_words():
+    # spacing/apostrophe/hyphen changes must not create new word-internal matches
+    for q in ["blood-pressure target in diabetes", "patient's kidney function", "re-check eGFR in 3 months",
+              "What is the normal range for creatinine?", "मधुमेह में रक्तचाप कितना होना चाहिए"]:
+        assert check_red_flags(q).allowed, q

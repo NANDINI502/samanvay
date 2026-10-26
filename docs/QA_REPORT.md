@@ -31,8 +31,8 @@ listed under [Needs owner decision](#needs-owner-decision).
 
 **Top 5 risks**
 
-1. **Keyword red-flag layer is brittle** (27 of 49 odd phrasings missed: double spaces, `can’t`, plurals like "seizures", Hindi without
-   bindu). Live, the AI safety check caught every one tested, but if that call times out the deterministic net alone would miss them (O-1).
+1. **Keyword red-flag layer was brittle** (27 of 49 odd phrasings missed: double spaces, `can’t`, plurals like "seizures", Hindi without
+   bindu; fixed after this report: now 11 missed, all typos, paraphrases or mixed script). Live, the AI safety check caught every one tested, but if that call times out the deterministic net alone would miss them (O-1).
 2. **Implausible inputs pass the calculators**: age 150 is accepted, and creatinine 159 (µmol/L typed as mg/dL) gives "eGFR 0.2 — kidney
    failure" with no unit warning (O-2). A clinician judge may try exactly this.
 3. **"Guidance" banner on non-answers**: when the sources don't cover a question (doses, "give a diagnosis"), the text correctly says so but
@@ -67,7 +67,7 @@ because they need information only you have.
 
 | # | Issue | Evidence | Suggested change |
 |---|---|---|---|
-| O-1 | Red-flag keyword matching misses spacing/punctuation/inflection variants | C-FLAGS table: e.g. `chest  pain`, `can’t breathe` (curly apostrophe, common on phones), `cant breathe`, `seizures`, `fainting`, `collapsing`, `coughing up blood`, `सीने मे दर्द`, `सांस नही आ रही`, `seene mein  dard` | In `_normalize`: collapse whitespace, map `’`→`'`; allow plural/-ing forms for single-word flags; add the bindu-less Hindi spellings (`मे`, `नही`) to the normalisation. All strengthen the guardrail; none weakens it. |
+| O-1 | **Done 2026-10-27 (owner approved).** Red-flag keyword matching missed spacing/punctuation/word-form variants | C-FLAGS table | `_normalize` now collapses spaces and hyphens, straightens curly apostrophes and ignores the Devanagari nasal marks; English word-form variants added (chestpain, face/facial drooping, cant breathe, can't/cant/cannot breath, seizures, fainting, collapsing), Hindi/Hinglish दौरे पड़ / daure pad*, spellings ultii, dora. Keyword layer: 22 → 38 of 49 probe phrasings. Still left to the AI safety check: typos (chest pian, slurred speach), paraphrases (pain in the chest, coughing up blood, blood in her vomit, lips turning blue, saans lene mein dikkat) and mixed script (chest me dard, seene में dard, Chest में दर्द). pytest 278 passed; mock eval unchanged. |
 | O-2 | No plausibility bounds / unit hint on calculator inputs | M-5: age 150 → eGFR 32.9; creatinine 159 → eGFR 0.2 "kidney failure" | An upper bound for age and a "creatinine looks like µmol/L (÷ 88.4 for mg/dL)?" check. Needs a cited source for the bounds. |
 | O-3 | "Guidance" banner when the answer says the sources don't cover it | Live: metformin / amlodipine dose, "give a diagnosis" | Treat an agent's "not covered" answer as a low-confidence deferral, or add a "Not covered by the sources" banner. Touches deferral logic/prompts. |
 | O-4 | Web fallback can cite an irrelevant page | Live: "`<img …>` what is eGFR?" → PMC abstract about EGFR (the lung-cancer receptor); the answer said it doesn't apply, but it is listed as a source | e.g. require the search result to share the question's key terms, or drop sources the answer says are irrelevant. |

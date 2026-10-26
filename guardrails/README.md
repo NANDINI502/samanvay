@@ -34,7 +34,7 @@ table.
 | black stool | काला मल<br>काली टट्टी | `kala mal`<br>`kali tatti` |
 | coughing blood | खाँसी में ख़ून<br>ख़ून की खाँसी | `khansi mein khoon`<br>`khoon ki khansi` |
 | unconscious | बेहोश | `behosh*` |
-| seizure | दौरा पड़<br>मिर्गी का दौरा | `daura pad*`<br>`mirgi ka daura` |
+| seizure | दौरा पड़<br>दौरे पड़<br>मिर्गी का दौरा | `daura pad*`<br>`daure pad*`<br>`mirgi ka daura` |
 | fainted | ग़श खा<br>चक्कर खाकर गिर<br>चक्कर खा कर गिर | `ghash kha*`<br>`chakkar khakar gir*`<br>`chakkar kha kar gir*` |
 | collapse | अचानक गिर | `achanak gir*` |
 | confusion | बहकी बहकी बात<br>होश में नहीं | `behki behki baat*`<br>`hosh mein nahi` |
@@ -50,8 +50,13 @@ How matching works:
   longer Roman word. A trailing `*` matches word endings
   (`behosh*` matches *behosh* and *behoshi*; `saans nahi aa*` matches
   *aa rahi*, *aa raha*, *aati*).
+- **Spacing and punctuation (all languages):** runs of spaces and hyphens
+  count as one space (*chest  pain*, *chest-pain*), and curly apostrophes
+  as straight ones (*can’t* = *can't*), so phone keyboards and typing slips
+  don't hide a flag.
 - **Devanagari spelling variants:** the nukta is ignored (ख़ून = खून,
-  ज़बान = जबान) and chandrabindu is treated as anusvara (साँस = सांस).
+  ज़बान = जबान), and so are the nasal marks chandrabindu and anusvara,
+  which are often left out (साँस = सांस = सास, में = मे, नहीं = नही).
   Devanagari phrases also match as prefixes (साँस नहीं आ matches साँस नहीं आ रही).
 - **Romanised spelling variants:** before Hinglish matching only, these
   spellings are mapped to the canonical spelling used above. English
@@ -78,14 +83,22 @@ How matching works:
 | tez | tej |
 | honth | hoth, hont |
 | neele | nile, neela, nila, neeli, nili |
-| ulti | ultee, ulty |
+| ulti | ultee, ulty, ultii |
 | kali | kaali |
 | kala | kaala |
 | khansi | khaansi, khaansee |
-| daura | doura |
+| daura | doura, dora |
 | mirgi | mirgee |
 | ghash | gash, ghaash |
 | behki | bahki |
+
+### English spelling and word-form variants
+
+Added after the QA probe of 2026-10-27 (`docs/QA_REPORT.md`), to the English
+list in `guardrails/checks.py`. They are other spellings or word forms of
+flags already on the list, not new clinical signs: *chestpain*; *face
+drooping*, *facial drooping*; *cant breathe*, *can't breath*, *cant
+breath*, *cannot breath*; *seizures*; *fainting*; *collapsing*.
 
 ### Known over-matches (safe direction, for review)
 
