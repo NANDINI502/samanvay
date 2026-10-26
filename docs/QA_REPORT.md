@@ -6,11 +6,11 @@ links below work only in a local checkout).
 
 **How it was tested.** Broad coverage on a local server in mock mode (`MEDBOT_MOCK_LLM=1`: guardrails, risk tools, routing
 and UI are real; model replies are labelled stubs). Then one focused live pass with real Nemotron on Token Factory:
-19 questions on a local server and 7 on the deployed demo earlier today (26 live questions so far). The deployed demo still runs
-`f818250`; cases 8–10 there (Live web source, Hinglish, Hindi) and a check of this commit run after you push (about 4 more questions). Widths 1440 / 1024 / 390 (360 for phone checks), light and dark, English / हिन्दी / Hinglish,
+19 questions on a local server and 11 on the deployed demo (7 before and 4 after deploying `93fadcf`), 30 live questions in total.
+Widths 1440 / 1024 / 390 (360 for phone checks), light and dark, English / हिन्दी / Hinglish,
 phones emulated as an Android device with touch.
 
-**Totals:** FAIL 3, FIXED 2, NOT RUN 2, NOTE 5, OWNER 1, PASS 145. FIXED = found and fixed in this pass. OWNER / NOTE / FAIL items are
+**Totals:** FAIL 3, FIXED 2, NOT RUN 2, NOTE 5, OWNER 1, PASS 150. FIXED = found and fixed in this pass. OWNER / NOTE / FAIL items are
 listed under [Needs owner decision](#needs-owner-decision).
 
 ## Judge's eye
@@ -56,6 +56,7 @@ listed under [Needs owner decision](#needs-owner-decision).
 | 9 | DEPLOY.md: real repo URL, `samanvay` service name example (was a dead `medbot-orchestrator.onrender.com`), status-pill wording for the new UI, UptimeRobot note | `DEPLOY.md` |
 | 10 | Removed `api/static/index_old.html` (old "MedBot Orchestrator" page, not served, not referenced; still in git history) | — |
 | 11 | `qa/screenshots/` added to `.gitignore` | `.gitignore` |
+| 12 | "How this answer was made" table: its sideways-scrolling container is now keyboard-focusable and labelled (axe `scrollable-region-focusable`, seen at 1024px on the deployed site) | `api/static/index.html` |
 
 `pytest tests/`: 276 passed, 1 xfailed after the fixes (2 new tests; nothing loosened).
 
@@ -211,6 +212,11 @@ because they need information only you have.
 | LIVE-D-2 | Live (deploy) | 7 Try-a-case buttons on the deployed site @1440 light (earlier today) | right banner, rings, Listen, trace | Multi-agent 13.2 s Guidance (14 trace steps); Red flag 1.6 s Emergency; Referral 3.2 s Refer; eGFR 11.1 s ring 42.6; FIB-4 11.2 s ring 2.00; Cardiac 13.8 s ring; Guideline 7.5 s Guidance. All with Listen. | **PASS** |  |
 | LIVE-D-3 | Live (deploy) | Rate limit on the deployed site | 'Demo limit reached' after 10/hour per IP | Cases 8–10 and an 11th question got the translated 'Demo limit reached' card with the retry time; page kept working. | **PASS** |  |
 | LIVE-D-4 | Live (deploy) | Lighthouse mobile, deployed site | good scores | Performance 91, Accessibility 100, Best Practices 100, SEO 100. FCP 1.9 s, LCP 3.2 s, TBT 0 ms, CLS 0.016. Warm load: TTFB 0.3–0.8 s, 38 KB gzipped HTML. (Local mock server: 79/100/100/100; no compression locally.) | **PASS** |  |
+| LIVE-D-5 | Live (deploy) | Commit `93fadcf` deployed | page = pushed index.html; HEAD /api/health 200; blank question 422 | Page identical to the pushed file (ignoring line endings); HEAD 200; blank question → 422 'question is empty'; `/api/health` ready, mock false. | **PASS** |  |
+| LIVE-D-6 | Live (deploy) | Live web source @1440 light | web answer, labelled, WHO/NIH/CDC only | Guidance, Neuro answered from the live web; 'Live web source' tag; sources cdc.gov + pmc.ncbi.nlm.nih.gov; Listen works; no serious axe issue; no sideways scroll. | **PASS** | [png](../qa/screenshots/live-deploy-case7-1440-light.png) |
+| LIVE-D-7 | Live (deploy) | Health worker · Hinglish @390 light | Hinglish answer with Next step, Listen 'Suniye' | 'Guidelines se salah', Cardiac + Endocrine answered; Listen → 'Rokiye' → 'Suniye'. One agent call took 46.4 s (Token Factory latency on that call; the others 1–2 s). | **PASS** | [png](../qa/screenshots/live-deploy-case8-390-light.png) |
+| LIVE-D-8 | Live (deploy) | Health worker · हिन्दी red flag @390 dark | Hindi emergency, no AI call | 'आपातकाल — तुरंत कार्रवाई करें', team stopped, no model call. Listen speaks hi-IN (the headless test browser has no voices, so speech 'ends' after 0.4 s and the button resets; verified with event tracing). | **PASS** | [png](../qa/screenshots/live-deploy-case9-390-dark.png) |
+| LIVE-D-9 | Live (deploy) | eGFR calculator @1024 dark | ring 42.6, amber zone | Ring 42.6 mL/min/1.73 m²; axe found `scrollable-region-focusable` on the trace table container → fixed (#12). | **PASS** | [png](../qa/screenshots/live-deploy-case3-1024-dark.png) |
 
 ## C. Safety and robustness
 
