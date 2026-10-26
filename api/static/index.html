@@ -505,7 +505,7 @@
   .status { background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-weight: 600; }
   .s-live { color: var(--brand); } .s-mock { color: var(--mock); } .s-off { color: var(--red); } .s-wait { color: var(--muted); }
   .seg { background: var(--surface); border: 1px solid var(--line); padding: 3px; }
-  .seg label > span { color: var(--ink-2); min-height: 38px; padding: 0 14px; font-size: 14.5px; font-weight: 600; }
+  .seg label > span { color: var(--ink-2); min-height: 44px; padding: 0 14px; font-size: 14.5px; font-weight: 600; }
   .seg label:has(input:checked) > span { background: var(--brand); color: var(--on-brand); }
   .seg label:has(input:focus-visible) > span { outline-color: var(--haldi); }
   .bar .iconbtn { color: var(--ink); }
@@ -528,7 +528,7 @@
   .hero-copy h1 span, .hero-copy h1 em { display: block; }
   .hero-copy h1 em { color: var(--brand); font-style: italic; }
   .hero-copy p { margin: 0 auto; max-width: 600px; color: var(--ink-2); font-size: 18px; }
-  body.asked .hero-copy { display: none; }
+  body.asked .hero-copy { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* ---------- the question ---------- */
   .ask { display: grid; gap: 10px; }
@@ -537,7 +537,7 @@
   .who-l { font-size: 14.5px; color: var(--muted); font-weight: 600; margin-right: 6px; }
   .pillopt { position: relative; }
   .pillopt input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
-  .pillopt > span { display: inline-grid; place-items: center; padding: 0 16px; min-height: 42px; border-radius: 999px; border: 1px solid var(--line-2);
+  .pillopt > span { display: inline-grid; place-items: center; padding: 0 16px; min-height: 44px; border-radius: 999px; border: 1px solid var(--line-2);
                     background: var(--surface); font-size: 15px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
   .pillopt:has(input:checked) > span { background: var(--ink); border-color: var(--ink); color: var(--paper); }
   .pillopt:has(input:focus-visible) > span { outline: 3px solid var(--haldi); outline-offset: 2px; }
@@ -581,9 +581,12 @@
   .tile .ag { font-size: 12px; color: var(--muted); }
   .tile .st { top: 6px; right: 6px; }
   .tile.scan { border-color: var(--o-fg); box-shadow: 0 0 0 3px var(--o-bg); transform: none; }
-  .tile.off { opacity: .45; }
+  /* fade the icon, not the words: names stay readable (WCAG AA contrast) */
+  .tile.off, .team.stopped .tile { opacity: 1; filter: none; }
+  .tile.off .ic, .team.stopped .tile .ic { opacity: .45; filter: grayscale(1); }
+  .tile.off .nm, .team.stopped .tile .nm { color: var(--muted); }
   .tile.ok, .tile.warn, .tile.bad { border-color: color-mix(in srgb, var(--o-fg) 40%, var(--line)); }
-  .team.stopped .tile { filter: grayscale(1); opacity: .4; }
+  .team.stopped .tile { border-style: dashed; }
   .team.stopped { border: 0; }
   .tile.ok .st { background: var(--brand); }
   .stepper { display: none; }
@@ -633,7 +636,7 @@
   .answer-body { padding: 20px 22px 22px; }
   .answer-text { font-size: 18.5px; line-height: 1.7; }
   .urgent .answer-text { font-size: 21px; }
-  .listen { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 14px; margin: 0 0 14px; border-radius: 999px; border: 1px solid var(--line-2);
+  .listen { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; margin: 0 0 14px; border-radius: 999px; border: 1px solid var(--line-2);
             background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14.5px; cursor: pointer; }
   .listen svg { width: 18px; height: 18px; color: var(--brand); }
   .listen[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); } .listen[aria-pressed="true"] svg { color: var(--on-brand); }
@@ -866,7 +869,7 @@
       </div>
     </div>
     <div id="formerr" class="formerr" role="alert"></div>
-    <p class="safe"><span data-ico="shield"></span><span><b>Decision support, not diagnosis.</b> <span data-i18n="safety">For emergencies, call local emergency services.</span></span><span class="hint" data-i18n="hint">Ctrl/⌘+Enter</span></p>
+    <p class="safe"><span data-ico="shield"></span><span><b data-i18n="dsnd">Decision support, not diagnosis.</b> <span data-i18n="safety">For emergencies, call local emergency services.</span></span><span class="hint" data-i18n="hint">Ctrl/⌘+Enter</span></p>
   </form>
 
   <div class="work">
@@ -970,7 +973,7 @@ const UI = {
         who: "Who is asking?", hw: "Health worker", hwSub: "Simple words · Hindi", cl: "Clinician", clSub: "Full detail · numbers", ansLang: "Answer language",
         ask: "What do you want to ask?", ph: "Type a question about a patient — e.g. Diabetic patient with eGFR 50, which BP target applies?",
         mic: "Speak your question", micStop: "Stop listening", brand: "Samanvay", go: "Ask Samanvay", hint: "Ctrl/⌘+Enter to ask", measure: "Measurements",
-        safety: "For emergencies, call local emergency services.", team: "Specialist Team", teamSub: "Each question goes only to the specialists it needs.",
+        dsnd: "Decision support, not diagnosis.", safety: "For emergencies, call local emergency services.", team: "Specialist Team", teamSub: "Each question goes only to the specialists it needs.",
         st1: "Assessing symptoms", st2: "Running agents", st3: "Synthesizing answer",
         o_cardiac: "Heart", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Lungs", o_neuro: "Brain",
         s_ok: "answered", s_warn: "not sure", s_bad: "deferred", s_off: "not consulted",
@@ -989,7 +992,7 @@ const UI = {
         history: "History", histNote: "Only your last 10 questions are kept, on this device. Answers and measurements are never saved.",
         noHist: "No questions yet.", clearHist: "Clear history", settings: "Settings", uiLang: "Interface language", defAud: "Default: who is asking",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Close", filled: "{x}/{n} filled",
-        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer", limit: "Demo limit reached", web: "Live web source",
+        editVals: "Edit values", loadRow: "Load a real dataset row", clear: "Clear", loading: "Loading…", err: "Couldn't get an answer", netErr: "Can't reach the Samanvay server. Check your internet connection and try again.", limit: "Demo limit reached", web: "Live web source",
         emptyQ: "Please type a question first.", toolNote: "A tool runs only when its specialist is consulted. If a value is missing, the specialist asks for it instead of guessing.",
         needs: "No result yet — the specialist needs:", invalid: "No result:", riskTitle: "Heart risk estimate", modeCl: "Clinician", modeHw: "Health worker" },
   hi: { nav_home: "होम", nav_ask: "पूछें", nav_history: "इतिहास", nav_settings: "सेटिंग्स",
@@ -997,7 +1000,7 @@ const UI = {
         who: "कौन पूछ रहा है?", hw: "स्वास्थ्य कार्यकर्ता", hwSub: "आसान शब्द · हिन्दी", cl: "डॉक्टर", clSub: "पूरी जानकारी · आँकड़े", ansLang: "जवाब की भाषा",
         ask: "आप क्या पूछना चाहते हैं?", ph: "मरीज़ के बारे में सवाल लिखें — जैसे: डायबिटीज़ के मरीज़ का BP कितना होना चाहिए?",
         mic: "बोलकर पूछें", micStop: "सुनना बंद करें", brand: "समन्वय", go: "समन्वय से पूछें", hint: "Ctrl/⌘+Enter से पूछें", measure: "जाँच के आँकड़े",
-        safety: "आपात स्थिति में तुरंत एम्बुलेंस या नज़दीकी अस्पताल से संपर्क करें।", team: "विशेषज्ञ टीम", teamSub: "हर सवाल सिर्फ़ ज़रूरी विशेषज्ञों के पास जाता है।",
+        dsnd: "फ़ैसले में मदद, निदान नहीं।", safety: "आपात स्थिति में तुरंत एम्बुलेंस या नज़दीकी अस्पताल से संपर्क करें।", team: "विशेषज्ञ टीम", teamSub: "हर सवाल सिर्फ़ ज़रूरी विशेषज्ञों के पास जाता है।",
         st1: "लक्षणों की जाँच", st2: "विशेषज्ञ काम पर", st3: "जवाब तैयार",
         o_cardiac: "दिल", o_renal: "गुर्दा", o_hepatic: "लिवर", o_endocrine: "डायबिटीज़", o_respiratory: "फेफड़े", o_neuro: "दिमाग",
         s_ok: "जवाब दिया", s_warn: "पक्का नहीं", s_bad: "रोका गया", s_off: "नहीं पूछा गया",
@@ -1016,7 +1019,7 @@ const UI = {
         history: "इतिहास", histNote: "इस डिवाइस पर सिर्फ़ आपके आख़िरी 10 सवाल रखे जाते हैं। जवाब और आँकड़े कभी सेव नहीं होते।",
         noHist: "अभी कोई सवाल नहीं।", clearHist: "इतिहास मिटाएँ", settings: "सेटिंग्स", uiLang: "स्क्रीन की भाषा", defAud: "शुरुआत में: कौन पूछ रहा है",
         theme: "थीम", themeSys: "सिस्टम", themeLight: "लाइट", themeDark: "डार्क", close: "बंद करें", filled: "{n} में से {x} भरे",
-        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका", limit: "डेमो की सीमा पूरी हो गई", web: "लाइव वेब स्रोत",
+        editVals: "आँकड़े बदलें", loadRow: "डेटासेट की असली पंक्ति लोड करें", clear: "मिटाएँ", loading: "लोड हो रहा है…", err: "जवाब नहीं मिल सका", netErr: "समन्वय सर्वर से जुड़ नहीं पाए। इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।", limit: "डेमो की सीमा पूरी हो गई", web: "लाइव वेब स्रोत",
         emptyQ: "पहले सवाल लिखें।", toolNote: "कोई टूल तभी चलता है जब उसके विशेषज्ञ से पूछा जाए। कोई आँकड़ा न हो, तो विशेषज्ञ अंदाज़ा नहीं लगाता, पूछता है।",
         needs: "अभी नतीजा नहीं — विशेषज्ञ को चाहिए:", invalid: "नतीजा नहीं:", riskTitle: "दिल के जोखिम का अनुमान", modeCl: "डॉक्टर", modeHw: "स्वास्थ्य कार्यकर्ता" },
   hinglish: { nav_home: "Home", nav_ask: "Poochein", nav_history: "History", nav_settings: "Settings",
@@ -1024,7 +1027,7 @@ const UI = {
         who: "Kaun pooch raha hai?", hw: "Health worker", hwSub: "Aasaan shabd · Hindi", cl: "Doctor", clSub: "Poori jaankari · aankde", ansLang: "Jawaab ki bhasha",
         ask: "Aap kya poochna chahte hain?", ph: "Mareez ke baare mein sawaal likhein — jaise: Diabetes wale mareez ka BP kitna hona chahiye?",
         mic: "Bolkar poochein", micStop: "Sunna band karein", brand: "Samanvay", go: "Samanvay se poochein", hint: "Ctrl/⌘+Enter se poochein", measure: "Jaanch ke aankde",
-        safety: "Emergency mein turant ambulance ya nazdeeki hospital se sampark karein.", team: "Specialist Team", teamSub: "Har sawaal sirf zaroori specialists ke paas jaata hai.",
+        dsnd: "Faisle mein madad, diagnosis nahi.", safety: "Emergency mein turant ambulance ya nazdeeki hospital se sampark karein.", team: "Specialist Team", teamSub: "Har sawaal sirf zaroori specialists ke paas jaata hai.",
         st1: "Lakshan ki jaanch", st2: "Specialists kaam par", st3: "Jawaab taiyaar",
         o_cardiac: "Dil", o_renal: "Kidney", o_hepatic: "Liver", o_endocrine: "Diabetes", o_respiratory: "Phephde", o_neuro: "Dimaag",
         s_ok: "jawaab diya", s_warn: "pakka nahi", s_bad: "roka gaya", s_off: "nahi poocha gaya",
@@ -1043,7 +1046,7 @@ const UI = {
         history: "History", histNote: "Is device par sirf aapke aakhri 10 sawaal rakhe jaate hain. Jawaab aur aankde kabhi save nahi hote.",
         noHist: "Abhi koi sawaal nahi.", clearHist: "History mitayein", settings: "Settings", uiLang: "Screen ki bhasha", defAud: "Shuru mein: kaun pooch raha hai",
         theme: "Theme", themeSys: "System", themeLight: "Light", themeDark: "Dark", close: "Band karein", filled: "{n} mein se {x} bhare",
-        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka", limit: "Demo ki limit poori ho gayi", web: "Live web source",
+        editVals: "Aankde badlein", loadRow: "Dataset ki asli row load karein", clear: "Mitayein", loading: "Load ho raha hai…", err: "Jawaab nahi mil saka", netErr: "Samanvay server se connect nahi ho paaya. Internet connection check karke dobara try karein.", limit: "Demo ki limit poori ho gayi", web: "Live web source",
         emptyQ: "Pehle sawaal likhein.", toolNote: "Koi tool tabhi chalta hai jab uske specialist se poocha jaaye. Koi aankda na ho, toh specialist andaaza nahi lagata, poochta hai.",
         needs: "Abhi nateeja nahi — specialist ko chahiye:", invalid: "Nateeja nahi:", riskTitle: "Dil ke risk ka andaaza", modeCl: "Doctor", modeHw: "Health worker" },
 };
@@ -1776,8 +1779,12 @@ $("#ask").addEventListener("submit", async (ev) => {
   (isNarrow() ? $("#results") : $("#team")).scrollIntoView({ behavior: motion(), block: "nearest" });
   runTeam();
   try {
-    const r = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-                                       body: JSON.stringify({ question, patient_values, ...getMode() }) });
+    let r;
+    try {
+      r = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
+                                   body: JSON.stringify({ question, patient_values, ...getMode() }) });
+    } catch (e) { health = null; $("#status").dataset.off = "1"; setPill(); throw new Error(t("netErr")); }
+    if (!health) { delete $("#status").dataset.off; fetch("api/health").then(h => h.json()).then(h => { health = h; setPill(); }).catch(() => {}); }
     if (!r.ok) { let m = await r.text(); try { m = JSON.parse(m).detail || m; } catch (e) { /* plain text */ } const err = new Error(typeof m === "string" ? m : JSON.stringify(m)); err.limit = r.status === 429; throw err; }
     const d = await r.json();
     last = d;

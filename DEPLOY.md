@@ -124,10 +124,11 @@ What the docs say, and what it means here:
    public repository URL without linking an account).
 2. Render dashboard → **New** → **Web Service**.
 3. **Source:** choose **Public Git Repository** and paste
-   `https://github.com/<GITHUB_USER>/<REPO>`. Or connect GitHub and pick the
+   `https://github.com/NANDINI502/samanvay`. Or connect GitHub and pick the
    repo.
-4. **Name:** e.g. `medbot-orchestrator` (this becomes
-   `https://medbot-orchestrator.onrender.com` if it's free).
+4. **Name:** e.g. `samanvay` (this becomes `https://samanvay.onrender.com` if
+   it's free; otherwise Render adds a suffix, as in the live demo
+   `https://samanvay-z93y.onrender.com`).
    **Language:** **Docker**. **Branch:** `main`. **Region:** any.
    **Root Directory** and **Dockerfile Path** stay as they are: `Dockerfile`
    is at the repo root.
@@ -145,10 +146,12 @@ What the docs say, and what it means here:
 9. Open `https://<name>.onrender.com/api/health` and check
    `"ready": true, "mock": false, "api_key_configured": true`.
 10. Open the page, run each **Try a case** in both audiences at phone width,
-    and check the header says **LIVE on Nebius Token Factory** and the
-    trace shows latency and tokens per Nemotron call.
+    and check the status pill in the top bar says **Live** and "How this
+    answer was made" shows latency and tokens per Nemotron call.
 11. **Keep it awake:** UptimeRobot → **New monitor** → **HTTP(s)**, URL
-    `https://<name>.onrender.com/api/health`, interval **5 minutes**.
+    `https://<name>.onrender.com/api/health`, interval **5 minutes**. The
+    endpoint answers GET and HEAD, makes no model call and is never
+    rate-limited, so the pings cost nothing.
 
 Pushes to `main` redeploy the service when Auto-Deploy is on (Settings →
 Build & Deploy; not checked in the docs above). Turn it off after the

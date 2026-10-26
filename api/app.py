@@ -29,7 +29,7 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from agents.registry import AGENT_CONFIGS, ORGANS
 from api.ratelimit import client_ip, limiter
@@ -60,13 +60,20 @@ class AskRequest(BaseModel):
     audience: Literal["clinician", "health_worker"] = "clinician"
     language: Literal["en", "hi", "hinglish"] = "en"  # health_worker only; clinician answers are English
 
+    @field_validator("question")
+    @classmethod
+    def not_blank(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("question is empty")
+        return v
 
-@app.get("/")
+
+@app.api_route("/", methods=["GET", "HEAD"])
 def index() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])  # HEAD: uptime monitors send it by default
 def health() -> dict:
     """Always 200 while the process serves requests. `ready` says whether
     questions can be answered: mock mode, or live with a key configured.

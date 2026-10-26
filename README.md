@@ -401,7 +401,7 @@ git clone https://github.com/NANDINI502/samanvay && cd samanvay
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt -c constraints.txt
-cp .env.example .env               # live mode: add NEBIUS_API_KEY, confirm model IDs
+cp .env.example .env               # Windows cmd: copy .env.example .env; live mode: add NEBIUS_API_KEY
 python -m rag.ingest --organ all   # optional; the web app builds missing indexes at startup
 ```
 
@@ -424,9 +424,11 @@ python -m orchestrator.cli "What does this patient's eGFR mean?" \
 python -m orchestrator.cli --inputs hepatic   # inputs a risk tool needs
 ```
 
-**Docker / deployment:** see [DEPLOY.md](DEPLOY.md) — Hugging Face Spaces
-(Docker) and Nebius Serverless Endpoints. The API key is supplied only as a
-platform secret, never in the image. Health check: `GET /api/health`.
+**Docker / deployment:** see [DEPLOY.md](DEPLOY.md). The live demo runs as a
+Docker web service on Render's free tier (section R); Hugging Face Spaces and
+Nebius Serverless Endpoints are also documented. The API key is supplied only
+as a platform secret, never in the image. Health check: `GET /api/health`
+(GET or HEAD, never rate-limited, no model call).
 
 ## Tests
 
@@ -449,6 +451,10 @@ All tests run offline (`tests/conftest.py` sets `MEDBOT_MOCK_LLM=1`).
 | `test_negative_results.py` | Retired models' metrics reproduce exactly; they are not served |
 | `test_api.py` | Web API, per-step model trace, health check, 503 on model failure without leaking the key |
 | `test_check_nebius.py` | Readiness script with faked Token Factory responses; key never printed |
+| `test_audience.py` | Clinician vs health-worker mode: only the wording changes; routing, guardrails, tools and citations are identical |
+| `test_ratelimit.py` | `/api/ask` per-IP limit and daily cap; `/api/health` never limited and makes no model call |
+| `test_web_fallback.py` | Tavily fallback with a stubbed HTTP call: replaces only a low-confidence deferral; allowed domains only |
+| `test_benchmark_tiers.py` | Tier benchmark plumbing: case selection, percentiles, one role varied at a time |
 
 One strict `xfail` documents a known retrieval limitation (below).
 
@@ -623,6 +629,8 @@ From `git log` (dates are commit dates, UTC+8):
 - **2026-10-25** — Renamed to Samanvay.
 - **2026-10-26** — Model-tier benchmark (Nano / Super / Ultra per role); safety check gets its own model setting.
 - **2026-10-26** — Final live eval; README: eval results, web fallback, limitations; *Live web source* example in the UI.
+- **2026-10-27** — "Care" UI redesign (NHS-style triage cards, score rings, read-aloud); design rationale in `docs/DESIGN.md`.
+- **2026-10-27** — QA sweep (`docs/QA_REPORT.md`): accessibility and error-state fixes, HEAD on `/api/health` for uptime monitors, blank questions rejected.
 
 ## License
 

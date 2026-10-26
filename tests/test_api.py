@@ -15,6 +15,15 @@ def test_page_and_health():
     assert set(h["risk_models"]) == {"cardiac", "renal", "hepatic"}
 
 
+def test_head_for_uptime_monitors():
+    assert client.head("/api/health").status_code == 200
+    assert client.head("/").status_code == 200
+
+
+def test_blank_question_is_rejected():
+    assert client.post("/api/ask", json={"question": " \t\n "}).status_code == 422
+
+
 def test_schema_lists_agents_and_risk_fields():
     s = client.get("/api/schema").json()
     assert len(s["agents"]) == 6
