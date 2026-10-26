@@ -37,7 +37,7 @@ listed under [Needs owner decision](#needs-owner-decision).
    failure" with no unit warning (O-2). A clinician judge may try exactly this.
 3. **"Guidance" banner on non-answers**: when the sources don't cover a question (doses, "give a diagnosis"), the text correctly says so but
    the banner still says "Guidance from the guidelines" (O-3). The web fallback can also add an irrelevant source (O-4).
-4. **A cited source is dead**: the PAHO risk-chart PDF shown under cardiac answers returns 502 (O-6).
+4. **A cited source was dead**: the PAHO risk-chart PDF shown under cardiac answers returned 502 (O-6; replaced after this report with WHO's own 2007 WHO/ISH pocket guidelines).
 5. **Demo availability**: Render free tier sleeps (≈30–60 s wake-up) and the per-IP limit is 10/hour, which a judge can hit in one
    session; the per-IP limit can also be bypassed with a fake `X-Forwarded-For` (the daily cap still protects credits) (O-5).
 
@@ -72,7 +72,7 @@ because they need information only you have.
 | O-3 | "Guidance" banner when the answer says the sources don't cover it | Live: metformin / amlodipine dose, "give a diagnosis" | Treat an agent's "not covered" answer as a low-confidence deferral, or add a "Not covered by the sources" banner. Touches deferral logic/prompts. |
 | O-4 | Web fallback can cite an irrelevant page | Live: "`<img …>` what is eGFR?" → PMC abstract about EGFR (the lung-cancer receptor); the answer said it doesn't apply, but it is listed as a source | e.g. require the search result to share the question's key terms, or drop sources the answer says are irrelevant. |
 | O-5 | Per-IP rate limit trusts the client's `X-Forwarded-For` | C-SEC-4: each fake IP got 200 | Use the client IP that Render/Cloudflare sets (verify which header on Render before changing). Consider `MEDBOT_RATE_PER_IP=20–30` during judging; the daily cap (200) still caps cost. |
-| O-6 | Dead citation | A-5: `www3.paho.org/hq/dmdocuments/2010/colour_charts_24_Aug_07.pdf` → 502, cited in `rag/corpus/cardiac_who_pen.md` and shown as a source in cardiac answers | Replace with a working official copy of the WHO/ISH risk charts (citation change). |
+| O-6 | **Done 2026-10-27 (owner approved).** Dead citation | `www3.paho.org/.../colour_charts_24_Aug_07.pdf` → 502 | Replaced in `rag/corpus/cardiac_who_pen.md` with WHO's *Prevention of Cardiovascular Disease: Pocket Guidelines … (WHO/ISH Cardiovascular Risk Prediction Charts)*, Geneva 2007, ISBN 978 92 4 154726 0, on afro.who.int (200, PDF; text checked: same chart method — 10-year risk from age, sex, blood pressure, smoking, total cholesterol and diabetes, 14 sub-regions; this edition's charts are AFR D/E, noted in the citation). Title block only, so retrieval is unchanged. |
 | O-7 | Old name in model prompts and LICENSE | `agents/specialist.py:30`, `orchestrator/audience.py:120,137` ("MedBot Orchestrator"); LICENSE "MedBot Orchestrator Contributors" | Rename to Samanvay (prompt change → re-run the live eval after). |
 | O-8 | No request-body size limit | C-API-6: 5 MB body accepted | Optional: reject bodies over ~64 KB. |
 | O-9 | `/api/health` says a key is configured when it's the `.env.example` placeholder | A-3 | Optional: treat `your_key_here` as not set. |

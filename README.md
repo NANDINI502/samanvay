@@ -64,7 +64,7 @@ How the corpus uses it:
 
 | Corpus | WHO PEN content | Other cited sources |
 | --- | --- | --- |
-| Cardiac | Total CVD risk factors, risk-chart actions, referral | WHO/ISH risk charts (PAHO/WHO) |
+| Cardiac | Total CVD risk factors, risk-chart actions, referral | WHO/ISH risk prediction charts (WHO pocket guidelines, 2007) |
 | Renal | Kidney-related referral and blood-pressure rules | NIDDK (NIH) |
 | Neuro | Stroke/TIA referral rule | NINDS (NIH) |
 | Endocrine | Diagnostic thresholds, BP threshold in diabetes | WHO diabetes fact sheet |

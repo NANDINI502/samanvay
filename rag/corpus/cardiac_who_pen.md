@@ -3,8 +3,15 @@
 Source: WHO Package of Essential Noncommunicable Disease Interventions (PEN)
 for Primary Health Care in Low-Resource Settings, World Health Organization.
 Public document. URL: https://www.afro.who.int/sites/default/files/2017-06/9789241506557_eng.pdf
-Also underlying risk-chart methodology: WHO/ISH Risk Prediction Charts, PAHO/WHO,
-https://www3.paho.org/hq/dmdocuments/2010/colour_charts_24_Aug_07.pdf
+Also underlying risk-chart methodology: WHO/ISH Cardiovascular Risk Prediction
+Charts, in World Health Organization, Prevention of Cardiovascular Disease: Pocket
+Guidelines for Assessment and Management of Cardiovascular Risk, Geneva, 2007,
+ISBN 978 92 4 154726 0 (the African Region edition; its charts are for AFR D and
+AFR E, and it describes the same method for all 14 WHO sub-regions: 10-year risk
+from age, sex, blood pressure, smoking status, total blood cholesterol and
+diabetes). URL: https://www.afro.who.int/sites/default/files/2017-06/Pocket%20CVD%20manual%20English.pdf
+(Replaces the PAHO copy of the charts, www3.paho.org/hq/dmdocuments/2010/colour_charts_24_Aug_07.pdf,
+which returned HTTP 502 on 2026-10-27.)
 
 This file is a curated set of protocol excerpts used to ground the Cardiac
 specialist agent's retrieval. It is NOT the full WHO document — always cite
