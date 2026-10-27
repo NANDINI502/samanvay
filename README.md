@@ -493,8 +493,10 @@ One strict `xfail` documents a known retrieval limitation (below).
 
 `MEDBOT_MOCK_LLM=0 python -m eval.run` runs every case in `eval/cases.jsonl`
 through the full live pipeline and scores what the system *did*, never what
-it said medically. Final live run 2026-10-26 (Nemotron router, Ultra
-orchestrator, Super agents, web fallback on), `eval/results/20261026T095448Z.json`:
+it said medically. Final live run 2026-10-27 on commit `092845e` (Nemotron
+router, Ultra orchestrator, Super agents, web fallback on),
+`eval/results/20261027T073020Z.json`. The previous run (2026-10-26,
+`20261026T095448Z.json`) gave the same result on every metric:
 
 > **What these numbers mean.** The 66 eval cases are test cases we wrote
 > ourselves to check routing and safety behaviour (which agents run, when
@@ -694,6 +696,8 @@ From `git log` (dates are commit dates, UTC+8):
 - **2026-10-26** — Final live eval; README: eval results, web fallback, limitations; *Live web source* example in the UI.
 - **2026-10-27** — "Care" UI redesign (NHS-style triage cards, score rings, read-aloud); design rationale in `docs/DESIGN.md`.
 - **2026-10-27** — QA sweep (`docs/QA_REPORT.md`): accessibility and error-state fixes, HEAD on `/api/health` for uptime monitors, blank questions rejected.
+- **2026-10-27** — Red flags survive spelling, spacing and word-form variants; dead PAHO citation replaced with WHO/ISH pocket guidelines.
+- **2026-10-27** — QA follow-ups: eGFR refuses implausible age and creatinine that looks like µmol/L; rate limit keyed on the real client IP (default 30/hour); placeholder key not counted as configured; prompts and LICENSE renamed to Samanvay; README Design section; final live eval on `092845e`, all 100%.
 
 ## License
 
