@@ -83,3 +83,43 @@ def test_max_tokens_is_capped(monkeypatch):
     except RuntimeError:
         pass
     assert seen["max_tokens"] == 120
+
+
+def test_forged_forwarded_for_does_not_dodge_the_per_ip_limit(monkeypatch):
+    # The client writes the first X-Forwarded-For entry; the proxy appends the real one.
+    monkeypatch.setenv("MEDBOT_RATE_PER_IP", "2")
+    monkeypatch.setenv("MEDBOT_DAILY_CAP", "100")
+    for fake in ("1.1.1.1", "2.2.2.2"):
+        h = {"X-Forwarded-For": f"{fake}, 203.0.113.9"}
+        assert client.post("/api/ask", json=Q, headers=h).status_code == 200
+    r = client.post("/api/ask", json=Q, headers={"X-Forwarded-For": "3.3.3.3, 203.0.113.9"})
+    assert r.status_code == 429
+
+
+def test_cloudflare_client_ip_wins_over_forwarded_for(monkeypatch):
+    monkeypatch.setenv("MEDBOT_RATE_PER_IP", "1")
+    monkeypatch.setenv("MEDBOT_DAILY_CAP", "100")
+    h = {"CF-Connecting-IP": "198.51.100.20", "X-Forwarded-For": "9.9.9.9, 10.0.0.1"}
+    assert client.post("/api/ask", json=Q, headers=h).status_code == 200
+    # same Cloudflare address, different forged chain: still the same client
+    h2 = {"CF-Connecting-IP": "198.51.100.20", "X-Forwarded-For": "8.8.8.8, 10.0.0.2"}
+    assert client.post("/api/ask", json=Q, headers=h2).status_code == 429
+    # another Cloudflare address behind the same proxy is a different client
+    h3 = {"CF-Connecting-IP": "198.51.100.21", "X-Forwarded-For": "8.8.8.8, 10.0.0.2"}
+    assert client.post("/api/ask", json=Q, headers=h3).status_code == 200
+
+
+def test_client_ip_order():
+    from api.ratelimit import client_ip
+    assert client_ip({"cf-connecting-ip": "198.51.100.1", "x-forwarded-for": "1.1.1.1"}, "peer") == "198.51.100.1"
+    assert client_ip({"x-forwarded-for": "1.1.1.1, 203.0.113.4"}, "peer") == "203.0.113.4"
+    assert client_ip({}, "peer") == "peer"
+
+
+def test_default_per_ip_limit_is_30(monkeypatch):
+    monkeypatch.delenv("MEDBOT_RATE_PER_IP", raising=False)
+    monkeypatch.setenv("MEDBOT_DAILY_CAP", "100")
+    h = {"CF-Connecting-IP": "198.51.100.30"}
+    for _ in range(30):
+        assert client.post("/api/ask", json={"question": "sudden facial droop"}, headers=h).status_code == 200
+    assert client.post("/api/ask", json={"question": "sudden facial droop"}, headers=h).status_code == 429

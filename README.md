@@ -452,7 +452,7 @@ All tests run offline (`tests/conftest.py` sets `MEDBOT_MOCK_LLM=1`).
 | `test_api.py` | Web API, per-step model trace, health check, 503 on model failure without leaking the key |
 | `test_check_nebius.py` | Readiness script with faked Token Factory responses; key never printed |
 | `test_audience.py` | Clinician vs health-worker mode: only the wording changes; routing, guardrails, tools and citations are identical |
-| `test_ratelimit.py` | `/api/ask` per-IP limit and daily cap; `/api/health` never limited and makes no model call |
+| `test_ratelimit.py` | `/api/ask` per-IP limit (default 30/hour; a forged `X-Forwarded-For` doesn't reset it) and daily cap; `/api/health` (GET and HEAD) never limited and makes no model call |
 | `test_web_fallback.py` | Tavily fallback with a stubbed HTTP call: replaces only a low-confidence deferral; allowed domains only |
 | `test_benchmark_tiers.py` | Tier benchmark plumbing: case selection, percentiles, one role varied at a time |
 

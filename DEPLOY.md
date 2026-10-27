@@ -44,7 +44,7 @@ only a CPU, and the only secret is your Token Factory API key.
 | `NEBIUS_BASE_URL` | no | Optional; defaults to `https://api.tokenfactory.nebius.com/v1/` |
 | `EMBED_BACKEND` | no | `tfidf` (image default) |
 | `PORT` | no | Optional; image default `7860` (Render injects `10000`, and the start command uses it) |
-| `MEDBOT_RATE_PER_IP` | no | `/api/ask` questions per client IP per window; default `10` (`0` = off) |
+| `MEDBOT_RATE_PER_IP` | no | `/api/ask` questions per client IP per window; default `30` (`0` = off) |
 | `MEDBOT_RATE_WINDOW_S` | no | Per-IP window in seconds; default `3600` |
 | `MEDBOT_DAILY_CAP` | no | `/api/ask` questions per UTC day, all clients together; default `200` (`0` = off) |
 | `MEDBOT_MAX_TOKENS_CAP` | no | Ceiling on `max_tokens` for every model call; default `4000` (the largest budget any call uses; lower values make long answers fail as truncated) |
@@ -54,15 +54,18 @@ only a CPU, and the only secret is your Token Factory API key.
 ### Public-demo limits
 
 Anyone with the URL can spend your Token Factory credits, so `/api/ask` is
-rate-limited in process (`api/ratelimit.py`): per client IP (first
-`X-Forwarded-For` entry) and a global daily cap. When a limit is hit the API
+rate-limited in process (`api/ratelimit.py`): per client IP and a global
+daily cap. The client IP is Cloudflare's `CF-Connecting-IP` (Render serves
+through Cloudflare, which overwrites any value the client sends), else the
+*last* `X-Forwarded-For` entry (the one the nearest proxy appended; earlier
+entries are whatever the client wrote), else the socket peer. The deploy log
+says once which source was used: look for `rate limit: client IP taken from`. When a limit is hit the API
 returns `429` and the page shows **Demo limit reached** with the reason.
 Red-flag deferrals count too (simpler, and conservative). `/api/health`
 and the page itself are never limited and `/api/health` makes no model
 call, so an uptime pinger costs nothing. Counters live in memory and reset
-when the process restarts or the free instance spins down. A client can
-forge `X-Forwarded-For` to get round the per-IP limit; the daily cap still
-bounds total spend.
+when the process restarts or the free instance spins down. The daily cap
+bounds total spend even if the per-IP key were ever wrong.
 
 Retrieval indexes are built when the container starts (a few seconds with
 TF-IDF), so they always match `EMBED_BACKEND`.
@@ -138,7 +141,7 @@ What the docs say, and what it means here:
    - `NEMOTRON_ORCHESTRATOR_MODEL` = `nvidia/Nemotron-3-Ultra-550b-a55b`
    - `NEMOTRON_AGENT_MODEL` = `nvidia/nemotron-3-super-120b-a12b`
    - `MEDBOT_MOCK_LLM` = `0`
-   - Optional: `MEDBOT_DAILY_CAP`, `MEDBOT_RATE_PER_IP` (defaults 200 and 10/hour).
+   - Optional: `MEDBOT_DAILY_CAP`, `MEDBOT_RATE_PER_IP` (defaults 200 and 30/hour).
    - Optional web fallback: `MEDBOT_WEB_FALLBACK` = `1` and `TAVILY_API_KEY` = your Tavily key.
 7. **Advanced → Health Check Path:** `/api/health`.
 8. **Deploy Web Service.** Watch **Logs** until you see

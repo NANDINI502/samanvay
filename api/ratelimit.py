@@ -3,7 +3,7 @@
 Every /api/ask can spend Token Factory credits, so a public URL needs a
 ceiling. Two limits, both read from the environment at call time:
 
-  MEDBOT_RATE_PER_IP    questions per client IP per window (default 10)
+  MEDBOT_RATE_PER_IP    questions per client IP per window (default 30)
   MEDBOT_RATE_WINDOW_S  window length in seconds (default 3600)
   MEDBOT_DAILY_CAP      questions per UTC day across all clients (default 200)
 
@@ -12,12 +12,20 @@ restart (or a free-tier spin-down) resets it, which is fine for one demo
 instance. /api/health and the static page are never limited, so an uptime
 pinger doesn't use up the budget.
 
-Behind a proxy (Render, HF) the client IP is the first X-Forwarded-For
-entry. A client can forge that header to dodge the per-IP limit, which is
-why the global daily cap exists: it bounds total spend regardless.
+Client IP behind a proxy (`client_ip`): the client can write any
+X-Forwarded-For it likes, and proxies append to it rather than replace it
+(seen on Render), so the first entry can't be trusted. In order:
+  1. CF-Connecting-IP: Render serves through Cloudflare, which sets this
+     header on every request and overwrites any value the client sent.
+  2. The LAST X-Forwarded-For entry: the one the nearest proxy appended.
+  3. The socket peer (local runs, tests).
+The source used is logged once (the header name, never the address), so the
+deploy log shows which one Render provides. The global daily cap still
+bounds total spend if the per-IP key is ever wrong.
 """
 from __future__ import annotations
 
+import logging
 import os
 import threading
 import time
@@ -47,7 +55,7 @@ class DemoLimiter:
     def check(self, ip: str) -> str | None:
         """Count one question from `ip`. Returns None if allowed, else the
         message to show (and nothing is counted)."""
-        per_ip = _env_int("MEDBOT_RATE_PER_IP", 10)
+        per_ip = _env_int("MEDBOT_RATE_PER_IP", 30)
         window = _env_int("MEDBOT_RATE_WINDOW_S", 3600)
         daily = _env_int("MEDBOT_DAILY_CAP", 200)
         now = time.monotonic()
@@ -75,10 +83,21 @@ class DemoLimiter:
             return None
 
 
+_logged_source = False
+
+
 def client_ip(headers, fallback: str | None) -> str:
-    fwd = headers.get("x-forwarded-for", "")
-    first = fwd.split(",")[0].strip()
-    return first or fallback or "unknown"
+    """The client address to rate-limit on; see the module docstring."""
+    global _logged_source
+    cf = headers.get("cf-connecting-ip", "").strip()
+    last = headers.get("x-forwarded-for", "").split(",")[-1].strip()
+    source, ip = (("cf-connecting-ip", cf) if cf else
+                  ("x-forwarded-for (last entry)", last) if last else
+                  ("socket peer", fallback or "unknown"))
+    if not _logged_source:
+        _logged_source = True
+        logging.getLogger("uvicorn.error").info("rate limit: client IP taken from %s", source)
+    return ip
 
 
 limiter = DemoLimiter()
