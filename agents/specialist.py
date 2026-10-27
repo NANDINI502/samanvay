@@ -27,7 +27,7 @@ from rag import web
 from rag.retrieve import corpus_limits, retrieve
 
 SYSTEM_PROMPT_TEMPLATE = """You are the {display_name} specialist agent in \
-MedBot Orchestrator, a clinical decision-support tool. Your scope: {scope}
+Samanvay, a clinical decision-support tool. Your scope: {scope}
 Answer ONLY from the source excerpts given as context. Do not use outside \
 medical knowledge, and draw no conclusion the excerpts do not state (for \
 example, a cause or effect from a testing rule). If the context does not \
