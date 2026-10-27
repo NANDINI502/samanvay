@@ -28,6 +28,9 @@ class CalcInput:
     minimum: float | None = None    # lower bound for numeric inputs
     min_exclusive: bool = True      # True: value must be > minimum; False: >= minimum
     min_reason: str = ""            # shown when the bound is violated
+    maximum: float | None = None    # upper bound (inclusive) for numeric inputs
+    max_reason: str = ""            # shown when the upper bound is violated ...
+    max_message: str = ""           # ... or, if set, this message replaces the generic one
 
 
 @dataclass(frozen=True)

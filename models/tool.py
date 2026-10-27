@@ -140,6 +140,7 @@ def required_inputs(organ: str) -> list[dict]:
             else:
                 item["min"] = i.minimum
                 item["min_exclusive"] = i.min_exclusive
+                item["max"] = i.maximum
             out.append(item)
         return out
     b = load_bundle(organ)
@@ -205,6 +206,10 @@ def _parse_calc_input(i, raw) -> tuple[object, str | None]:
     if i.minimum is not None and (x <= i.minimum if i.min_exclusive else x < i.minimum):
         op = ">" if i.min_exclusive else ">="
         return None, f"{i.label}: {raw} is not valid; must be {op} {i.minimum:g} ({i.min_reason})."
+    if i.maximum is not None and x > i.maximum:
+        if i.max_message:
+            return None, f"{i.label}: {raw}. {i.max_message}"
+        return None, f"{i.label}: {raw} is not valid; must be <= {i.maximum:g} ({i.max_reason})."
     return x, None
 
 

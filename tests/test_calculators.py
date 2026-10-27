@@ -218,3 +218,35 @@ def test_math_sanity_sqrt_used_for_alt():
     # ALT enters as its square root (Sterling: (ALT [U/L])^(1/2)); quadrupling ALT halves FIB-4.
     assert fib4.fib4(50, 40, 100, 200) == pytest.approx(fib4.fib4(50, 40, 25, 200) / 2)
     assert math.isclose(fib4.fib4(50, 40, 25, 200), 2.0)
+
+
+# Input sanity checks (models/renal/egfr.py docstring): refused, never converted
+@pytest.mark.parametrize("age", [121, 150])
+def test_egfr_refuses_implausible_age(age):
+    r = estimate("renal", {"age": age, "sex": "male", "serum_creatinine": 1.0})
+    assert r.status == "invalid" and r.value is None
+    assert any("<= 120" in p and "input sanity check" in p for p in r.problems)
+
+
+def test_egfr_accepts_age_bounds():
+    for age in (18, 120):
+        assert estimate("renal", {"age": age, "sex": "female", "serum_creatinine": 1.0}).status == "ok"
+
+
+@pytest.mark.parametrize("scr", [20.1, 159, 1768])  # 159 µmol/L = QA case C-TRICK-units
+def test_egfr_refuses_creatinine_that_looks_like_umol(scr):
+    r = estimate("renal", {"age": 60, "sex": "male", "serum_creatinine": scr})
+    assert r.status == "invalid" and r.value is None and not r.band
+    assert any("This looks like µmol/L. Enter mg/dL (µmol/L ÷ 88.4)." in p for p in r.problems)
+
+
+def test_egfr_creatinine_20_still_computed():
+    r = estimate("renal", {"age": 60, "sex": "male", "serum_creatinine": 20})
+    assert r.status == "ok" and r.band == "15 or less"
+
+
+def test_egfr_umol_rule_changes_no_band():
+    # Every value the rule refuses would be in the <= 15 band anyway (age 18 gives the highest eGFR).
+    for sex in ("female", "male"):
+        assert egfr.egfr_cr_2021(5.4, 18, sex) <= 15
+    assert egfr.UMOL_PER_MG_DL == 88.4 and egfr.MAX_CREATININE_MG_DL == 20

@@ -505,6 +505,13 @@ Full dataset provenance: [DATASETS.md](DATASETS.md). Retired models:
   (≥ 60 normal range; < 60 may mean kidney disease; ≤ 15 kidney failure).
   No CKD staging. Adults only (≥ 18), with the paper's caveat that it may not
   apply in acute care.
+- **Input sanity checks** (refused, never converted; not clinical
+  thresholds): age above 120; serum creatinine above 20 mg/dL gets *"This
+  looks like µmol/L. Enter mg/dL (µmol/L ÷ 88.4)."* The factor 88.4 is from
+  the paper's Table 1 footnote, where creatinine averaged 1.16–1.66 mg/dL
+  (SD 0.70–1.16), so 20 mg/dL is over 15 SD above every mean. Any true value
+  above 20 would be in the ≤ 15 band anyway. Reasoning in
+  `models/renal/egfr.py`.
 
 ### FIB-4 — Hepatic agent (published formula)
 
