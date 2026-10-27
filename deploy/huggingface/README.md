@@ -13,7 +13,7 @@ short_description: Multi-agent clinical decision support on Nemotron
 Multi-agent clinical decision support on Nebius Token Factory + NVIDIA
 Nemotron. **Decision support, not diagnosis.**
 
-Source code, setup and documentation: <GITHUB_REPO_URL>
+Source code, setup and documentation: https://github.com/NANDINI502/samanvay
 
 This file is the Hugging Face Space card. It is copied to the Space's
 `README.md` at deploy time (see `DEPLOY.md` in the GitHub repo); the YAML

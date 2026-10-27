@@ -25,7 +25,7 @@ Work one step at a time and stop for the owner's OK after each.
 | J | Nebius embeddings (step 5) | Skip unless everything else is done; keep TF-IDF |
 | — | Care UI redesign + QA sweep | Done 2026-10-27 (`f818250`, `93fadcf`, `cef6681`; `docs/QA_REPORT.md`); red-flag variants (`62a6d14`), dead PAHO link replaced (`9eddf87`) |
 | — | QA follow-ups (owner approved 2026-10-27) | Done 2026-10-27: O-7 rename in prompts + LICENSE (`e7df95d`); O-9 placeholder key (`1db8f0d`); HEAD on /api/health already in `93fadcf`, now tested; O-5 client IP from CF-Connecting-IP / last X-Forwarded-For, default 30/hour (`b73b71b`); O-2 eGFR input sanity checks (`a5cc8f1`); O-11 README Design + limitations (`092845e`). pytest 291 passed, 1 xfailed; live eval `eval/results/20261027T073020Z.json` on `092845e` all 100% (66 cases, 0 errors). Skipped by owner, documented: O-3, O-4, O-8, O-12, O-13. Draft `docs/DEVPOST.md` for owner to edit |
-| L | Final live run, README, leak check (step 6) | Done 2026-10-26: pytest 274 passed, 1 xfailed; live eval `eval/results/20261026T095448Z.json` all 100% (66 cases, 0 errors); git history leak check clean; README eval table, web fallback, limitations, change list; UI "Live web source" case. Demo URL filled in. Left for owner: `<FEEDBACK>`, video, Devpost form, push |
+| L | Final live run, README, leak check (step 6) | Done 2026-10-26: pytest 274 passed, 1 xfailed; live eval `eval/results/20261026T095448Z.json` all 100% (66 cases, 0 errors); git history leak check clean; README eval table, web fallback, limitations, change list; UI "Live web source" case. Demo URL filled in. Left for owner: `<FEEDBACK>`, video, Devpost form, push. Feedback filled in by the owner and pushed 2026-10-28; video and Devpost form remain |
 
 ## Current session order (from 2026-10-24)
 
@@ -35,7 +35,7 @@ Work one step at a time and stop for the owner's OK after each.
 3. I — tier benchmark.
 4. H — native tool calling (conditional, see table).
 5. J — skip unless everything else is done.
-6. L — final run, README sections, leak check. Owner writes <FEEDBACK>, gives <DEMO_URL>/<GITHUB_REPO_URL>, and pushes.
+6. L — final run, README sections, leak check. Owner writes <FEEDBACK>, gives <DEMO_URL>/<GITHUB_REPO_URL>, and pushes. (Done 2026-10-28.)
 
 One step at a time; commit after each; stop for the owner's OK. No pushing.
 Note: `.env` sets `MEDBOT_MOCK_LLM` to a mock value; run the live eval with

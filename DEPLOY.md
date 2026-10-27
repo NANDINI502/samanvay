@@ -208,7 +208,7 @@ https://huggingface.co/docs/hub/spaces-config-reference
    Space was created with a `.gitattributes` that already tracks `*.joblib`,
    the `track` line is a no-op.
 
-   Edit `<GITHUB_REPO_URL>` in the Space README before pushing.
+   The Space README already links to https://github.com/NANDINI502/samanvay.
    `git archive` exports only files committed to git, so `.env` (git-ignored)
    can't be copied.
 4. **Watch the build** in the Space's *Logs* tab. When it shows *Running*,

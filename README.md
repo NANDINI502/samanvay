@@ -23,7 +23,7 @@ tell the user to refer instead of guessing.
 > **Decision support, not diagnosis.** This is a hackathon prototype, not a
 > medical device. It does not replace clinical judgment.
 
-- **Live demo:** https://samanvay-z93y.onrender.com (Render free tier: the first request after 15 idle minutes takes about a minute)
+- **Live demo:** https://samanvay-z93y.onrender.com (kept awake with an uptime monitor; if it was idle, the first request may take up to a minute)
 - **Repository:** https://github.com/NANDINI502/samanvay
 
 ## Contents
@@ -662,21 +662,18 @@ reproduces these numbers exactly (tested).
 
 ## Feedback on Nebius & NVIDIA tools
 
-_To be written from the team's own experience — nothing here is filled in
-on our behalf._
-
 **Nebius Token Factory**
-- What worked well: `<FEEDBACK>`
-- What was hard or confusing: `<FEEDBACK>`
-- Suggestions: `<FEEDBACK>`
+- What worked well: Once the key worked, it was easy and smooth. The API is OpenAI-compatible, so it dropped straight into the standard OpenAI Python client with only a base URL and key change. One key gave access to all three Nemotron tiers (Nano, Super, Ultra), which made it easy to benchmark every role against every tier. Listing models through the API let us verify model IDs in a script (`scripts/check_nebius.py`) instead of guessing.
+- What was hard or confusing: Onboarding asked for a payment card before the key was usable, which is a real barrier for students. Before billing was set up, our key returned HTTP 401, and the error didn't say the cause was billing, so we first suspected the key or the model ID. The model IDs also use three different casing styles (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/Nemotron-3-Ultra-550b-a55b`), and we got the Ultra ID wrong at first.
+- Suggestions: Make 401/403 errors say what is wrong (billing not set up, invalid key, or no access to the model). Use one consistent naming scheme for model IDs. Offer hackathon credits that don't require a card. Add per-key spending caps and usage alerts, which matter for public demos.
 
 **NVIDIA Nemotron models**
-- Answer quality / grounding behaviour: `<FEEDBACK>`
-- Latency and token usage (see the UI's pipeline trace): `<FEEDBACK>`
-- Suggestions: `<FEEDBACK>`
+- Answer quality / grounding behaviour: All three tiers followed our instruction to answer only from the retrieved guideline excerpts, or to say the excerpts don't cover the question; every tier passed all 22 grounding checks in our tier benchmark, and the final live eval passed 24/24. Nemotron 3 reasons before answering and that counts against max_tokens, so our short strict-JSON calls (router and safety check) were cut off until we turned reasoning off for those roles; we also added a guard that detects answers truncated at the limit.
+- Latency and token usage: In our 25 Oct benchmark, Ultra was the fastest specialist agent (p50 2.6 s, vs 3.2 s for Super and 5.4 s for Nano), which surprised us because we expected smaller tiers to be faster. A router call used about 250 tokens and an agent call about 1,000. A full multi-agent answer took about 7 s end to end.
+- Suggestions: Document how to switch reasoning on or off per request and how reasoning tokens count against max_tokens. Publish typical latency per tier on Token Factory. An Indic-language (Hindi/Hinglish) evaluation would help builders like us: we could test behaviour, but not answer quality in Hindi.
 
 **Other Nebius tools (Serverless Endpoints, Container Registry, SecretStash)**
-- `<FEEDBACK>`
+- We used only Token Factory. Within the submission period we didn't get to Serverless Endpoints, so the demo runs on Render's free tier. Moving hosting to Nebius Serverless Endpoints is our next step, so inference and serving sit on one platform.
 
 ## What changed during the submission period
 
@@ -697,7 +694,7 @@ From `git log` (dates are commit dates, UTC+8):
 - **2026-10-27** — "Care" UI redesign (NHS-style triage cards, score rings, read-aloud); design rationale in `docs/DESIGN.md`.
 - **2026-10-27** — QA sweep (`docs/QA_REPORT.md`): accessibility and error-state fixes, HEAD on `/api/health` for uptime monitors, blank questions rejected.
 - **2026-10-27** — Red flags survive spelling, spacing and word-form variants; dead PAHO citation replaced with WHO/ISH pocket guidelines.
-- **2026-10-27** — QA follow-ups: eGFR refuses implausible age and creatinine that looks like µmol/L; rate limit keyed on the real client IP (default 30/hour); placeholder key not counted as configured; prompts and LICENSE renamed to Samanvay; README Design section; final live eval on `092845e`, all 100%.
+- **2026-10-27** — QA follow-ups (O-2, O-5, O-7, O-9, O-11 in `docs/QA_REPORT.md`): eGFR refuses implausible age and creatinine that looks like µmol/L; rate limit keyed on the real client IP (default 30/hour); placeholder key not counted as configured; prompts and LICENSE renamed to Samanvay; README Design section; final live eval on `092845e`, all 100%.
 
 ## License
 
