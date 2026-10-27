@@ -79,7 +79,7 @@ def health() -> dict:
     questions can be answered: mock mode, or live with a key configured.
     Reports only whether a key is set, never any part of it."""
     indexes_ready = all((Path(INDEX_DIR) / f"{o}.faiss").exists() for o in ORGANS)
-    key_set = bool(llm.NEBIUS_API_KEY)
+    key_set = llm.key_configured()
     return {
         "status": "ok",
         "ready": indexes_ready and (mock_enabled() or key_set),

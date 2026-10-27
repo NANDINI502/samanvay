@@ -48,6 +48,7 @@ def test_health_is_not_rate_limited_and_calls_no_model(monkeypatch):
     monkeypatch.setattr(llm, "_client", no_calls)
     for _ in range(20):
         assert client.get("/api/health").status_code == 200
+        assert client.head("/api/health").status_code == 200
     assert client.post("/api/ask", json={"question": "sudden facial droop"}).status_code == 200
     assert client.get("/api/health").status_code == 200
 

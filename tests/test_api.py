@@ -122,6 +122,14 @@ def test_health_not_ready_live_without_key(monkeypatch):
     assert h["status"] == "ok" and h["ready"] is False and h["api_key_configured"] is False
 
 
+def test_health_treats_placeholder_key_as_not_configured(monkeypatch):
+    from orchestrator import client as llm
+    monkeypatch.setattr(llm, "NEBIUS_API_KEY", "your_key_here")  # the .env.example value
+    monkeypatch.setenv("MEDBOT_MOCK_LLM", "0")
+    h = client.get("/api/health").json()
+    assert h["ready"] is False and h["api_key_configured"] is False
+
+
 def test_model_failure_returns_503_without_key(monkeypatch):
     from orchestrator import client as llm
     monkeypatch.setenv("MEDBOT_MOCK_LLM", "0")

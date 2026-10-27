@@ -123,6 +123,15 @@ def list_models() -> list[str]:
     return sorted(m.id for m in _client().models.list())
 
 
+# The value .env.example ships with: copying the example without editing it is not a key.
+PLACEHOLDER_KEY = "your_key_here"
+
+
+def key_configured() -> bool:
+    """True if NEBIUS_API_KEY is set to something other than the placeholder."""
+    return bool(NEBIUS_API_KEY) and NEBIUS_API_KEY.strip() != PLACEHOLDER_KEY
+
+
 def redact(text: str) -> str:
     """Remove the API key from any text before it is printed or logged."""
     return text.replace(NEBIUS_API_KEY, "<NEBIUS_API_KEY>") if NEBIUS_API_KEY else text
